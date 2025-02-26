@@ -1,10 +1,11 @@
-#include "../includes/PNG.hpp"
+#include "png/PNG.hpp"
 
 #include <iostream>
 
 int main(int argc, char* argv[])
 {
 	std::cout << "Hello" << std::endl;
+
 	assert(argc == 2);
 
 	PNG png;

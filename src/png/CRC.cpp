@@ -2,7 +2,7 @@
 // Created by ben on 20/02/2022.
 //
 
-#include "../includes/CRC.hpp"
+#include "png/CRC.hpp"
 
 bool CRC_table_computed = false;
 unsigned long CRC_table[256];

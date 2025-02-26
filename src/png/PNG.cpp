@@ -1,4 +1,4 @@
-#include "../includes/PNG.hpp"
+#include "png/PNG.hpp"
 
 std::map<ChunkType, std::string> TypeToString
     {
