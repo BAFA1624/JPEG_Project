@@ -1,0 +1,49 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+CRC_table	./src/png/CRC.cpp	/^unsigned long CRC_table[256];$/;"	v
+CRC_table_computed	./src/png/CRC.cpp	/^bool          CRC_table_computed = false;$/;"	v
+IDAT	./include/png/png_types.hpp	/^    IDAT,$/;"	m	class:png_chunk_t
+IEND	./include/png/png_types.hpp	/^    IEND,$/;"	m	class:png_chunk_t
+IHDR	./include/png/png_types.hpp	/^    IHDR,$/;"	m	class:png_chunk_t
+INVALID	./include/png/png_types.hpp	/^    INVALID,$/;"	m	class:png_chunk_t
+JPEG_PROJECT_CRC_HPP	./include/png/crc.hpp	/^#define JPEG_PROJECT_CRC_HPP$/;"	d
+PLTE	./include/png/png_types.hpp	/^    PLTE,$/;"	m	class:png_chunk_t
+PNG	./include/png/png.hpp	/^    PNG() : png_chunks() {}$/;"	f	class:PNG
+PNG	./include/png/png.hpp	/^class PNG$/;"	c
+PNGChunk	./include/png/png_types.hpp	/^    PNGChunk( std::uint32_t _len, png_chunk_t _type, char * _data,$/;"	f	struct:png_pixel_format_t::PNGChunk
+PNGChunk	./include/png/png_types.hpp	/^    PNGChunk() :$/;"	f	struct:png_pixel_format_t::PNGChunk
+PNGChunk	./include/png/png_types.hpp	/^struct PNGChunk$/;"	s	class:png_pixel_format_t
+a_grayscale	./include/png/png_types.hpp	/^    a_grayscale = 4,$/;"	m	class:png_pixel_format_t
+a_truecolor	./include/png/png_types.hpp	/^    a_truecolor = 6$/;"	m	class:png_pixel_format_t
+bKGD	./include/png/png_types.hpp	/^    bKGD, \/\/ def. background colour$/;"	m	class:png_chunk_t
+cHRM	./include/png/png_types.hpp	/^    cHRM, \/\/ chromaticity coords of display primaries & white point$/;"	m	class:png_chunk_t
+crc	./include/png/png_types.hpp	/^    std::bitset<32> crc;$/;"	m	struct:png_pixel_format_t::PNGChunk
+dSIG	./include/png/png_types.hpp	/^    dSIG, \/\/ Storing digital signatures$/;"	m	class:png_chunk_t
+data	./include/png/png_types.hpp	/^    char *          data;$/;"	m	struct:png_pixel_format_t::PNGChunk
+eXIF	./include/png/png_types.hpp	/^    eXIF, \/\/ Stores Exif metadata$/;"	m	class:png_chunk_t
+gAMA	./include/png/png_types.hpp	/^    gAMA,$/;"	m	class:png_chunk_t
+grayscale	./include/png/png_types.hpp	/^    grayscale,$/;"	m	class:png_pixel_format_t
+hIST	./include/png/png_types.hpp	/^    hIST, \/\/ Stores histogram, or tot. amount of each colour in image$/;"	m	class:png_chunk_t
+iCCP	./include/png/png_types.hpp	/^    iCCP, \/\/ ICC colour profile$/;"	m	class:png_chunk_t
+iTXt	./include/png/png_types.hpp	/^    iTXt, \/\/ Contains keyword & UTF8 text, see$/;"	m	class:png_chunk_t
+indexed	./include/png/png_types.hpp	/^    indexed = 3,$/;"	m	class:png_pixel_format_t
+len	./include/png/png_types.hpp	/^    std::uint32_t   len;$/;"	m	struct:png_pixel_format_t::PNGChunk
+main	./src/main.cpp	/^main( [[maybe_unused]] int argc, [[maybe_unused]] char * argv[] ) {$/;"	f
+noexcept	./include/png/png.hpp	/^    PNGChunk process_chunk( const std::string_view chunk_data ) noexcept;$/;"	m	class:PNG
+pHYs	./include/png/png_types.hpp	/^    pHYs, \/\/ Intended pixel sz. px\/unit x-axis (4 bytes), px\/unit y-axis (4$/;"	m	class:png_chunk_t
+png_chunk_t	./include/png/png_types.hpp	/^enum class png_chunk_t : std::uint32_t {$/;"	c
+png_chunks	./include/png/png.hpp	/^    std::vector<PNGChunk> png_chunks;$/;"	m	class:PNG
+png_pixel_format_t	./include/png/png_types.hpp	/^enum class png_pixel_format_t {$/;"	c
+sBIT	./include/png/png_types.hpp	/^    sBIT, \/\/ (Significant bits) shows colour-accuracy of source data (1-13$/;"	m	class:png_chunk_t
+sPLT	./include/png/png_types.hpp	/^    sPLT, \/\/ Suggest palette if fulle colour range unavailable$/;"	m	class:png_chunk_t
+sRGB	./include/png/png_types.hpp	/^    sRGB, \/\/ Indicates sRGB colour space is used. Contains 1 byte, 4 values$/;"	m	class:png_chunk_t
+sTER	./include/png/png_types.hpp	/^    sTER, \/\/ Stereo-image indicator chunk for stereoscopic images$/;"	m	class:png_chunk_t
+tEXt	./include/png/png_types.hpp	/^    tEXt,$/;"	m	class:png_chunk_t
+tIME	./include/png/png_types.hpp	/^    tIME, \/\/ Stores time of last change.$/;"	m	class:png_chunk_t
+tRNS	./include/png/png_types.hpp	/^    tRNS,$/;"	m	class:png_chunk_t
+truecolor	./include/png/png_types.hpp	/^    truecolor = 2,$/;"	m	class:png_pixel_format_t
+type	./include/png/png_types.hpp	/^    png_chunk_t     type;$/;"	m	struct:png_pixel_format_t::PNGChunk
