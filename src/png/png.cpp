@@ -1,5 +1,6 @@
-#include "png/PNG.hpp"
+#include "png/png.hpp"
 
+#include <iostream>
 #include <map>
 #include <string>
 
