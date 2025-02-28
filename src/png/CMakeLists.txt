@@ -1,7 +1,7 @@
 include_directories(../../include/)
 
-set(sources PNG.cpp CRC.cpp CST.cpp)
+set(sources png_types.cpp crc.cpp cst.cpp)
 
-message(STATUS "Creating PNG shared libraries...")
+message(STATUS "Creating PNG shared library...")
 add_library(PNG SHARED ${sources})
 set(LINK_LIBS ${LINK_LIBS} PNG PARENT_SCOPE)

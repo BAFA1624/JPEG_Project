@@ -1,8 +1,55 @@
 #include "png/png.hpp"
 
+#include <cassert>
 #include <iostream>
 #include <map>
 #include <string>
+
+namespace PNG
+{
+
+[[nodiscard]] constexpr bool
+verify_png_header( const std::bitset<64> & header_bits ) noexcept {
+    constexpr std::bitset<64> expected_header{ 0x89'504E47'0D0A'1A'0A };
+    return header_bits == expected_header;
+}
+
+constexpr PNG::PNG() : png_raw(), png_chunks() {}
+
+constexpr PNG::PNG( const std::string_view raw_data ) {
+    // Check first 8 bytes for valid header type
+    assert( raw_data.size() >= 8 );
+    const std::bitset<64> header{ raw_data.data(), 8 };
+
+    // Verify valid png header
+    // TODO: Handle more gracefully, exceptions?
+    assert( verify_png_header( header ) );
+
+    // Maintains current offset in the raw data
+    std::size_t data_offset{ 8 };
+
+    // Read PNG blocks
+    do {
+        // Parse block size
+        const std::uint32_t chunk_sz{ *reinterpret_cast<const std::uint32_t *>(
+            raw_data.data() + data_offset ) };
+        data_offset += sizeof( std::uint32_t );
+
+        // Parse block type
+        const png_chunk_t chunk_type{ *reinterpret_cast<const png_chunk_t *>(
+            raw_data.data() + data_offset ) };
+        data_offset += sizeof( png_chunk_t );
+
+        // Parse block
+        // Calculate & verify CRC
+        // Build PNGChunk
+        png_chunks.emplace_back();
+    } while ( true );
+}
+
+} // namespace PNG
+
+// OLD CODE:
 
 // clang-format off
 std::map<png_chunk_t, std::string> TypeToString {
