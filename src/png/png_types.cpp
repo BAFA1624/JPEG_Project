@@ -49,17 +49,26 @@ constexpr PNGChunk::PNGChunk( const std::uint32_t     _block_size,
     type( _type ),
     block_ptr( nullptr ),
     crc( _crc ) {
-    block_ptr = std::make_unique<char>( new char[block_size] );
+    block_ptr = std::make_unique<char *>( new char[block_size] );
     // TODO: Handle more gracefully
     assert( block_ptr );
 
-    std::copy_n( _source_ptr, block_size, block_ptr );
+    std::copy_n( _source_ptr, block_size, *block_ptr );
 }
+
+constexpr PNGChunk::PNGChunk( const std::uint32_t     _block_size,
+                              const png_chunk_t       _type,
+                              std::unique_ptr<char *> _source_ptr,
+                              const std::bitset<32> & _crc ) noexcept :
+    block_size( _block_size ),
+    type( _type ),
+    block_ptr( std::move( _source_ptr ) ),
+    crc( _crc ) {}
 
 constexpr PNGChunk::PNGChunk( PNGChunk && rhs ) noexcept :
     block_size( rhs.block_size ),
     type( rhs.type ),
-    block_ptr( rhs.block_ptr ),
+    block_ptr( std::move( rhs.block_ptr ) ),
     crc( rhs.crc ) {
     // Invalidate rhs block
     rhs.block_size = 0;
@@ -72,7 +81,7 @@ PNGChunk::operator=( PNGChunk && rhs ) noexcept {
     if ( this != &rhs ) {
         block_size = rhs.block_size;
         type = rhs.type;
-        block_ptr = rhs.block_ptr;
+        block_ptr = std::move( rhs.block_ptr );
         crc = rhs.crc;
 
         rhs.block_size = 0;
@@ -84,22 +93,21 @@ PNGChunk::operator=( PNGChunk && rhs ) noexcept {
     return *this;
 }
 
-constexpr PNGChunk::~PNGChunk() noexcept {
-    if ( block_ptr ) {
-        delete[] block_ptr;
-    }
-}
-
 constexpr PNGChunk
 PNGChunk::deep_copy() const {
-    const auto data_copy = new char[block_size];
+    auto data_copy = std::make_unique<char *>( new char[block_size] );
 
     // TODO: Handle more gracefully
-    assert( data_copy );
+    assert( *data_copy );
 
-    std::copy_n( block_ptr, block_size, data_copy );
+    std::copy_n( *block_ptr, block_size, *data_copy );
 
-    return PNGChunk{ block_size, type, data_copy, crc };
+    return PNGChunk{ block_size, type, std::move( data_copy ), crc };
+}
+
+constexpr bool
+PNGChunk::is_valid() const noexcept {
+    return type != png_chunk_t::INVALID;
 }
 
 } // namespace PNG

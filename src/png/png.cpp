@@ -50,7 +50,7 @@ constexpr PNG::PNG( const std::string_view raw_data ) {
 } // namespace PNG
 
 // OLD CODE:
-
+/*
 // clang-format off
 std::map<png_chunk_t, std::string> TypeToString {
     {png_chunk_t::INVALID, "INVALID"},
@@ -247,4 +247,4 @@ ParsePNG( const std::filesystem::directory_entry & _file,
     fp.close();
 
     return true;
-}
+}*/

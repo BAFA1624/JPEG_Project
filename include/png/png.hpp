@@ -12,8 +12,6 @@ namespace PNG
 [[nodiscard]] constexpr bool
 verify_png_header( const std::bitset<64> & header_bits ) noexcept;
 
-[[nodiscard]] constexpr PNGChunk create_chunk();
-
 class PNG
 {
     public:

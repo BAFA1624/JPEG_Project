@@ -5,8 +5,8 @@
 #include <bitset>
 #include <cstdint>
 #include <expected>
+#include <iostream>
 #include <memory>
-#include <ostream>
 
 namespace PNG
 {
@@ -121,14 +121,14 @@ enum class png_error_t { invalid_parse };
 
 struct PNGChunk
 {
-    std::uint32_t         block_size; // Length of block
-    png_chunk_t           type;       // Type of block
-    std::unique_ptr<char> block_ptr;  // Pointer to start of block in memory
-    std::bitset<32>       crc;        // Block cyclic-redundancy-check for block
+    std::uint32_t           block_size; // Length of block
+    png_chunk_t             type;       // Type of block
+    std::unique_ptr<char *> block_ptr;  // Pointer to start of block in memory
+    std::bitset<32>         crc; // Block cyclic-redundancy-check for block
 
     constexpr explicit PNGChunk() noexcept;
     constexpr PNGChunk( const std::uint32_t _len, const png_chunk_t _type,
-                        std::unique_ptr<char>   _source_ptr,
+                        std::unique_ptr<char *> _source_ptr,
                         const std::bitset<32> & _crc ) noexcept;
     constexpr PNGChunk( const std::uint32_t _len, const png_chunk_t _type,
                         const char * const      _source_ptr,
@@ -139,9 +139,9 @@ struct PNGChunk
     constexpr PNGChunk( PNGChunk && rhs ) noexcept;
     constexpr PNGChunk & operator=( PNGChunk && rhs ) noexcept;
 
-    constexpr ~PNGChunk() noexcept;
-
     constexpr PNGChunk deep_copy() const;
+
+    constexpr bool is_valid() const noexcept;
 };
 
 } // namespace PNG
