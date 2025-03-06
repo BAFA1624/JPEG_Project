@@ -14,19 +14,27 @@ verify_png_header( const std::bitset<64> & header_bits ) noexcept {
     return header_bits == expected_header;
 }
 
-constexpr PNG::PNG() : png_raw(), png_chunks() {}
+constexpr PNG::PNG() :
+    valid_png( false ), header_bits( 0 ), png_raw( 0 ), png_chunks( 0 ) {}
 
-constexpr PNG::PNG( const std::string_view raw_data ) {
+constexpr PNG::PNG( const std::string_view raw_data ) :
+    valid_png( true ),
+    header_bits( raw_data.data(), 8 ),
+    png_raw( 0 ),
+    png_chunks( 0 ) {
     // Check first 8 bytes for valid header type
     assert( raw_data.size() >= 8 );
-    const std::bitset<64> header{ raw_data.data(), 8 };
 
     // Verify valid png header
-    // TODO: Handle more gracefully, exceptions?
-    assert( verify_png_header( header ) );
+    if ( !( valid_png = verify_header() ) ) {
+        // TODO: Add some handling
+    }
 
     // Maintains current offset in the raw data
     std::size_t data_offset{ 8 };
+
+    // Read in raw png data
+
 
     // Read PNG blocks
     do {
