@@ -7,3 +7,5 @@
 #define NOCOPY( class )              \
     class( const class & ) = delete; \
     class & operator=( const class & ) = delete;
+
+#define COLD [[unlikely]]

@@ -1,6 +1,6 @@
 # tests/png/CMakeLists.txt
 
-include_directories(../../include/)
+include_directories(${TEST_INCLUDE_DIRS})
 
 set(PNG_SUB_TEST_SOURCES
     png_types_test.cpp

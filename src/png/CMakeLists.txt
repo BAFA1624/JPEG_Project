@@ -1,6 +1,6 @@
 # src/png/CMakeLists.txt
 
-include_directories(${CMAKE_SOURCE_DIR}/include/)
+include_directories(${INCLUDE_DIRS})
 
 set(PNG_SOURCES png.cpp png_types.cpp crc.cpp cst.cpp)
 

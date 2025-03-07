@@ -1,6 +1,6 @@
 # tests/common/CMakeLists.txt
 
-include_directories(../../include/)
+include_directories(${TEST_INCLUDE_DIRS})
 
 set(COMMON_SUB_TEST_SOURCES
     common_test.cpp

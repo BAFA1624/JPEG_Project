@@ -19,6 +19,10 @@ set(CMAKE_CXX_STANDARD 23)
 # Generate compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Setting project directories
+set(INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
+set(TEST_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/tests/include ${INCLUDE_DIRS})
+
 # Set output directories
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 

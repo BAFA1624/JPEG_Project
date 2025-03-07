@@ -1,6 +1,6 @@
 # src/common/CMakeLists.txt
 
-include_directories(../../include/)
+include_directories(${INCLUDE_DIRS})
 
 set(COMMON_SOURCES common.cpp)
 
