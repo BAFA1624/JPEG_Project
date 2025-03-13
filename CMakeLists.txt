@@ -27,21 +27,18 @@ set(TEST_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/tests/include ${INCLUDE_DIRS})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
 # Default compiler flags
-set(CMAKE_CXX_FLAGS_DEBUG "-Wall -Wextra -Wconversion -pedantic -O0 -ggdb")
-set(CMAKE_CXX_FLAGS_RELEASE "-Werror -DNDEBUG -march=native -Wall -Wextra -pedantic -Wconversion -O3")
+set(CMAKE_CXX_FLAGS_DEBUG "-Wall -Wextra -Wconversion -pedantic -O0 -ggdb -fpic")
+set(CMAKE_CXX_FLAGS_RELEASE "-Werror -DNDEBUG -march=native -Wall -Wextra -pedantic -Wconversion -O3 -fpic")
 
 # Include directories
-include_directories(./include/ ${OPENGL_INCLUDE_DIRS} ${GLUT_INCLUDE_DIRS})
+#include_directories(./include/ ${OPENGL_INCLUDE_DIRS} ${GLUT_INCLUDE_DIRS})
 
 # Important subdirectories
 add_subdirectory(src)
 add_subdirectory(tests)
 
+message(STATUS "LINK_LIBS: ${LINK_LIBS}")
 add_executable(main src/main.cpp)
-add_custom_command(
-	TARGET main POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json ${CMAKE_SOURCE_DIR}/compile_commands.json
-	COMMENT "Transferring compile_commands.json"
-)
 
 target_link_libraries(main PRIVATE ${LINK_LIBS})
+target_include_directories(main PRIVATE ${INCLUDE_DIRS})
