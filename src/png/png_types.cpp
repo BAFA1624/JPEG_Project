@@ -35,6 +35,7 @@ operator<<( std::ostream & out_stream, const png_chunk_t chunk_type ) {
 
     return out_stream;
 }
+
 constexpr PNGChunk::PNGChunk() noexcept :
     block_size( 0 ),
     type( png_chunk_t::INVALID ),

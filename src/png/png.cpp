@@ -2,8 +2,7 @@
 
 #include <cassert>
 #include <iostream>
-#include <map>
-#include <string>
+#include <ranges>
 
 namespace PNG
 {
@@ -34,7 +33,16 @@ constexpr PNG::PNG( const std::string_view raw_data ) :
     std::size_t data_offset{ 8 };
 
     // Read in raw png data
-
+    png_raw = std::vector<std::uint8_t>( raw_data.size() - data_offset );
+    int i{ 0 };
+    for ( const auto c : raw_data | std::views::drop( data_offset ) ) {
+        std::cout << std::hex << c;
+        if ( i > 20 ) {
+            std::cout << std::endl;
+            exit( 0 );
+        }
+        png_raw.emplace_back( static_cast<std::uint8_t>( c ) );
+    }
 
     // Read PNG blocks
     do {

@@ -145,5 +145,3 @@ struct PNGChunk
 };
 
 } // namespace PNG
-
-// PNG_TYPES_HPP
