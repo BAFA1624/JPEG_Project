@@ -1,5 +1,6 @@
 #include "png/png.hpp"
 
+#include <bit>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -7,19 +8,28 @@
 
 int
 main( [[maybe_unused]] int argc, [[maybe_unused]] char * argv[] ) {
-    std::cout << "Hello" << std::endl;
+    if constexpr ( std::endian::native == std::endian::little ) {
+        std::cout << "Little endian.\n";
+    }
+    else if constexpr ( std::endian::native == std::endian::big ) {
+        std::cout << "Big endian.\n";
+    }
+    else {
+        std::cout << "Mixed endian.\n";
+    }
 
     const auto filename{ "swirl.png" };
 
-    const std::filesystem::path data_path{
-        "/Users/ben/Documents/gitrepos.nosync/JPEG_Project/data"
-    };
+    const auto data_path{ std::filesystem::current_path() / "../data" };
 
     const std::filesystem::directory_entry data_dir{ data_path };
     if ( !( data_dir.exists() ) ) {
         std::cout << "Directory: " << data_path << " does not exist."
                   << std::endl;
         return 1;
+    }
+    else {
+        std::cout << "Found: " << data_path << std::endl;
     }
 
     const auto                             png_path{ data_path / filename };
@@ -28,6 +38,9 @@ main( [[maybe_unused]] int argc, [[maybe_unused]] char * argv[] ) {
         std::cout << "File: " << png_entry.path() << " does not exist."
                   << std::endl;
         return 1;
+    }
+    else {
+        std::cout << "Found file: " << png_path << std::endl;
     }
 
     std::ifstream png_file{ png_path, std::ios::binary | std::ios::in };
@@ -41,9 +54,6 @@ main( [[maybe_unused]] int argc, [[maybe_unused]] char * argv[] ) {
 
     std::stringstream file_contents;
     file_contents << png_file.rdbuf();
-
-    constexpr std::bitset<64> expected_header{ 0x89'504E47'0D0A'1A'0A };
-    const auto result = PNG::verify_png_header( expected_header );
 
     PNG::PNG png{ std::string_view{ file_contents.str() } };
 }

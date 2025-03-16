@@ -2,23 +2,30 @@
 
 #include "png_types.hpp"
 
-#include <filesystem>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace PNG
 {
 
 [[nodiscard]] constexpr bool
-verify_png_header( const std::bitset<64> & header_bits ) noexcept;
+verify_png_header( const std::bitset<64> & header_bits ) noexcept {
+    constexpr std::bitset<64> expected_header{ 0x89'504E47'0D0A'1A'0A };
+    return header_bits == expected_header;
+}
 
 class PNG
 {
     public:
-    constexpr PNG(); // Default constructor
+    constexpr PNG() :
+        valid_png( false ),
+        current_error( png_error_t::NONE ),
+        header_bits( 0 ),
+        png_chunks( 0 ) {} // Default constructor
 
-    constexpr explicit PNG(
-        const std::string_view ); // Construct from string_view
+    explicit PNG(
+        const std::string_view raw_data ); // Construct from string_view
     // constexpr explicit PNG( const std::filesystem::directory_entry &
     //                             file ); // Construct from directory entry
 
@@ -30,25 +37,25 @@ class PNG
     // PNG( PNG && png );
     // PNG & operator=( PNG && png );
 
-    [[nodiscard]] static constexpr inline bool
+    [[nodiscard]] static constexpr bool
     verify_png_header( const std::bitset<64> & header ) noexcept;
 
     // Construct PNG object from input stream
     //[[nodiscard]] PNG & operator<<( std::istream & input_stream );
 
     private:
-    //[[nodiscard]] std::expected<PNGChunk, png_error_t>
-    // parse_chunk( const std::string_view chunk_data );
+    [[nodiscard]] PNGChunk parse_chunk( const std::string_view chunk_data,
+                                        std::size_t &          data_offset );
 
-    [[nodiscard]] constexpr inline bool verify_header() noexcept {
+    [[nodiscard]] constexpr bool verify_header() noexcept {
         constexpr std::bitset<64> expected_header{ 0x89'504E47'0D0A'1A'0A };
         return header_bits == expected_header;
     }
 
-    bool                      valid_png;
-    std::bitset<64>           header_bits;
-    std::vector<std::uint8_t> png_raw;
-    std::vector<PNGChunk>     png_chunks;
+    bool                  valid_png;
+    png_error_t           current_error;
+    std::bitset<64>       header_bits;
+    std::vector<PNGChunk> png_chunks;
 };
 
 } // namespace PNG
