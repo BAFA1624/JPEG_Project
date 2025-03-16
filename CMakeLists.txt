@@ -37,7 +37,6 @@ set(CMAKE_CXX_FLAGS_RELEASE "-Werror -DNDEBUG -march=native -Wall -Wextra -pedan
 add_subdirectory(src)
 add_subdirectory(tests)
 
-message(STATUS "LINK_LIBS: ${LINK_LIBS}")
 add_executable(main src/main.cpp)
 
 target_link_libraries(main PRIVATE ${LINK_LIBS})
