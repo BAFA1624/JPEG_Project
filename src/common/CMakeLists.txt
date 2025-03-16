@@ -1,6 +1,6 @@
 # src/common/CMakeLists.txt
 
-set(COMMON_SOURCES common.cpp)
+set(COMMON_SOURCES common.cpp crc.cpp)
 
 message(STATUS "Creating COMMON shared library, sources: ${COMMON_SOURCES}")
 add_library(COMMON SHARED ${COMMON_SOURCES})
