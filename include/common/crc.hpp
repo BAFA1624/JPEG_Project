@@ -1,32 +1,88 @@
 #pragma once
 
+#include <array>
 #include <bit>
 #include <bitset>
 #include <cstdint>
-namespace PNG
-{
+#include <iostream>
+#include <span>
+
 namespace CRC
 {
-constinit inline std::bitset<32> png_polynomial{
+
+namespace
+{
+constexpr inline std::bitset<32> png_polynomial_little_endian{
     "00000100110000010001110110110111"
 };
-}
-} // namespace PNG
+constexpr inline std::bitset<32> png_polynomial_big_endian{
+    "11101101101110001000001100100000"
+};
+} // namespace
 
-namespace CRC
+template <std::endian E = std::endian::native>
+constinit inline auto png_polynomial = []() {
+    return ( E == std::endian::little ) ? png_polynomial_little_endian :
+                                          png_polynomial_big_endian;
+};
+
+class CrcTable32
 {
-enum class crc_type_t { naive };
+    public:
+    using value_t = std::bitset<32>;
 
-template <std::uint64_t N, std::uint64_t M, std::endian E = std::endian::native>
-    requires( N <= M )
-[[nodiscard]] constexpr std::bitset<N>
-naive_endian( const std::uint8_t * input_bits, const std::uint64_t n_input_bits,
-              const std::bitset<M> polynomial ) {
-    std::bitset<N> remainder{ 0 };
-    if constexpr ( E == std::endian::little ) {
-        for ( std::uint64_t i{ 0 }; i < n_input_bits; ++i ) {}
+    CrcTable32() = delete;
+    explicit CrcTable32( const value_t & polynomial ) :
+        is_table_computed( false ),
+        is_table2_computed( false ),
+        table( std::array<value_t, 256>{} ),
+        table2( std::array<std::uint64_t, 256>{} ),
+        polynomial( polynomial ) {
+        calculate_table();
+        calculate_table2();
+
+        std::cout << "Table 1:\n";
+        print_table( table );
+        std::cout << "Table 2:\n";
+        print_table2( table2 );
     }
-    else if constexpr ( E == std::endian::big ) {}
-    return remainder;
-}
+
+    [[nodiscard]] value_t crc( const std::span<const std::byte> input_bytes );
+    [[nodiscard]] value_t crc2( const std::span<const std::byte> input_bytes );
+
+    constexpr inline void
+    print_table( const std::array<value_t, 256> & table ) const noexcept {
+        for ( std::size_t i{ 0 }; i < 16; ++i ) {
+            for ( std::size_t j{ 0 }; j < 16; ++j ) {
+                std::cout << table[16 * i + j].to_ulong() << " ";
+            }
+            std::cout << "\n";
+        }
+    }
+    constexpr inline void print_table2(
+        const std::array<std::uint64_t, 256> & table ) const noexcept {
+        for ( std::size_t i{ 0 }; i < 16; ++i ) {
+            for ( std::size_t j{ 0 }; j < 16; ++j ) {
+                std::cout << table[16 * i + j] << " ";
+            }
+            std::cout << "\n";
+        }
+    }
+
+    private:
+    void    calculate_table() noexcept;
+    void    calculate_table2() noexcept;
+    value_t update_crc( const value_t &                  initial_crc,
+                        const std::span<const std::byte> input_bytes ) noexcept;
+    value_t
+    update_crc2( const value_t &                  initial_crc,
+                 const std::span<const std::byte> input_bytes ) noexcept;
+
+    bool                           is_table_computed;
+    bool                           is_table2_computed;
+    std::array<value_t, 256>       table;
+    std::array<std::uint64_t, 256> table2;
+    value_t                        polynomial;
+};
+
 } // namespace CRC

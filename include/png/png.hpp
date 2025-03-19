@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/crc.hpp"
 #include "png_types.hpp"
 
 #include <string_view>
@@ -18,11 +19,13 @@ verify_png_header( const std::bitset<64> & header_bits ) noexcept {
 class PNG
 {
     public:
-    constexpr PNG() :
+    PNG() :
         valid_png( false ),
         current_error( png_error_t::NONE ),
         header_bits( 0 ),
-        png_chunks( 0 ) {} // Default constructor
+        png_chunks( 0 ),
+        crc_calculator( CRC::png_polynomial<std::endian::big>() ) {
+    } // Default constructor
 
     explicit PNG(
         const std::string_view raw_data ); // Construct from string_view
@@ -56,6 +59,7 @@ class PNG
     png_error_t           current_error;
     std::bitset<64>       header_bits;
     std::vector<PNGChunk> png_chunks;
+    CRC::CrcTable32       crc_calculator;
 };
 
 } // namespace PNG

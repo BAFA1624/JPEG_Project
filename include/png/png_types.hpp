@@ -107,7 +107,7 @@ enum class png_chunk_t : std::uint32_t {
 };
 
 enum class png_pixel_format_t : std::uint32_t {
-    grayscale,
+    grayscale = 0,
     truecolor = 2,
     indexed = 3,
     alpha_grayscale = 4,
@@ -130,10 +130,11 @@ std::ostream & operator<<( std::ostream &           out_stream,
 
 struct PNGChunk
 {
-    std::uint32_t           data_size; // Length of block
-    png_chunk_t             type;      // Type of block
-    std::unique_ptr<char *> block_ptr; // Pointer to start of block in memory
-    std::bitset<32>         crc; // Block cyclic-redundancy-check for block
+    std::uint32_t data_size; // Length of block
+    png_chunk_t   type;      // Type of block
+    std::unique_ptr<std::byte *>
+                    block_ptr; // Pointer to start of block in memory
+    std::bitset<32> crc;       // Block cyclic-redundancy-check for block
 
     constexpr PNGChunk() noexcept :
         data_size( 0 ),
@@ -141,10 +142,11 @@ struct PNGChunk
         block_ptr( nullptr ),
         crc( 0 ) {}
     PNGChunk( const std::uint32_t _len, const png_chunk_t _type,
-              std::unique_ptr<char *> _source_ptr,
-              const std::bitset<32> & _crc ) noexcept;
+              std::unique_ptr<std::byte *> _source_ptr,
+              const std::bitset<32> &      _crc ) noexcept;
     PNGChunk( const std::uint32_t _len, const png_chunk_t _type,
-              char * const _source_ptr, const std::bitset<32> & _crc ) noexcept;
+              unsigned char * const   _source_ptr,
+              const std::bitset<32> & _crc ) noexcept;
 
     NOCOPY( PNGChunk );
 

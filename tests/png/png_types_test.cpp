@@ -17,6 +17,6 @@ namespace PNG
 } // namespace PNG
 
 int
-png_types_test( int argc, char ** argv ) {
+png_types_test( [[maybe_unused]] int argc, [[maybe_unused]] char ** argv ) {
     return 0;
 }

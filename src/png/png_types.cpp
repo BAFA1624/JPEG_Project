@@ -136,17 +136,18 @@ operator<<( std::ostream & out_stream, const png_pixel_format_t pixel_format ) {
 }
 
 PNGChunk::PNGChunk( const std::uint32_t _data_size, const png_chunk_t _type,
-                    char * const            _source_ptr,
+                    unsigned char * const   _source_ptr,
                     const std::bitset<32> & _crc ) noexcept :
     data_size( _data_size ), type( _type ), block_ptr( nullptr ), crc( _crc ) {
-    block_ptr = std::make_unique<char *>( _source_ptr );
+    block_ptr = std::make_unique<std::byte *>(
+        reinterpret_cast<std::byte *>( _source_ptr ) );
     // TODO: Handle more gracefully
     assert( block_ptr.get() );
 }
 
 PNGChunk::PNGChunk( const std::uint32_t _data_size, const png_chunk_t _type,
-                    std::unique_ptr<char *> _source_ptr,
-                    const std::bitset<32> & _crc ) noexcept :
+                    std::unique_ptr<std::byte *> _source_ptr,
+                    const std::bitset<32> &      _crc ) noexcept :
     data_size( _data_size ),
     type( _type ),
     block_ptr( std::move( _source_ptr ) ),
@@ -155,7 +156,7 @@ PNGChunk::PNGChunk( const std::uint32_t _data_size, const png_chunk_t _type,
 PNGChunk::PNGChunk( PNGChunk && rhs ) noexcept :
     data_size( rhs.data_size ),
     type( rhs.type ),
-    block_ptr( std::unique_ptr<char *>( rhs.block_ptr.release() ) ),
+    block_ptr( std::unique_ptr<std::byte *>( rhs.block_ptr.release() ) ),
     crc( rhs.crc ) {
     // Invalidate rhs block
     rhs.data_size = 0;
@@ -169,7 +170,7 @@ PNGChunk::operator=( PNGChunk && rhs ) noexcept {
     if ( this != &rhs ) {
         data_size = rhs.data_size;
         type = rhs.type;
-        block_ptr = std::unique_ptr<char *>{ rhs.block_ptr.release() };
+        block_ptr = std::unique_ptr<std::byte *>{ rhs.block_ptr.release() };
         crc = rhs.crc;
 
         rhs.data_size = 0;
@@ -183,7 +184,7 @@ PNGChunk::operator=( PNGChunk && rhs ) noexcept {
 
 PNGChunk
 PNGChunk::deep_copy() const {
-    auto data_copy{ std::make_unique<char *>( new char[data_size] ) };
+    auto data_copy{ std::make_unique<std::byte *>( new std::byte[data_size] ) };
 
     std::copy_n( block_ptr.get(), data_size, data_copy.get() );
 
