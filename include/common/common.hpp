@@ -20,7 +20,7 @@ operator<<( std::ostream & out_stream, const std::byte byte ) {
 }
 
 template <std::integral T, std::endian E = std::endian::native>
-[[nodiscard]] constexpr T
+[[nodiscard]] constexpr inline T
 byteswap( const T value ) {
     if constexpr ( E == std::endian::little ) {
         return std::byteswap( value );
