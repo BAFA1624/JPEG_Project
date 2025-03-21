@@ -1,7 +1,5 @@
 #include "common/crc.hpp"
 
-#include "common/common.hpp"
-
 #include <cstdint>
 
 namespace CRC
@@ -12,9 +10,9 @@ CrcTable32::calculate_table() noexcept {
     value_t c;
 
     for ( std::uint32_t i{ 0 }; i < 256; ++i ) {
-        c = value_t( byteswap( i ) );
+        c = value_t{ i };
         for ( std::uint32_t j{ 0 }; j < 8; ++j ) {
-            if ( !( c & value_t{}.set() ).any() ) {
+            if ( !( c & value_t{ 1 } ).any() ) {
                 c = polynomial ^ ( c >> 1 );
             }
             else {
@@ -30,12 +28,13 @@ CrcTable32::calculate_table() noexcept {
 
 void
 CrcTable32::calculate_table2() noexcept {
-    std::uint64_t c;
-    for ( std::uint64_t i{ 0 }; i < 256; ++i ) {
+    std::uint32_t c;
+    for ( std::uint32_t i{ 0 }; i < 256; ++i ) {
         c = i;
-        for ( std::uint64_t j{ 0 }; j < 8; ++j ) {
+        for ( std::uint32_t j{ 0 }; j < 8; ++j ) {
             if ( c & 1 ) {
-                c = png_polynomial<std::endian::little>().to_ulong()
+                c = static_cast<std::uint32_t>(
+                        PNG::png_polynomial<std::endian::big>().to_ulong() )
                     ^ ( c >> 1 );
             }
             else {
@@ -52,18 +51,30 @@ CrcTable32::update_crc(
     const value_t &                  initial_crc,
     const std::span<const std::byte> input_bytes ) noexcept {
     constexpr auto pad_byte = []( const std::byte b ) -> value_t {
-        return byteswap( std::to_integer<std::uint64_t>( b ) );
+        return std::to_integer<std::uint32_t>( b );
     };
+    constexpr auto pad_byte_swap = []( const std::byte b ) -> value_t {
+        return byteswap( std::to_integer<std::uint32_t>( b ) );
+    };
+
+    std::byte b{ 1 };
+    b << 1;
+    std::cout << "without pad_byte: "
+              << std::bitset<8>{ std::to_integer<std::uint32_t>( b ) }
+              << ", pad_byte: " << pad_byte( b )
+              << ", pad_byte_swap: " << pad_byte_swap( b ) << std::endl;
 
     if ( !is_table_computed ) {
         calculate_table();
     }
+    std::cout << value_t{ byteswap<std::uint32_t>( 0xff ) } << std::endl;
 
     value_t crc_result = initial_crc;
-    for ( std::uint64_t i{ 0 }; i < input_bytes.size() * 8; ++i ) {
-        const auto idx{ ( ( crc_result ^ pad_byte( input_bytes[i] ) )
-                          & value_t{ 0xff } )
-                            .to_ulong() };
+    for ( std::uint32_t i{ 0 }; i < input_bytes.size() * 8; ++i ) {
+        const auto idx{ byteswap( static_cast<std::uint32_t>(
+            ( ( crc_result ^ pad_byte( input_bytes[i] ) )
+              & value_t{ byteswap<std::uint32_t>( 0xff ) } )
+                .to_ulong() ) ) };
         // std::cout << idx << std::endl;
         crc_result = table[idx];
     }
@@ -89,12 +100,12 @@ CrcTable32::update_crc2(
 
 CrcTable32::value_t
 CrcTable32::crc( const std::span<const std::byte> input_bytes ) {
-    return update_crc( 0xffffffffL, input_bytes );
+    return update_crc( 0xffffffffL, input_bytes ) ^ value_t { 0xffffffffL };
 }
 
 CrcTable32::value_t
 CrcTable32::crc2( const std::span<const std::byte> input_bytes ) {
-    return update_crc2( 0xffffffffL, input_bytes );
+    return update_crc2( 0xffffffffL, input_bytes ) ^ value_t { 0xffffffffL };
 }
 
 } // namespace CRC

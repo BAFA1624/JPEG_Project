@@ -24,7 +24,7 @@ class PNG
         current_error( png_error_t::NONE ),
         header_bits( 0 ),
         png_chunks( 0 ),
-        crc_calculator( CRC::png_polynomial<std::endian::big>() ) {
+        crc_calculator( CRC::PNG::png_polynomial<std::endian::big>() ) {
     } // Default constructor
 
     explicit PNG(

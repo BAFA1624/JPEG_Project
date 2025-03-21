@@ -15,7 +15,7 @@ PNG::PNG( const std::string_view raw_data ) :
     current_error( png_error_t::NONE ),
     header_bits( 0 ),
     png_chunks( 0 ),
-    crc_calculator( CRC::png_polynomial<std::endian::big>() ) {
+    crc_calculator( CRC::PNG::png_polynomial<std::endian::big>() ) {
     // Check first 8 bytes for valid header type
     assert( raw_data.size() >= 8 );
 
@@ -37,14 +37,23 @@ PNG::PNG( const std::string_view raw_data ) :
         // std::cout << png_chunks[png_chunks.size() - 1] << std::endl;
     } while ( data_offset < raw_data.size() );
 
-    std::cout << CRC::png_polynomial<std::endian::big>() << std::endl;
-    std::cout << std::hex << CRC::png_polynomial<std::endian::big>().to_ullong()
+    std::cout << "Big endian:    "
+              << CRC::PNG::png_polynomial<std::endian::big>() << std::endl;
+    std::cout << "Little endian: "
+              << CRC::PNG::png_polynomial<std::endian::little>() << std::endl;
+    std::cout << "Big endian unswapped: " << std::hex
+              << CRC::PNG::png_polynomial<std::endian::big>().to_ullong()
               << std::endl;
-    std::cout << std::hex
-              << byteswap( CRC::png_polynomial<std::endian::big>().to_ullong() )
+    std::cout << "Big endian swapped: " << std::hex
+              << byteswap(
+                     CRC::PNG::png_polynomial<std::endian::big>().to_ullong() )
               << std::endl;
-    std::cout << std::hex
-              << CRC::png_polynomial<std::endian::little>().to_ullong()
+    std::cout << "Little endian unswapped: " << std::hex
+              << CRC::PNG::png_polynomial<std::endian::little>().to_ullong()
+              << std::endl;
+    std::cout << "Little endian swapped: " << std::hex
+              << byteswap( CRC::PNG::png_polynomial<std::endian::little>()
+                               .to_ullong() )
               << std::endl;
 
     png_chunks.shrink_to_fit();
@@ -73,15 +82,15 @@ PNG::parse_chunk( const std::string_view chunk_data,
     auto data{ std::make_unique<std::byte *>( new std::byte[data_size] ) };
     std::copy_n(
         reinterpret_cast<const std::byte *>( chunk_data.data() + data_offset ),
-        data_size, *data );
+        data_size,
+        *data );
     // auto data{ new char[data_size] };
     // std::copy_n( chunk_data.data() + data_offset, data_size, data );
     data_offset += data_size;
 
     // Parse CRC
-    const std::bitset<32> parsed_crc{ byteswap(
-        *reinterpret_cast<const std::uint32_t *>( chunk_data.data()
-                                                  + data_offset ) ) };
+    const std::bitset<32> parsed_crc{ *reinterpret_cast<const std::uint32_t *>(
+        chunk_data.data() + data_offset ) };
     data_offset += 4;
 
     // Validate CRC
@@ -93,10 +102,12 @@ PNG::parse_chunk( const std::string_view chunk_data,
 
     if ( ( parsed_crc ^ crc ).any() ) {
         std::cout << "Difference in crc detected:\n";
-        std::cout << "Parsed crc:     " << parsed_crc << std::endl;
+        std::cout << "Parsed crc:        " << parsed_crc << std::endl;
         std::cout << "1) Calculated crc: " << crc << std::endl;
+        std::cout << "   Difference:     " << ( parsed_crc ^ crc ) << std::endl;
         std::cout << "2) Calculated crc: " << crc2 << std::endl;
-        std::cout << "Difference:     " << ( parsed_crc ^ crc ) << std::endl;
+        std::cout << "   Difference:     " << ( parsed_crc ^ crc2 )
+                  << std::endl;
     }
     else {
         std::cout << "CRC VALIDATED!\n";
@@ -107,7 +118,8 @@ PNG::parse_chunk( const std::string_view chunk_data,
                      PNGChunk::is_valid( potential_chunk_type ) ?
                          potential_chunk_type :
                          png_chunk_t::INVALID,
-                     std::move( data ), crc );
+                     std::move( data ),
+                     crc );
 }
 
 } // namespace PNG

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "common/common.hpp"
+
 #include <array>
 #include <bit>
 #include <bitset>
@@ -10,21 +12,19 @@
 namespace CRC
 {
 
-namespace
+namespace PNG
 {
-constexpr inline std::bitset<32> png_polynomial_little_endian{
-    "00000100110000010001110110110111"
-};
 constexpr inline std::bitset<32> png_polynomial_big_endian{
     "11101101101110001000001100100000"
 };
-} // namespace
-
+constexpr inline std::bitset<32> png_polynomial_little_endian{ byteswap(
+    static_cast<std::uint32_t>( png_polynomial_big_endian.to_ulong() ) ) };
 template <std::endian E = std::endian::native>
 constinit inline auto png_polynomial = []() {
     return ( E == std::endian::little ) ? png_polynomial_little_endian :
                                           png_polynomial_big_endian;
 };
+} // namespace PNG
 
 class CrcTable32
 {

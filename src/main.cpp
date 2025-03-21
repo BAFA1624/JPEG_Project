@@ -56,4 +56,6 @@ main( [[maybe_unused]] int argc, [[maybe_unused]] char * argv[] ) {
     file_contents << png_file.rdbuf();
 
     PNG::PNG png{ std::string_view{ file_contents.str() } };
+
+    std::cout << sizeof( unsigned long ) << std::endl;
 }
