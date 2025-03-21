@@ -4,6 +4,7 @@ include_directories(${TEST_INCLUDE_DIRS})
 
 set(COMMON_SUB_TEST_SOURCES
     common_test.cpp
+    crc_test.cpp
 )
 create_test_sourcelist(COMMON_TEST_SOURCES common_tests.cpp ${COMMON_SUB_TEST_SOURCES})
 
