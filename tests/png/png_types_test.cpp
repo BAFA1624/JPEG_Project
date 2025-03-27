@@ -1,7 +1,16 @@
+#include "common/common_test_interfaces.hpp"
 #include "png/png_types.hpp"
 
 namespace PNG
 {
+
+void
+tmp( const TestError auto error ) {
+    std::cout << error.what() << std::endl;
+}
+
+void
+test_func( const Test<double, std::runtime_error, double, double> auto tmp ) {}
 
 // Test: png_chunk_t
 
