@@ -1,8 +1,6 @@
 #include "png/png_types.hpp"
 
 #include <cassert>
-#include <iomanip>
-#include <string_view>
 
 namespace PNG
 {
