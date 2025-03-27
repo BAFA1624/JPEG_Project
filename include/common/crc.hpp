@@ -11,7 +11,6 @@
 
 namespace CRC
 {
-
 namespace PNG
 {
 constexpr inline std::bitset<32> png_polynomial_big_endian{
@@ -84,5 +83,4 @@ class CrcTable32
     std::array<std::uint64_t, 256> table2;
     value_t                        polynomial;
 };
-
 } // namespace CRC
