@@ -10,8 +10,10 @@
 namespace PNG
 {
 
+constexpr inline std::uint64_t header_bits{ 64 };
+
 [[nodiscard]] constexpr bool
-verify_png_header( const std::bitset<64> & header_bits ) noexcept {
+verify_png_header( const std::bitset<header_bits> & header_bits ) noexcept {
     constexpr std::bitset<64> expected_header{ 0x89'504E47'0D0A'1A'0A };
     return header_bits == expected_header;
 }
@@ -41,7 +43,7 @@ class PNG
     // PNG & operator=( PNG && png );
 
     [[nodiscard]] static constexpr bool
-    verify_png_header( const std::bitset<64> & header ) noexcept;
+    verify_png_header( const std::bitset<header_bits> & header ) noexcept;
 
     // Construct PNG object from input stream
     //[[nodiscard]] PNG & operator<<( std::istream & input_stream );
@@ -55,11 +57,11 @@ class PNG
         return header_bits == expected_header;
     }
 
-    bool                  valid_png;
-    png_error_t           current_error;
-    std::bitset<64>       header_bits;
-    std::vector<PNGChunk> png_chunks;
-    CRC::CrcTable32       crc_calculator;
+    bool                     valid_png;
+    png_error_t              current_error;
+    std::bitset<header_bits> header_bits;
+    std::vector<PNGChunk>    png_chunks;
+    CRC::CrcTable32          crc_calculator;
 };
 
 } // namespace PNG

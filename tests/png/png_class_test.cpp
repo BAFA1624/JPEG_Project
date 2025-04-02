@@ -1,3 +1,4 @@
+#include "common/test_interfaces.hpp"
 #include "png/png.hpp"
 
 namespace PNG

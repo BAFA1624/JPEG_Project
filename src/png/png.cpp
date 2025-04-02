@@ -20,7 +20,7 @@ PNG::PNG( const std::string_view raw_data ) :
     assert( raw_data.size() >= 8 );
 
     // Verify valid png header
-    header_bits = std::bitset<64>{ byteswap(
+    header_bits = std::bitset<header_bits>{ byteswap<std::uint64_t>(
         *reinterpret_cast<const std::uint64_t *>( raw_data.data() ) ) };
     if ( !( valid_png = verify_header() ) ) {
         valid_png = false;

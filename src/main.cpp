@@ -1,3 +1,4 @@
+#include "common/test_interfaces.hpp"
 #include "png/png.hpp"
 
 #include <bit>
@@ -5,6 +6,11 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+
+bool
+tmp( const Test<double, std::runtime_error, double> auto & test ) {
+    test.run();
+}
 
 int
 main( [[maybe_unused]] int argc, [[maybe_unused]] char * argv[] ) {
@@ -18,7 +24,7 @@ main( [[maybe_unused]] int argc, [[maybe_unused]] char * argv[] ) {
         std::cout << "Mixed endian.\n";
     }
 
-    const auto filename{ "swirl.png" };
+    const auto * const filename{ "swirl.png" };
 
     const auto data_path{ std::filesystem::current_path() / "../data" };
 
@@ -58,4 +64,6 @@ main( [[maybe_unused]] int argc, [[maybe_unused]] char * argv[] ) {
     PNG::PNG png{ std::string_view{ file_contents.str() } };
 
     std::cout << sizeof( unsigned long ) << std::endl;
+
+    return 0;
 }

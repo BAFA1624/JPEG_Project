@@ -153,6 +153,8 @@ struct PNGChunk
     PNGChunk( PNGChunk && rhs ) noexcept;
     PNGChunk & operator=( PNGChunk && rhs ) noexcept;
 
+    ~PNGChunk() = default;
+
     PNGChunk deep_copy() const;
 
     [[nodiscard]] static constexpr bool
