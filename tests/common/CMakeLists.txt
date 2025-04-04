@@ -1,7 +1,5 @@
 # tests/common/CMakeLists.txt
 
-include_directories(${TEST_INCLUDE_DIRS})
-
 set(COMMON_SUB_TEST_SOURCES
     common_test.cpp
     crc_test.cpp
@@ -10,6 +8,8 @@ create_test_sourcelist(COMMON_TEST_SOURCES common_tests.cpp ${COMMON_SUB_TEST_SO
 
 message(STATUS "Making common tests:")
 add_executable(common_tests ${COMMON_TEST_SOURCES})
+
+target_include_directories(common_tests PRIVATE ${TEST_INCLUDE_DIRS})
 target_link_libraries(common_tests ${LINK_LIBS})
 
 # Add png_types tests

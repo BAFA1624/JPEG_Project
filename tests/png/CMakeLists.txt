@@ -1,7 +1,5 @@
 # tests/png/CMakeLists.txt
 
-include_directories(${TEST_INCLUDE_DIRS})
-
 set(PNG_SUB_TEST_SOURCES
     png_types_test.cpp
     png_class_test.cpp
@@ -10,6 +8,8 @@ create_test_sourcelist(PNG_TEST_SOURCES png_tests.cpp ${PNG_SUB_TEST_SOURCES})
 
 message(STATUS "Making png tests:")
 add_executable(png_tests ${PNG_TEST_SOURCES})
+
+target_include_directories(png_tests PRIVATE ${TEST_INCLUDE_DIRS})
 target_link_libraries(png_tests ${LINK_LIBS})
 
 # Add png_types tests

@@ -1,5 +1,6 @@
+#include "png/png_types_test.hpp"
+
 #include "common/test_interfaces.hpp"
-#include "png/png_types.hpp"
 
 namespace PNG
 {
