@@ -7,92 +7,100 @@ namespace PNG
 
 std::ostream &
 operator<<( std::ostream & out_stream, const png_chunk_t chunk_type ) {
+    const std::uint32_t type_copy{
+        convert_endian<std::endian::little, std::endian::big>(
+            static_cast<std::uint32_t>( chunk_type ) )
+    };
+    const auto type_ptr = reinterpret_cast<const char *>( &type_copy );
+    const auto type_string{ std::string{ type_ptr, 4 } };
+    out_stream << type_string;
+
     switch ( chunk_type ) {
     case png_chunk_t::INVALID: {
         out_stream << "INVALID (internal)";
     } break;
     case png_chunk_t::IHDR: {
-        out_stream << "IHDR (critical)";
+        out_stream << " (critical)";
         break;
     }
     case png_chunk_t::PLTE: {
-        out_stream << "PLTE (critical)";
+        out_stream << " (critical)";
         break;
     }
     case png_chunk_t::IDAT: {
-        out_stream << "IDAT (critical)";
+        out_stream << " (critical)";
         break;
     }
     case png_chunk_t::IEND: {
-        out_stream << "IEND (critical)";
+        out_stream << " (critical)";
         break;
     }
     case png_chunk_t::bKGD: {
-        out_stream << "bKGD (ancillary)";
+        out_stream << " (ancillary)";
         break;
     }
     case png_chunk_t::cHRM: {
-        out_stream << "cHRM (ancillary)";
+        out_stream << " (ancillary)";
         break;
     }
     case png_chunk_t::dSIG: {
-        out_stream << "dSIG (ancillary)";
+        out_stream << " (ancillary)";
         break;
     }
     case png_chunk_t::eXIF: {
-        out_stream << "eXIF (ancillary)";
+        out_stream << " (ancillary)";
         break;
     }
     case png_chunk_t::gAMA: {
-        out_stream << "gAMA (ancillary)";
+        out_stream << " (ancillary)";
         break;
     }
     case png_chunk_t::hIST: {
-        out_stream << "hIST (ancillary)";
+        out_stream << " (ancillary)";
         break;
     }
     case png_chunk_t::iCCP: {
-        out_stream << "iCCP (ancillary)";
+        out_stream << " (ancillary)";
         break;
     }
     case png_chunk_t::iTXt: {
-        out_stream << "iTXt (ancillary)";
+        out_stream << " (ancillary)";
         break;
     }
     case png_chunk_t::pHYs: {
-        out_stream << "pHYs (ancillary)";
+        out_stream << " (ancillary)";
         break;
     }
     case png_chunk_t::sBIT: {
-        out_stream << "sBIT (ancillary)";
+        out_stream << " (ancillary)";
         break;
     }
     case png_chunk_t::sPLT: {
-        out_stream << "sPLT (ancillary)";
+        out_stream << " (ancillary)";
         break;
     }
     case png_chunk_t::sRGB: {
-        out_stream << "sRGB (ancillary)";
+        out_stream << " (ancillary)";
         break;
     }
     case png_chunk_t::sTER: {
-        out_stream << "sTER (ancillary)";
+        out_stream << " (ancillary)";
         break;
     }
     case png_chunk_t::tEXt: {
-        out_stream << "tEXt (ancillary)";
+        out_stream << " (ancillary)";
         break;
     }
     case png_chunk_t::tIME: {
-        out_stream << "tIME (ancillary)";
+        out_stream << " (ancillary)";
         break;
     }
     case png_chunk_t::tRNS: {
-        out_stream << "tRNS (ancillary)";
+        out_stream << " (ancillary)";
         break;
     }
     case png_chunk_t::zTXt: {
-        out_stream << "zTXt (ancillary)";
+        out_stream << " (ancillary)";
     } break;
         // clang-format off
     COLD default : {
@@ -192,8 +200,9 @@ PNGChunk::deep_copy() const {
 [[nodiscard]] std::ostream &
 operator<<( std::ostream & out_stream, const PNGChunk & chunk ) {
     out_stream << "PNGChunk (" << chunk.type << "):\n"
-               << "\t- Data Size: " << chunk.data_size << '\n'
-               << "\t- CRC: " << chunk.crc << '\n'
+               << "\t- Data Size: " << std::hex << "0x" << chunk.data_size
+               << '\n'
+               << "\t- CRC: " << "0x" << chunk.crc /*.to_ulong()*/ << '\n'
                << "Block Data:\n--------\n"
                << *reinterpret_cast<std::uint64_t *>( *chunk.block_ptr )
                << "\n--------\n";

@@ -54,27 +54,34 @@ CrcTable32::update_crc(
         return std::to_integer<std::uint32_t>( b );
     };
     constexpr auto pad_byte_swap = []( const std::byte b ) -> value_t {
-        return byteswap( std::to_integer<std::uint32_t>( b ) );
+        return convert_endian<std::endian::big>(
+            std::to_integer<std::uint32_t>( b ) );
     };
 
     std::byte b{ 1 };
     b << 1;
     std::cout << "without pad_byte: "
-              << std::bitset<8>{ std::to_integer<std::uint32_t>( b ) }
+              << std::bitset<byte_bits>{ std::to_integer<std::uint32_t>( b ) }
               << ", pad_byte: " << pad_byte( b )
               << ", pad_byte_swap: " << pad_byte_swap( b ) << std::endl;
 
     if ( !is_table_computed ) {
         calculate_table();
     }
-    std::cout << value_t{ byteswap<std::uint32_t>( 0xff ) } << std::endl;
+    std::cout << value_t{
+        convert_endian<std::endian::big, std::endian::little, std::uint32_t>(
+            0xff )
+    } << std::endl;
 
     value_t crc_result = initial_crc;
     for ( std::uint32_t i{ 0 }; i < input_bytes.size() * 8; ++i ) {
-        const auto idx{ byteswap( static_cast<std::uint32_t>(
-            ( ( crc_result ^ pad_byte( input_bytes[i] ) )
-              & value_t{ byteswap<std::uint32_t>( 0xff ) } )
-                .to_ulong() ) ) };
+        const auto idx{ convert_endian<std::endian::big>(
+            static_cast<std::uint32_t>(
+                ( ( crc_result ^ pad_byte( input_bytes[i] ) )
+                  & value_t{ convert_endian<std::endian::big,
+                                            std::endian::little, std::uint32_t>(
+                      0xff ) } )
+                    .to_ulong() ) ) };
         // std::cout << idx << std::endl;
         crc_result = table[idx];
     }

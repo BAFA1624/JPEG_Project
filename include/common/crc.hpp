@@ -11,13 +11,20 @@
 
 namespace CRC
 {
+
+constexpr inline std::size_t crc_bits{ 32 };
+
 namespace PNG
 {
-constexpr inline std::bitset<32> png_polynomial_big_endian{
+
+
+constexpr inline std::bitset<crc_bits> png_polynomial_big_endian{
     "11101101101110001000001100100000"
 };
-constexpr inline std::bitset<32> png_polynomial_little_endian{ byteswap(
-    static_cast<std::uint32_t>( png_polynomial_big_endian.to_ulong() ) ) };
+constexpr inline std::bitset<crc_bits> png_polynomial_little_endian{
+    convert_endian<std::endian::big, std::endian::little>(
+        static_cast<std::uint32_t>( png_polynomial_big_endian.to_ulong() ) )
+};
 template <std::endian E = std::endian::native>
 constinit inline auto png_polynomial = []() {
     return ( E == std::endian::little ) ? png_polynomial_little_endian :
@@ -28,7 +35,7 @@ constinit inline auto png_polynomial = []() {
 class CrcTable32
 {
     public:
-    using value_t = std::bitset<32>;
+    using value_t = std::bitset<crc_bits>;
 
     CrcTable32() = delete;
     explicit CrcTable32( const value_t & polynomial ) :
@@ -40,10 +47,10 @@ class CrcTable32
         calculate_table();
         calculate_table2();
 
-        std::cout << "Table 1:\n";
-        print_table( table );
-        std::cout << "Table 2:\n";
-        print_table2( table2 );
+        // std::cout << "Table 1:\n";
+        // print_table( table );
+        // std::cout << "Table 2:\n";
+        // print_table2( table2 );
     }
 
     [[nodiscard]] value_t crc( const std::span<const std::byte> input_bytes );

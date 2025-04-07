@@ -14,15 +14,18 @@
 
 #define COLD [[unlikely]]
 
+constexpr inline std::size_t byte_bits{ 8 };
+
 constexpr inline std::ostream &
 operator<<( std::ostream & out_stream, const std::byte byte ) {
     return out_stream << std::bitset<8>( std::to_integer<unsigned>( byte ) );
 }
 
-template <std::integral T, std::endian E = std::endian::native>
+template <std::endian SourceEndian,
+          std::endian TargetEndian = std::endian::native, std::integral T>
 [[nodiscard]] constexpr inline T
-byteswap( const T value ) {
-    if constexpr ( E == std::endian::little ) {
+convert_endian( const T value ) {
+    if constexpr ( SourceEndian != TargetEndian ) {
         return std::byteswap( value );
     }
     else {

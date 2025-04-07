@@ -4,18 +4,19 @@
 #include "png_types.hpp"
 
 #include <string_view>
-#include <utility>
 #include <vector>
 
 namespace PNG
 {
 
-constexpr inline std::uint64_t header_bits{ 64 };
+constexpr inline std::size_t header_bits{ 64 };
 
 [[nodiscard]] constexpr bool
-verify_png_header( const std::bitset<header_bits> & header_bits ) noexcept {
-    constexpr std::bitset<64> expected_header{ 0x89'504E47'0D0A'1A'0A };
-    return header_bits == expected_header;
+verify_png_header( const std::bitset<header_bits> & header_bytes ) noexcept {
+    constexpr std::bitset<header_bits> expected_header{
+        0x89'504E47'0D0A'1A'0A
+    };
+    return header_bytes == expected_header;
 }
 
 class PNG
@@ -24,7 +25,7 @@ class PNG
     PNG() :
         valid_png( false ),
         current_error( png_error_t::NONE ),
-        header_bits( 0 ),
+        header_bytes( 0 ),
         png_chunks( 0 ),
         crc_calculator( CRC::PNG::png_polynomial<std::endian::big>() ) {
     } // Default constructor
@@ -53,13 +54,15 @@ class PNG
                                         std::size_t &          data_offset );
 
     [[nodiscard]] constexpr bool verify_header() noexcept {
-        constexpr std::bitset<64> expected_header{ 0x89'504E47'0D0A'1A'0A };
-        return header_bits == expected_header;
+        constexpr std::bitset<header_bits> expected_header{
+            0x89'504E47'0D0A'1A'0A
+        };
+        return header_bytes == expected_header;
     }
 
     bool                     valid_png;
     png_error_t              current_error;
-    std::bitset<header_bits> header_bits;
+    std::bitset<header_bits> header_bytes;
     std::vector<PNGChunk>    png_chunks;
     CRC::CrcTable32          crc_calculator;
 };
