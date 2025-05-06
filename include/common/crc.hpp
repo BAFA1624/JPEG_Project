@@ -6,7 +6,6 @@
 #include <bit>
 #include <bitset>
 #include <cstdint>
-#include <iostream>
 #include <span>
 
 namespace CRC

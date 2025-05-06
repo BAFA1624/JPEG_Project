@@ -4,6 +4,7 @@
 #include <cassert>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <sstream>
 
 constexpr bool
@@ -73,5 +74,3 @@ crc_test( [[maybe_unused]] int argc, [[maybe_unused]] char ** argv ) {
 
     return n_tests - test_passes;
 }
-
-// clang-format on
