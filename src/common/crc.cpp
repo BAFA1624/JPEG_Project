@@ -8,10 +8,8 @@ namespace CRC
 
 void
 CrcTable32::calculate_table() noexcept {
-    value_t c;
-
     for ( std::uint32_t i{ 0 }; i < 256; ++i ) {
-        c = value_t{ i };
+        auto c = value_t{ i };
         for ( std::uint32_t j{ 0 }; j < 8; ++j ) {
             c = ( c >> 1 )
                 ^ ( ( c & value_t{ 1 } )
