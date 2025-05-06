@@ -30,9 +30,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 set(CMAKE_CXX_FLAGS_DEBUG "-Wall -Wextra -Wconversion -pedantic -O0 -ggdb -fpic")
 set(CMAKE_CXX_FLAGS_RELEASE "-Werror -DNDEBUG -march=native -Wall -Wextra -pedantic -Wconversion -O3 -fpic")
 
-# Include directories
-#include_directories(./include/ ${OPENGL_INCLUDE_DIRS} ${GLUT_INCLUDE_DIRS})
-
 # Important subdirectories
 add_subdirectory(src)
 add_subdirectory(tests)
