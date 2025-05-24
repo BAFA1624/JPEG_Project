@@ -32,3 +32,16 @@ convert_endian( const T value ) {
         return value;
     }
 }
+
+// clang-format off
+template <std::endian baseEndianness, std::size_t N = 32>
+constexpr inline std::size_t lsb{ (
+    baseEndianness == std::endian::little ? 0 :
+    baseEndianness == std::endian::big    ? N - 1 :
+                                            N - 1 ) };
+template <std::endian baseEndianness, std::size_t N = 32>
+constexpr inline std::size_t msb{ (
+    baseEndianness == std::endian::little ? N - 1 :
+    baseEndianness == std::endian::big    ? 0 :
+                                            0 ) };
+// clang-format on
