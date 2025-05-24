@@ -68,7 +68,7 @@ crc_test( [[maybe_unused]] int argc, [[maybe_unused]] char ** argv ) {
 
     const std::filesystem::directory_entry iend_file{
         std::filesystem::current_path() / ".." / ".." / ".." / "tests" / "data"
-        / "iend_bytes.txt"
+        / "iend_bytes.bin"
     };
     test_passes += ( test_crc_iend( iend_file ) ? 1 : 0 );
 
