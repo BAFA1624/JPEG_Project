@@ -13,7 +13,7 @@ find_package(OpenGL REQUIRED)
 find_package(GLUT REQUIRED)
 
 # Compiler info
-set(CMAKE_CXX_COMPILER g++-14)
+set(CMAKE_CXX_COMPILER g++-15)
 set(CMAKE_CXX_STANDARD 23)
 
 # Generate compile_commands.json
