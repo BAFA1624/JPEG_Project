@@ -1,7 +1,8 @@
 # PngChunk Planning
 
 The *PngChunk* class is implemented as a linked list with each chunk containing
-a `std::unique_ptr<PngChunk>` to the next chunk in the file.
+a `std::unique_ptr<PngChunk>` to the next chunk in the file. The list itself is
+managed by the *Png* class.
 
 ## Base Class:
 
@@ -57,7 +58,7 @@ const_base_pointer_t PngChunk::next_chunk() const
 base_pointer_t PngChunk::set_previous_chunk(const base_pointer_t new_chunk)
 base_pointer_t PngChunk::set_next_chunk(const base_pointer_t new_chunk)
 ```
-- Sets the value of m\_previous\_chunk & m\_next\_chunk respectively. Returns the old value
+- Sets the value of m\_previous\_chunk & m\_next\_chunk respectively. Returns the old value.
 
 ```cpp
 bool PngChunk::insert_chunk_before(const base_pointer_t new_chunk)
