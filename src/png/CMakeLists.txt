@@ -1,6 +1,6 @@
 # src/png/CMakeLists.txt
 
-set(PNG_SOURCES png_types.cpp png.cpp)
+set(PNG_SOURCES png_types.cpp png_chunk.cpp png.cpp)
 
 message(STATUS "Creating PNG shared library, sources:  ${PNG_SOURCES}")
 add_library(PNG SHARED ${PNG_SOURCES})
