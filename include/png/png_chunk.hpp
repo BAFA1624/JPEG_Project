@@ -2,7 +2,6 @@
 
 #include "png/png_types.hpp"
 
-#include <deque>
 #include <memory>
 
 namespace PNG
@@ -22,8 +21,8 @@ class PngChunk
     virtual ~PngChunk() = default;
 
     // Unique ptr type to the PngChunk base class
-    using const_base_pointer_t = const std::shared_ptr<const PngChunk>;
-    using base_pointer_t = const std::shared_ptr<PngChunk>;
+    using const_base_pointer_t = std::shared_ptr<const PngChunk>;
+    using base_pointer_t = std::shared_ptr<PngChunk>;
 
     // Returns the png_chunk_t for the current chunk
     [[nodiscard]] constexpr auto get_chunk_type() const noexcept {
@@ -42,11 +41,13 @@ class PngChunk
         return m_next_chunk;
     }
 
-    base_pointer_t set_previous_chunk();
-    base_pointer_t set_next_chunk();
+    [[maybe_unused]] constexpr base_pointer_t
+    set_previous_chunk( const base_pointer_t new_chunk );
+    [[maybe_unused]] constexpr base_pointer_t
+    set_next_chunk( const base_pointer_t new_chunk );
 
-    bool insert_chunk_before( const base_pointer_t new_chunk );
-    bool insert_chunk_after( const base_pointer_t new_chunk );
+    constexpr bool insert_chunk_before( base_pointer_t new_chunk );
+    constexpr bool insert_chunk_after( base_pointer_t new_chunk );
 
     friend std::ostream & operator<<( std::ostream &   os,
                                       const PngChunk & png_chunk );
@@ -63,6 +64,10 @@ class PngChunk
     private:
     static constexpr auto m_chunk_type{ png_chunk_t::INVALID };
 };
+
+template <typename Parent, typename Child>
+concept ValidChild =
+    std::is_base_of_v<PngChunk, Child> && Parent::template accepts<Child>();
 
 class PngChunkIHDR : public PngChunk
 {
