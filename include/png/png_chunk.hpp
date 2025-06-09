@@ -2,8 +2,6 @@
 
 #include "png/png_chunk_base.hpp"
 
-#include <memory>
-
 namespace PNG
 {
 
