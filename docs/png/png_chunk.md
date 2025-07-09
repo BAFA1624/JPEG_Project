@@ -6,9 +6,9 @@ managed by the *Png* class.
 
 Each *PngChunk* indicates which type of chunk it is via it's `m_chunk_type` member variable.
 The chunk specific functionality is maintained by the respective *PngChunkPayload* for that type.
+The *PngChunk* itself uses a `std::unique_ptr<PngChunkPayload>`
 
-
-## Base Class:
+## Base Class
 
 ### Member Types:
 ```cpp
@@ -28,6 +28,12 @@ using const_pointer_t = std::shared_ptr<
 constexpr png_chunk_t m_chunk_type
 ```
 - Constexpr enumeration value showing the current chunk type.
+
+```cpp
+constexpr std::unique_ptr<PngChunkPayload> m_payload
+```
+- Constexpr `std::unique_ptr` to a *[PngChunkPayload](./png_chunk_payload.md)* containing
+any specific implementation for this chunk type.
 
 #### Protected
 ```cpp
@@ -78,7 +84,3 @@ static consteval bool accepts(
 ---
 
 ## Inheriting Classes:
-
-
-
-
