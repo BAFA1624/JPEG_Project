@@ -9,7 +9,8 @@
 
 ## Next Work
 
- - [ ] Implement PngChunk base class. [[png_chunk.md]]
+ - [ ] Implement *PngChunkPayload* class. [PngChunkPayload](png/png_chunk_payload.md)
+ - [ ] Implement PngChunk base class. [PngChunk](png/png_chunk.md)[[png_chunk.md]]
  - [ ] Implement classes for the critical png chunk types inheriting from the base class.
  - [ ] Implement PngChunk tree class.
     - [ ] Might need to implement simple linked list if you want.
