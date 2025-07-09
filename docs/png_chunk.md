@@ -4,6 +4,10 @@ The *PngChunk* class is implemented as a linked list with each chunk containing
 a `std::unique_ptr<PngChunk>` to the next chunk in the file. The list itself is
 managed by the *Png* class.
 
+Each *PngChunk* indicates which type of chunk it is via it's `m_chunk_type` member variable.
+The chunk specific functionality is maintained by the respective *PngChunkPayload* for that type.
+
+
 ## Base Class:
 
 ### Member Types:
