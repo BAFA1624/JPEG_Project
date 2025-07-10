@@ -1,3 +1,5 @@
+[Top Level Plan](../plan.md)
+
 # PngChunk Planning
 
 The *PngChunk* class is implemented as a linked list with each chunk containing
@@ -35,6 +37,12 @@ constexpr std::unique_ptr<PngChunkPayload> m_payload
 - Constexpr `std::unique_ptr` to a *[PngChunkPayload](./png_chunk_payload.md)* containing
 any specific implementation for this chunk type.
 
+```cpp
+constexpr static const std::uint32_t m_size { 12 };
+```
+- The size of the data directly managed by the *PngChunk* class, e.g. the chunk size, chunk type, & cyclic redundancy code.
+The total size of the chunk data is given by `m_size + m_payload->getSize()`.
+
 #### Protected
 ```cpp
 base_pointer_t m_previous_chunk
@@ -52,15 +60,15 @@ constexpr png_chunk_t PngChunk::get_chunk_type() const
 - Returns the current chunk type.
 
 ```cpp
-base_pointer_t PngChunk::previous_chunk()
-const_base_pointer_t PngChunk::previous_chunk() const
+[[nodiscard]] base_pointer_t PngChunk::previous_chunk()
+[[nodiscard]] const_base_pointer_t PngChunk::previous_chunk() const
 ```
 - Returns a pointer to the previous chunk in the file.
 If there is no previous chunk (*IHDR* chunks only), holds a nullptr.
 
 ```cpp
-base_pointer_t PngChunk::next_chunk()
-const_base_pointer_t PngChunk::next_chunk() const
+[[nodiscard]] base_pointer_t PngChunk::next_chunk()
+[[nodiscard]] const_base_pointer_t PngChunk::next_chunk() const
 ```
 - Returns a pointer to the next chunk in the file.
 
@@ -71,8 +79,8 @@ base_pointer_t PngChunk::set_next_chunk(const base_pointer_t new_chunk)
 - Sets the value of m\_previous\_chunk & m\_next\_chunk respectively. Returns the old value.
 
 ```cpp
-bool PngChunk::insert_chunk_before(const base_pointer_t new_chunk)
-bool PngChunk::insert_chunk_after(const base_pointer_t new_chunk)
+[[nodiscard]] bool PngChunk::insert_chunk_before(const base_pointer_t new_chunk)
+[[nodiscard]] bool PngChunk::insert_chunk_after(const base_pointer_t new_chunk)
 ```
 - Insert a new chunk before/after the current chunk. Returns true if successful, false if not.
 
