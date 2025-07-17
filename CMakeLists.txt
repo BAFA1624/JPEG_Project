@@ -14,7 +14,7 @@ find_package(GLUT REQUIRED)
 
 # Compiler info
 set(CMAKE_CXX_COMPILER g++-15)
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 26)
 
 # Generate compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

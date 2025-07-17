@@ -2,6 +2,7 @@
 
 #include "common/common.hpp"
 
+#include <algorithm>
 #include <bitset>
 #include <cstdint>
 #include <expected>
@@ -26,10 +27,9 @@ enum class png_chunk_t : std::uint32_t {
      * - Color type (1 byte, value 0/2/3/4/6)
      * - Compression method (1 byte, value 0)
      * - Filter method (1 byte, value 0)
-     * - Interlace method (1 byte, value 0 "no interlace"/1 "Adam7 interlace")
-     * 13 bits total.
-     * "bit depth" is defined as:
-     * number of bits per sample or palette index (not per pixel)
+     * - Interlace method (1 byte, value 0 "no interlace"/1 "Adam7 interlace") *
+     * 13 bits total. "bit depth" is defined as: number of bits per sample or
+     * palette index (not per pixel)
      * */
     IHDR = 0x49'48'44'52,
     /* PLTE:
@@ -105,6 +105,35 @@ enum class png_chunk_t : std::uint32_t {
      * Lower case last letter = safe to copy, even if application doesn't
      * understand it.*/
 };
+static constinit std::array<png_chunk_t, 21> valid_png_chunk_t{
+    // clang-format off
+    png_chunk_t::IHDR,
+    png_chunk_t::PLTE,
+    png_chunk_t::IDAT,
+    png_chunk_t::IEND,
+    png_chunk_t::bKGD,
+    png_chunk_t::cHRM,
+    png_chunk_t::dSIG,
+    png_chunk_t::eXIF,
+    png_chunk_t::gAMA,
+    png_chunk_t::hIST,
+    png_chunk_t::iCCP,
+    png_chunk_t::iTXt,
+    png_chunk_t::pHYs,
+    png_chunk_t::sBIT,
+    png_chunk_t::sPLT,
+    png_chunk_t::sRGB,
+    png_chunk_t::sTER,
+    png_chunk_t::tEXt,
+    png_chunk_t::tIME,
+    png_chunk_t::tRNS,
+    png_chunk_t::zTXt
+    // clang-format on
+};
+constexpr bool
+isValid( const png_chunk_t png_chunk_type ) {
+    return std::ranges::contains( valid_png_chunk_t, png_chunk_type );
+}
 
 enum class png_pixel_format_t : std::uint32_t {
     grayscale = 0,
@@ -159,36 +188,99 @@ struct PNGChunk
 
     [[nodiscard]] static constexpr bool
     is_valid( const png_chunk_t type ) noexcept {
-        switch ( type ) {
-        case png_chunk_t::IHDR: [[fallthrough]];
-        case png_chunk_t::PLTE: [[fallthrough]];
-        case png_chunk_t::IDAT: [[fallthrough]];
-        case png_chunk_t::IEND: [[fallthrough]];
-        case png_chunk_t::bKGD: [[fallthrough]];
-        case png_chunk_t::cHRM: [[fallthrough]];
-        case png_chunk_t::dSIG: [[fallthrough]];
-        case png_chunk_t::eXIF: [[fallthrough]];
-        case png_chunk_t::gAMA: [[fallthrough]];
-        case png_chunk_t::hIST: [[fallthrough]];
-        case png_chunk_t::iCCP: [[fallthrough]];
-        case png_chunk_t::iTXt: [[fallthrough]];
-        case png_chunk_t::pHYs: [[fallthrough]];
-        case png_chunk_t::sBIT: [[fallthrough]];
-        case png_chunk_t::sPLT: [[fallthrough]];
-        case png_chunk_t::sRGB: [[fallthrough]];
-        case png_chunk_t::sTER: [[fallthrough]];
-        case png_chunk_t::tEXt: [[fallthrough]];
-        case png_chunk_t::tIME: [[fallthrough]];
-        case png_chunk_t::tRNS: [[fallthrough]];
-        case png_chunk_t::zTXt: return ( true );
-        case png_chunk_t::INVALID: [[fallthrough]];
-        // Enums allow any valid representation of the
-        // underlying type, not just the defined values.
-        default: return false;
-        }
+        // switch ( type ) {
+        // case png_chunk_t::IHDR: [[fallthrough]];
+        // case png_chunk_t::PLTE: [[fallthrough]];
+        // case png_chunk_t::IDAT: [[fallthrough]];
+        // case png_chunk_t::IEND: [[fallthrough]];
+        // case png_chunk_t::bKGD: [[fallthrough]];
+        // case png_chunk_t::cHRM: [[fallthrough]];
+        // case png_chunk_t::dSIG: [[fallthrough]];
+        // case png_chunk_t::eXIF: [[fallthrough]];
+        // case png_chunk_t::gAMA: [[fallthrough]];
+        // case png_chunk_t::hIST: [[fallthrough]];
+        // case png_chunk_t::iCCP: [[fallthrough]];
+        // case png_chunk_t::iTXt: [[fallthrough]];
+        // case png_chunk_t::pHYs: [[fallthrough]];
+        // case png_chunk_t::sBIT: [[fallthrough]];
+        // case png_chunk_t::sPLT: [[fallthrough]];
+        // case png_chunk_t::sRGB: [[fallthrough]];
+        // case png_chunk_t::sTER: [[fallthrough]];
+        // case png_chunk_t::tEXt: [[fallthrough]];
+        // case png_chunk_t::tIME: [[fallthrough]];
+        // case png_chunk_t::tRNS: [[fallthrough]];
+        // case png_chunk_t::zTXt: return ( true );
+        // case png_chunk_t::INVALID: [[fallthrough]];
+        //// Enums allow any valid representation of the
+        //// underlying type, not just the defined values.
+        // default: return false;
+        // }
+        return isValid( type );
     }
 };
 
 std::ostream & operator<<( std::ostream & out_stream, const PNGChunk & chunk );
+
+// Division between Old /\ && new types \/
+
+// Types for the IHDR chunk
+
+using BitDepth = std::uint8_t;
+static constinit std::array<BitDepth, 5> valid_bit_depths{ 1, 2, 4, 8, 16 };
+constexpr bool
+isValid( const BitDepth bit_depth ) {
+    return std::ranges::contains( valid_bit_depths, bit_depth );
+}
+
+enum class ColourType : std::uint8_t {
+    // clang-format off
+    GREYSCALE         = 0,
+    TRUE_COLOUR       = 2,
+    INDEXED_COLOUR    = 3,
+    GREYSCALE_ALPHA   = 4,
+    TRUE_COLOUR_ALPHA = 6,
+    INVALID           = 7
+    // clang-format on
+};
+static constinit std::array<ColourType, 5> valid_colour_types{
+    // clang-format off
+    ColourType::GREYSCALE,
+    ColourType::TRUE_COLOUR,
+    ColourType::INDEXED_COLOUR,
+    ColourType::GREYSCALE_ALPHA,
+    ColourType::TRUE_COLOUR_ALPHA
+    // clang-format on
+};
+constexpr bool
+isValid( const ColourType colour_type ) {
+    return std::ranges::contains( valid_colour_types, colour_type );
+}
+
+enum class CompressionMethod : std::uint8_t {
+    COMPRESSION_METHOD_0 = 0,
+    INVALID = 1
+};
+constexpr bool
+isValid( const CompressionMethod compression_method ) {
+    return compression_method == CompressionMethod::COMPRESSION_METHOD_0;
+}
+
+enum class FilterMethod : std::uint8_t { FILTER_METHOD_0 = 0, INVALID = 1 };
+constexpr bool
+isValid( const FilterMethod filter_method ) {
+    return filter_method == FilterMethod::FILTER_METHOD_0;
+}
+
+enum class InterlaceMethod : std::uint8_t {
+    // clang-format off
+    NO_INTERLACE = 0,
+    ADAM_7 = 1
+    // clang-format on
+};
+constexpr bool
+isValid( const InterlaceMethod interlace_method ) {
+    return interlace_method == InterlaceMethod::NO_INTERLACE
+           || interlace_method == InterlaceMethod::ADAM_7;
+}
 
 } // namespace PNG
