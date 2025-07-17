@@ -13,7 +13,8 @@ namespace CRC
 
 enum class crc_t { simple, table };
 
-constexpr inline std::size_t crc_bits{ 32 };
+constexpr inline std::size_t crc_bytes{ 4 };
+constexpr inline std::size_t crc_bits{ byte_bits * crc_bytes };
 
 namespace PNG
 {
@@ -25,8 +26,9 @@ constexpr inline std::bitset<crc_bits> png_polynomial_little_endian{
     convert_endian<std::endian::big, std::endian::little>(
         static_cast<std::uint32_t>( png_polynomial_big_endian.to_ulong() ) )
 };
+
 template <std::endian E = std::endian::native>
-constinit inline auto png_polynomial = []() {
+constinit inline const auto png_polynomial = []() {
     return ( E == std::endian::little ) ? png_polynomial_little_endian :
                                           png_polynomial_big_endian;
 };
@@ -40,7 +42,7 @@ class CrcTable32
     CrcTable32() = delete;
     explicit CrcTable32( const value_t & polynomial ) :
         is_table_computed( false ),
-        table( std::array<value_t, 256>{} ),
+        table( std::array<value_t, table_size>{} ),
         polynomial( polynomial ) {
         calculate_table();
     }
@@ -48,14 +50,16 @@ class CrcTable32
     [[nodiscard]] value_t crc( const std::span<const std::byte> input_bytes );
 
     private:
+    static constexpr std::size_t table_size{ 256 };
+
     void calculate_table() noexcept;
     [[nodiscard]] value_t
     update_crc( const value_t &                  initial_crc,
                 const std::span<const std::byte> input_bytes ) noexcept;
 
-    bool                     is_table_computed;
-    std::array<value_t, 256> table;
-    value_t                  polynomial;
+    bool                            is_table_computed;
+    std::array<value_t, table_size> table;
+    value_t                         polynomial;
 };
 
 } // namespace CRC

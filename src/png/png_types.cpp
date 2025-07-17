@@ -1,5 +1,7 @@
 #include "png/png_types.hpp"
 
+#include "common/crc.hpp"
+
 #include <cassert>
 
 namespace PNG
@@ -11,8 +13,8 @@ operator<<( std::ostream & out_stream, const png_chunk_t chunk_type ) {
         convert_endian<std::endian::little, std::endian::big>(
             static_cast<std::uint32_t>( chunk_type ) )
     };
-    const auto type_ptr = reinterpret_cast<const char *>( &type_copy );
-    const auto type_string{ std::string{ type_ptr, 4 } };
+    const auto * type_ptr = reinterpret_cast<const char *>( &type_copy );
+    const auto   type_string{ std::string{ type_ptr, 4 } };
     out_stream << type_string;
 
     switch ( chunk_type ) {
@@ -142,8 +144,8 @@ operator<<( std::ostream & out_stream, const png_pixel_format_t pixel_format ) {
 }
 
 PNGChunk::PNGChunk( const std::uint32_t _data_size, const png_chunk_t _type,
-                    unsigned char * const   _source_ptr,
-                    const std::bitset<32> & _crc ) noexcept :
+                    unsigned char * const              _source_ptr,
+                    const std::bitset<CRC::crc_bits> & _crc ) noexcept :
     data_size( _data_size ), type( _type ), block_ptr( nullptr ), crc( _crc ) {
     block_ptr = std::make_unique<std::byte *>(
         reinterpret_cast<std::byte *>( _source_ptr ) );
@@ -152,8 +154,8 @@ PNGChunk::PNGChunk( const std::uint32_t _data_size, const png_chunk_t _type,
 }
 
 PNGChunk::PNGChunk( const std::uint32_t _data_size, const png_chunk_t _type,
-                    std::unique_ptr<std::byte *> _source_ptr,
-                    const std::bitset<32> &      _crc ) noexcept :
+                    std::unique_ptr<std::byte *>       _source_ptr,
+                    const std::bitset<CRC::crc_bits> & _crc ) noexcept :
     data_size( _data_size ),
     type( _type ),
     block_ptr( std::move( _source_ptr ) ),

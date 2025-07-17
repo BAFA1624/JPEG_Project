@@ -24,16 +24,17 @@
 
 constexpr inline std::size_t byte_bits{ 8 };
 
-constexpr inline std::ostream &
+constexpr std::ostream &
 operator<<( std::ostream & out_stream, const std::byte byte ) {
-    return out_stream << std::bitset<8>( std::to_integer<unsigned>( byte ) );
+    return out_stream << std::bitset<byte_bits>(
+               std::to_integer<unsigned>( byte ) );
 }
 
-template <std::endian SourceEndian,
-          std::endian TargetEndian = std::endian::native, std::integral T>
-[[nodiscard]] constexpr inline T
+template <std::endian sourceEndian,
+          std::endian targetEndian = std::endian::native, std::integral T>
+[[nodiscard]] constexpr T
 convert_endian( const T value ) {
-    if constexpr ( SourceEndian != TargetEndian ) {
+    if constexpr ( sourceEndian != targetEndian ) {
         return std::byteswap( value );
     }
     else {
@@ -45,15 +46,11 @@ convert_endian( const T value ) {
 // Least Significant Bit
 template <std::endian baseEndianness, std::size_t N = 32> requires (N != 0)
 constexpr inline std::size_t lsb{ (
-    baseEndianness == std::endian::little ? 0 :
-    baseEndianness == std::endian::big    ? N - 1 :
-                                            N - 1 ) };
+    baseEndianness == std::endian::little ? 0 : N - 1 ) };
 // Most Significant Bit
 template <std::endian baseEndianness, std::size_t N = 32> requires (N != 0)
 constexpr inline std::size_t msb{ (
-    baseEndianness == std::endian::little ? N - 1 :
-    baseEndianness == std::endian::big    ? 0 :
-                                            0 ) };
+    baseEndianness == std::endian::little ? N - 1 : 0 ) };
 
 template <std::endian baseEndianness, std::size_t offset, std::size_t N = 32> requires (offset < N && N != 0)
 consteval inline std::size_t lsb_offset() {

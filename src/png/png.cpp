@@ -18,7 +18,7 @@ PNG::PNG( const std::string_view raw_data ) :
     png_chunks( 0 ),
     crc_calculator( CRC::PNG::png_polynomial<std::endian::big>() ) {
     // Check first 8 bytes for valid header type
-    assert( raw_data.size() >= 8 );
+    assert( raw_data.size() >= header_bits );
 
     // Verify valid png header
     header_bytes = std::bitset<header_bits>{
@@ -80,7 +80,8 @@ PNG::parse_chunk( const std::string_view chunk_data,
     auto data{ std::make_unique<std::byte *>( new std::byte[data_size] ) };
     std::copy_n(
         reinterpret_cast<const std::byte *>( chunk_data.data() + data_offset ),
-        data_size, *data );
+        data_size,
+        *data );
     data_offset += data_size;
 
     // Parse CRC
@@ -97,7 +98,8 @@ PNG::parse_chunk( const std::string_view chunk_data,
                      PNGChunk::is_valid( potential_chunk_type ) ?
                          potential_chunk_type :
                          png_chunk_t::INVALID,
-                     std::move( data ), crc );
+                     std::move( data ),
+                     crc );
 }
 
 } // namespace PNG

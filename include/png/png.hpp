@@ -9,7 +9,7 @@
 namespace PNG
 {
 
-constexpr inline std::size_t header_bits{ 64 };
+constexpr inline const std::size_t header_bits{ 64 };
 
 [[nodiscard]] constexpr bool
 verify_png_header( const std::bitset<header_bits> & header_bytes ) noexcept {

@@ -159,23 +159,26 @@ std::ostream & operator<<( std::ostream &           out_stream,
 
 struct PNGChunk
 {
+    private:
     std::uint32_t data_size; // Length of block
     png_chunk_t   type;      // Type of block
     std::unique_ptr<std::byte *>
-                    block_ptr; // Pointer to start of block in memory
-    std::bitset<32> crc;       // Block cyclic-redundancy-check for block
+        block_ptr; // Pointer to start of block in memory
+    std::bitset<byte_bits * crc_bytes>
+        crc; // Block cyclic-redundancy-check for block
 
+    public:
     constexpr PNGChunk() noexcept :
         data_size( 0 ),
         type( png_chunk_t::INVALID ),
         block_ptr( nullptr ),
         crc( 0 ) {}
     PNGChunk( const std::uint32_t _len, const png_chunk_t _type,
-              std::unique_ptr<std::byte *> _source_ptr,
-              const std::bitset<32> &      _crc ) noexcept;
+              std::unique_ptr<std::byte *>               _source_ptr,
+              const std::bitset<byte_bits * crc_bytes> & _crc ) noexcept;
     PNGChunk( const std::uint32_t _len, const png_chunk_t _type,
-              unsigned char * const   _source_ptr,
-              const std::bitset<32> & _crc ) noexcept;
+              unsigned char * const                      _source_ptr,
+              const std::bitset<byte_bits * crc_bytes> & _crc ) noexcept;
 
     NOCOPY( PNGChunk );
 
@@ -184,7 +187,7 @@ struct PNGChunk
 
     ~PNGChunk() = default;
 
-    PNGChunk deep_copy() const;
+    [[nodiscard]] PNGChunk deep_copy() const;
 
     [[nodiscard]] static constexpr bool
     is_valid( const png_chunk_t type ) noexcept {
