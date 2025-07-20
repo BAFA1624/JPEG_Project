@@ -8,7 +8,9 @@ IhdrChunkPayload::IhdrChunkPayload(
     std::uint32_t data_position{ 0 };
 
     // Parsing in data members:
-    m_width = to_integer<std::uint32_t>( raw_data.subspan( data_position, 4 ) );
+    m_width =
+        span_to_integer<std::uint32_t, std::endian::big, std::endian::native>(
+            raw_data.subspan( data_position, 4 ) );
     data_position += 4;
 }
 

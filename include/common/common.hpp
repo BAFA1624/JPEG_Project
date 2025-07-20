@@ -15,7 +15,7 @@
     class & operator=( const class & ) = delete;
 
 #define VIRTUAL_BASE_CLASS( class ) \
-    \ class() = default;            \
+    class() = default;              \
     NOCOPY( class )                 \
     NOMOVE( class )                 \
     ~class() = default;
@@ -29,6 +29,9 @@ operator<<( std::ostream & out_stream, const std::byte byte ) {
     return out_stream << std::bitset<byte_bits>(
                std::to_integer<unsigned>( byte ) );
 }
+
+template <std::endian E>
+concept ValidEndian = E == std::endian::little || E == std::endian::big;
 
 template <std::endian sourceEndian,
           std::endian targetEndian = std::endian::native, std::integral T>
@@ -44,36 +47,51 @@ convert_endian( const T value ) {
 
 // clang-format off
 // Least Significant Bit
-template <std::endian baseEndianness, std::size_t N = 32> requires (N != 0)
+template <std::endian E, std::size_t N = 32> requires (N != 0) && ValidEndian<E>
 constexpr inline std::size_t lsb{ (
-    baseEndianness == std::endian::little ? 0 : N - 1 ) };
+    E == std::endian::little ? 0 : N - 1 ) };
 // Most Significant Bit
-template <std::endian baseEndianness, std::size_t N = 32> requires (N != 0)
+template <std::endian E, std::size_t N = 32> requires (N != 0) && ValidEndian<E>
 constexpr inline std::size_t msb{ (
-    baseEndianness == std::endian::little ? N - 1 : 0 ) };
+    E == std::endian::little ? N - 1 : 0 ) };
 
-template <std::endian baseEndianness, std::size_t offset, std::size_t N = 32> requires (offset < N && N != 0)
+// Consteval offset functions for compile time known offsets
+template <std::endian E, std::size_t offset, std::size_t N = 32> requires (offset < N && N != 0) && ValidEndian<E>
 consteval inline std::size_t lsb_offset() {
-    if constexpr (baseEndianness == std::endian::little) {
-        return lsb<baseEndianness, N> + offset;
+    if constexpr (E == std::endian::little) {
+        return lsb<E, N> + offset;
     }
-    else if constexpr (baseEndianness == std::endian::big) {
-        return lsb<baseEndianness, N> - offset;
-    }
-    else {
-        static_assert( false, "Mixed endian formats are unsupported." );
+    else if constexpr (E == std::endian::big) {
+        return lsb<E, N> - offset;
     }
 }
-template <std::endian baseEndianness, std::size_t offset, std::size_t N = 32> requires (offset < N && N != 0)
+template <std::endian E, std::size_t offset, std::size_t N = 32> requires (offset < N && N != 0) && ValidEndian<E>
 consteval inline std::size_t msb_offset() {
-    if constexpr (baseEndianness == std::endian::little) {
-        return msb<baseEndianness, N> - offset;
+    if constexpr (E == std::endian::little) {
+        return msb<E, N> - offset;
     }
-    else if constexpr (baseEndianness == std::endian::big) {
-        return msb<baseEndianness, N> + offset;
+    else if constexpr (E == std::endian::big) {
+        return msb<E, N> + offset;
     }
-    else {
-        static_assert( false, "Mixed endian formats are unsupported." );
+}
+
+template <std::endian E, std::size_t N = 32> requires (N != 0) && ValidEndian<E>
+constexpr inline std::size_t lsb_offset(const std::size_t offset) {
+    if constexpr (E == std::endian::little) {
+        return lsb<E, N> + offset;
+    }
+    else if constexpr (E == std::endian::big) {
+        return lsb<E, N> - offset;
+    }
+}
+
+template <std::endian E, std::size_t N = 32> requires (N != 0) && ValidEndian<E>
+constexpr inline std::size_t msb_offset(const std::size_t offset) {
+    if constexpr (E == std::endian::little) {
+        return msb<E, N> - offset;
+    }
+    else if constexpr (E == std::endian::big) {
+        return msb<E, N> + offset;
     }
 }
 // clang-format on
@@ -82,7 +100,8 @@ template <typename T, std::endian sourceEndian,
           std::endian targetEndian = std::endian::native>
     requires std::is_integral_v<T> && std::is_unsigned_v<T>
              && ( sizeof( T ) == 1 )
-constexpr T span_to_integer_1( const std::span<std::byte> & data ) {
+             && ValidEndian<sourceEndian> && ValidEndian<targetEndian>
+constexpr T span_to_integer_1( const std::span<const std::byte> & data ) {
     return static_cast<T>( data[0] );
 }
 
@@ -90,7 +109,8 @@ template <typename T, std::endian sourceEndian,
           std::endian targetEndian = std::endian::native>
     requires std::is_integral_v<T> && std::is_unsigned_v<T>
              && ( sizeof( T ) == 2 )
-constexpr T span_to_integer_2( const std::span<std::byte> & data ) {
+             && ValidEndian<sourceEndian> && ValidEndian<targetEndian>
+constexpr T span_to_integer_2( const std::span<const std::byte> & data ) {
     if constexpr ( targetEndian == std::endian::little ) {
         return static_cast<T>( data[lsb<sourceEndian, 2>] )
                | static_cast<T>( data[msb<sourceEndian, 2>] );
@@ -105,7 +125,8 @@ template <typename T, std::endian sourceEndian,
           std::endian targetEndian = std::endian::native>
     requires std::is_integral_v<T> && std::is_unsigned_v<T>
              && ( sizeof( T ) == 4 )
-constexpr T span_to_integer_4( const std::span<std::byte> & data ) {
+             && ValidEndian<sourceEndian> && ValidEndian<targetEndian>
+constexpr T span_to_integer_4( const std::span<const std::byte> & data ) {
     if constexpr ( targetEndian == std::endian::little ) {
         return static_cast<T>( data[lsb<sourceEndian, 4>] )
                | static_cast<T>( data[msb_offset<sourceEndian, 2, 4>()] )
@@ -124,7 +145,8 @@ template <typename T, std::endian sourceEndian,
           std::endian targetEndian = std::endian::native>
     requires std::is_integral_v<T> && std::is_unsigned_v<T>
              && ( sizeof( T ) == 8 )
-constexpr T span_to_integer_8( const std::span<std::byte> & data ) {
+             && ValidEndian<sourceEndian> && ValidEndian<targetEndian>
+constexpr T span_to_integer_8( const std::span<const std::byte> & data ) {
     if constexpr ( targetEndian == std::endian::little ) {
         return static_cast<T>( data[lsb<sourceEndian, 8>] )
                | static_cast<T>( data[msb_offset<sourceEndian, 6, 8>()] )
@@ -150,17 +172,11 @@ constexpr T span_to_integer_8( const std::span<std::byte> & data ) {
 template <typename T, std::endian sourceEndian,
           std::endian targetEndian = std::endian::native>
     requires std::is_integral_v<T> && std::is_unsigned_v<T>
+             && ValidEndian<sourceEndian> && ValidEndian<targetEndian>
 constexpr T
-span_to_integer( const std::span<std::byte> & data ) {
-    static_assert( sizeof( T ) == data.size() );
-
-    // Error if mixed endian detected
-    if ( ( targetEndian != std::endian::little
-           && targetEndian != std::endian::big )
-         || ( sourceEndian != std::endian::little
-              && sourceEndian != std::endian::big ) ) {
-        static_assert( false, "Mixed endian formats are unsupported." );
-    }
+span_to_integer( const std::span<const std::byte> & data ) {
+    // Error if provided no. bytes != size of output type
+    assert( sizeof( T ) == data.size() );
 
     // Specialisations for common integer sizes
     if constexpr ( sizeof( T ) == 1 )

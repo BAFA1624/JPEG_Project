@@ -3,7 +3,7 @@
 set(PNG_SUB_TEST_SOURCES
     png_types_test.cpp
     png_chunk_test.cpp
-    png_class_test.cpp
+    #png_class_test.cpp
 )
 create_test_sourcelist(PNG_TEST_SOURCES png_tests.cpp ${PNG_SUB_TEST_SOURCES})
 

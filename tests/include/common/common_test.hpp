@@ -20,9 +20,9 @@ integral_to_bytes() {
     };
 
     for ( std::size_t i{ 0 }; i < sizeof( T ); ++i ) {
-        bytes[msb_offset<E, i, sizeof( T )>()] =
+        bytes[msb_offset<E, sizeof( T )>( i )] =
             static_cast<std::byte>( byte_index(
-                T, msb_offset<std::endian::native, i, sizeof( T )>() ) );
+                T, msb_offset<std::endian::native, sizeof( T )>( i ) ) );
     }
 
     return bytes;
@@ -46,9 +46,9 @@ integral_to_bytes( const T x ) {
     };
 
     for ( std::size_t i{ 0 }; i < sizeof( T ); ++i ) {
-        bytes[msb_offset<E, i, sizeof( T )>()] =
+        bytes[msb_offset<E, sizeof( T )>( i )] =
             static_cast<std::byte>( byte_index(
-                x, msb_offset<std::endian::native, i, sizeof( T )>() ) );
+                x, msb_offset<std::endian::native, sizeof( T )>( i ) ) );
     }
 
     return bytes;

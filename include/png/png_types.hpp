@@ -12,8 +12,18 @@
 namespace PNG
 {
 
+// enum class png_error_t : std::uint32_t { NONE, invalid_header, invalid_block
+// };
+//
+// class bad_png_header : public std::runtime_error
+//{
+//     public:
+//     bad_png_header() : std::runtime_error( "Invalid png header detected." )
+//     {}
+// };
+
 // Chunk types underlying values are set to their hex values.
-enum class png_chunk_t : std::uint32_t {
+enum class PngChunkType : std::uint32_t {
     // WARNING:
     // INVALID chunk type is non-specification, i.e internal only
     INVALID = 0,
@@ -102,129 +112,47 @@ enum class png_chunk_t : std::uint32_t {
                          // as tEXt
 
     /* Lower case first letter = non-critical
-     * Lower case last letter = safe to copy, even if application doesn't
-     * understand it.*/
+     * Lower case last letter = safe to copy,
+     * even if application doesn't * understand it.*/
 };
-static constinit std::array<png_chunk_t, 21> valid_png_chunk_t{
+static constinit std::array<PngChunkType, 21> valid_png_chunk_t{
     // clang-format off
-    png_chunk_t::IHDR,
-    png_chunk_t::PLTE,
-    png_chunk_t::IDAT,
-    png_chunk_t::IEND,
-    png_chunk_t::bKGD,
-    png_chunk_t::cHRM,
-    png_chunk_t::dSIG,
-    png_chunk_t::eXIF,
-    png_chunk_t::gAMA,
-    png_chunk_t::hIST,
-    png_chunk_t::iCCP,
-    png_chunk_t::iTXt,
-    png_chunk_t::pHYs,
-    png_chunk_t::sBIT,
-    png_chunk_t::sPLT,
-    png_chunk_t::sRGB,
-    png_chunk_t::sTER,
-    png_chunk_t::tEXt,
-    png_chunk_t::tIME,
-    png_chunk_t::tRNS,
-    png_chunk_t::zTXt
+    PngChunkType::IHDR,
+    PngChunkType::PLTE,
+    PngChunkType::IDAT,
+    PngChunkType::IEND,
+    PngChunkType::bKGD,
+    PngChunkType::cHRM,
+    PngChunkType::dSIG,
+    PngChunkType::eXIF,
+    PngChunkType::gAMA,
+    PngChunkType::hIST,
+    PngChunkType::iCCP,
+    PngChunkType::iTXt,
+    PngChunkType::pHYs,
+    PngChunkType::sBIT,
+    PngChunkType::sPLT,
+    PngChunkType::sRGB,
+    PngChunkType::sTER,
+    PngChunkType::tEXt,
+    PngChunkType::tIME,
+    PngChunkType::tRNS,
+    PngChunkType::zTXt
     // clang-format on
 };
+
 constexpr bool
-isValid( const png_chunk_t png_chunk_type ) {
+isValid( const PngChunkType png_chunk_type ) {
     return std::ranges::contains( valid_png_chunk_t, png_chunk_type );
 }
 
-enum class png_pixel_format_t : std::uint32_t {
+enum class PngPixelFormat : std::uint32_t {
     grayscale = 0,
     truecolor = 2,
     indexed = 3,
     alpha_grayscale = 4,
     alpha_truecolor = 6
 };
-
-enum class png_error_t : std::uint32_t { NONE, invalid_header, invalid_block };
-
-class bad_png_header : public std::runtime_error
-{
-    public:
-    bad_png_header() : std::runtime_error( "Invalid png header detected." ) {}
-};
-
-std::ostream & operator<<( std::ostream &    out_stream,
-                           const png_chunk_t chunk_type );
-
-std::ostream & operator<<( std::ostream &           out_stream,
-                           const png_pixel_format_t pixel_format );
-
-struct PNGChunk
-{
-    private:
-    std::uint32_t data_size; // Length of block
-    png_chunk_t   type;      // Type of block
-    std::unique_ptr<std::byte *>
-        block_ptr; // Pointer to start of block in memory
-    std::bitset<byte_bits * crc_bytes>
-        crc; // Block cyclic-redundancy-check for block
-
-    public:
-    constexpr PNGChunk() noexcept :
-        data_size( 0 ),
-        type( png_chunk_t::INVALID ),
-        block_ptr( nullptr ),
-        crc( 0 ) {}
-    PNGChunk( const std::uint32_t _len, const png_chunk_t _type,
-              std::unique_ptr<std::byte *>               _source_ptr,
-              const std::bitset<byte_bits * crc_bytes> & _crc ) noexcept;
-    PNGChunk( const std::uint32_t _len, const png_chunk_t _type,
-              unsigned char * const                      _source_ptr,
-              const std::bitset<byte_bits * crc_bytes> & _crc ) noexcept;
-
-    NOCOPY( PNGChunk );
-
-    PNGChunk( PNGChunk && rhs ) noexcept;
-    PNGChunk & operator=( PNGChunk && rhs ) noexcept;
-
-    ~PNGChunk() = default;
-
-    [[nodiscard]] PNGChunk deep_copy() const;
-
-    [[nodiscard]] static constexpr bool
-    is_valid( const png_chunk_t type ) noexcept {
-        // switch ( type ) {
-        // case png_chunk_t::IHDR: [[fallthrough]];
-        // case png_chunk_t::PLTE: [[fallthrough]];
-        // case png_chunk_t::IDAT: [[fallthrough]];
-        // case png_chunk_t::IEND: [[fallthrough]];
-        // case png_chunk_t::bKGD: [[fallthrough]];
-        // case png_chunk_t::cHRM: [[fallthrough]];
-        // case png_chunk_t::dSIG: [[fallthrough]];
-        // case png_chunk_t::eXIF: [[fallthrough]];
-        // case png_chunk_t::gAMA: [[fallthrough]];
-        // case png_chunk_t::hIST: [[fallthrough]];
-        // case png_chunk_t::iCCP: [[fallthrough]];
-        // case png_chunk_t::iTXt: [[fallthrough]];
-        // case png_chunk_t::pHYs: [[fallthrough]];
-        // case png_chunk_t::sBIT: [[fallthrough]];
-        // case png_chunk_t::sPLT: [[fallthrough]];
-        // case png_chunk_t::sRGB: [[fallthrough]];
-        // case png_chunk_t::sTER: [[fallthrough]];
-        // case png_chunk_t::tEXt: [[fallthrough]];
-        // case png_chunk_t::tIME: [[fallthrough]];
-        // case png_chunk_t::tRNS: [[fallthrough]];
-        // case png_chunk_t::zTXt: return ( true );
-        // case png_chunk_t::INVALID: [[fallthrough]];
-        //// Enums allow any valid representation of the
-        //// underlying type, not just the defined values.
-        // default: return false;
-        // }
-        return isValid( type );
-    }
-};
-
-std::ostream & operator<<( std::ostream & out_stream, const PNGChunk & chunk );
-
-// Division between Old /\ && new types \/
 
 // Types for the IHDR chunk
 
@@ -286,4 +214,10 @@ isValid( const InterlaceMethod interlace_method ) {
            || interlace_method == InterlaceMethod::ADAM_7;
 }
 
+// ostream operators for png_types
+std::ostream & operator<<( std::ostream &     out_stream,
+                           const PngChunkType chunk_type );
+
+std::ostream & operator<<( std::ostream &       out_stream,
+                           const PngPixelFormat pixel_format );
 } // namespace PNG

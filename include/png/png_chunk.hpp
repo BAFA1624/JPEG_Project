@@ -8,25 +8,25 @@ namespace PNG
 class PngChunkIHDR : public PngChunkBase
 {
     private:
-    static constexpr auto m_chunk_type{ png_chunk_t::IHDR };
+    static constexpr auto m_chunk_type{ PngChunkType::IHDR };
 };
 
 class PngChunkPLTE : public PngChunkBase
 {
     private:
-    static constexpr auto m_chunk_type{ png_chunk_t::PLTE };
+    static constexpr auto m_chunk_type{ PngChunkType::PLTE };
 };
 
 class PngChunkIDAT : public PngChunkBase
 {
     private:
-    static constexpr auto m_chunk_type{ png_chunk_t::IDAT };
+    static constexpr auto m_chunk_type{ PngChunkType::IDAT };
 };
 
 class PngChunkIEND : public PngChunkBase
 {
     private:
-    static constexpr auto m_chunk_type{ png_chunk_t::IEND };
+    static constexpr auto m_chunk_type{ PngChunkType::IEND };
 };
 
 } // namespace PNG

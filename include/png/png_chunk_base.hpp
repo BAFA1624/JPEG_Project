@@ -24,7 +24,7 @@ class PngChunkBase
     using const_base_pointer_t = std::shared_ptr<const PngChunkBase>;
     using base_pointer_t = std::shared_ptr<PngChunkBase>;
 
-    // Returns the png_chunk_t for the current chunk
+    // Returns the PngChunkType for the current chunk
     [[nodiscard]] constexpr auto get_chunk_type() const noexcept {
         return m_chunk_type;
     }
@@ -62,7 +62,7 @@ class PngChunkBase
     };
 
     private:
-    static constexpr auto m_chunk_type{ png_chunk_t::INVALID };
+    static constexpr auto m_chunk_type{ PngChunkType::INVALID };
 };
 
 template <typename Parent, typename Child>
