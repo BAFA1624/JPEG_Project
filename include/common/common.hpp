@@ -54,22 +54,27 @@ constexpr inline std::size_t msb{ (
 
 template <std::endian baseEndianness, std::size_t offset, std::size_t N = 32> requires (offset < N && N != 0)
 consteval inline std::size_t lsb_offset() {
-    if constexpr (baseEndianness == std::endian::little)
+    if constexpr (baseEndianness == std::endian::little) {
         return lsb<baseEndianness, N> + offset;
-    else if constexpr (baseEndianness == std::endian::big)
+    }
+    else if constexpr (baseEndianness == std::endian::big) {
         return lsb<baseEndianness, N> - offset;
-    else
-        static_assert(false, "Mixed endian formats are unsupported.");
+    }
+    else {
+        static_assert( false, "Mixed endian formats are unsupported." );
+    }
 }
 template <std::endian baseEndianness, std::size_t offset, std::size_t N = 32> requires (offset < N && N != 0)
 consteval inline std::size_t msb_offset() {
-    if constexpr (baseEndianness == std::endian::little)
+    if constexpr (baseEndianness == std::endian::little) {
         return msb<baseEndianness, N> - offset;
-    else if constexpr (baseEndianness == std::endian::big)
+    }
+    else if constexpr (baseEndianness == std::endian::big) {
         return msb<baseEndianness, N> + offset;
-    else
-        static_assert(false, "Mixed endian formats are unsupported.");
-
+    }
+    else {
+        static_assert( false, "Mixed endian formats are unsupported." );
+    }
 }
 // clang-format on
 
@@ -154,7 +159,7 @@ span_to_integer( const std::span<std::byte> & data ) {
            && targetEndian != std::endian::big )
          || ( sourceEndian != std::endian::little
               && sourceEndian != std::endian::big ) ) {
-        static_assert( false );
+        static_assert( false, "Mixed endian formats are unsupported." );
     }
 
     // Specialisations for common integer sizes
