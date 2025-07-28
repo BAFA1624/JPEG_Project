@@ -56,6 +56,8 @@ PngChunkPLTE	./include/png/png_chunk.hpp	/^class PngChunkPLTE : public PngChunkB
 PngChunkPayloadBase	./include/png/png_chunk_payload.hpp	/^class PngChunkPayloadBase$/;"	c	namespace:PNG
 PngChunkType	./include/png/png_types.hpp	/^enum class PngChunkType : std::uint32_t {$/;"	c	namespace:PNG
 PngPixelFormat	./include/png/png_types.hpp	/^enum class PngPixelFormat : std::uint32_t {$/;"	c	class:PNG::PngChunkType
+STRINGIFY	./include/common/common.hpp	/^#define STRINGIFY(/;"	d
+STRINGIFY_IMPL	./include/common/common.hpp	/^#define STRINGIFY_IMPL(/;"	d
 TRUE_COLOUR	./include/png/png_types.hpp	/^    TRUE_COLOUR       = 2,$/;"	m	class:PNG::PngChunkType::PngPixelFormat::ColourType
 TRUE_COLOUR_ALPHA	./include/png/png_types.hpp	/^    TRUE_COLOUR_ALPHA = 6,$/;"	m	class:PNG::PngChunkType::PngPixelFormat::ColourType
 Test	./include/common/test_interfaces.hpp	/^concept Test = requires( TestType non_const_test, const TestType const_test,$/;"	v
@@ -65,6 +67,7 @@ VIRTUAL_BASE_CLASS	./include/common/common.hpp	/^#define VIRTUAL_BASE_CLASS(/;"	
 ValidChecker	./include/png/png_chunk_payload.hpp	/^        ValidChecker( const BitDepth bit_depth, const ColourType colour_type,$/;"	f	struct:PNG::IhdrChunkPayload::ValidChecker
 ValidChecker	./include/png/png_chunk_payload.hpp	/^    struct ValidChecker$/;"	s	class:PNG::IhdrChunkPayload
 ValidChild	./include/png/png_chunk_base.hpp	/^concept ValidChild =$/;"	m	namespace:PNG
+ValidEndian	./include/common/common.hpp	/^concept ValidEndian = E == std::endian::little || E == std::endian::big;$/;"	v
 accepts	./include/png/png_chunk_base.hpp	/^    static consteval bool accepts() {$/;"	f	class:PNG::PngChunkBase
 alpha_grayscale	./include/png/png_types.hpp	/^    alpha_grayscale = 4,$/;"	m	class:PNG::PngChunkType::PngPixelFormat
 alpha_truecolor	./include/png/png_types.hpp	/^    alpha_truecolor = 6$/;"	m	class:PNG::PngChunkType::PngPixelFormat
@@ -85,7 +88,7 @@ getWidth	./include/png/png_chunk_payload.hpp	/^    [[nodiscard]] constexpr auto 
 grayscale	./include/png/png_types.hpp	/^    grayscale = 0,$/;"	m	class:PNG::PngChunkType::PngPixelFormat
 header_bytes	./include/png/png.hpp	/^    std::bitset<header_bits> header_bytes;$/;"	m	class:PNG::PNG
 indexed	./include/png/png_types.hpp	/^    indexed = 3,$/;"	m	class:PNG::PngChunkType::PngPixelFormat
-integral_to_bytes	./tests/include/common/common_test.hpp	/^integral_to_bytes( const T x ) {$/;"	f
+integral_to_bytes	./tests/include/common/common_test.hpp	/^integral_to_bytes( const T integer ) {$/;"	f
 integral_to_bytes	./tests/include/common/common_test.hpp	/^integral_to_bytes() {$/;"	f
 isValid	./include/png/png_chunk_payload.hpp	/^        [[nodiscard]] constexpr bool isValid() const {$/;"	f	struct:PNG::IhdrChunkPayload::ValidChecker
 isValid	./include/png/png_types.hpp	/^isValid( const BitDepth bit_depth ) {$/;"	f	class:PNG::PngChunkType::PngPixelFormat
@@ -124,17 +127,18 @@ png_types_test	./tests/png/png_types_test.cpp	/^png_types_test( [[maybe_unused]]
 polynomial	./include/common/crc.hpp	/^    value_t                         polynomial;$/;"	m	class:CRC::CrcTable32
 previous_chunk	./include/png/png_chunk_base.hpp	/^    [[nodiscard]] base_pointer_t previous_chunk() { return m_previous_chunk; }$/;"	f	class:PNG::PngChunkBase
 previous_chunk	./include/png/png_chunk_base.hpp	/^    [[nodiscard]] const_base_pointer_t previous_chunk() const {$/;"	f	class:PNG::PngChunkBase
+print_bits	./tests/common/common_test.cpp	/^print_bits( const T value ) {$/;"	f	class:__anon1::std
 rhs	./include/png/png_chunk_base.hpp	/^    PngChunkBase & operator=( PngChunkBase && rhs ) = delete;$/;"	m	class:PNG::PngChunkBase
 rhs	./include/png/png_chunk_base.hpp	/^    PngChunkBase & operator=( const PngChunkBase & rhs ) = delete;$/;"	m	class:PNG::PngChunkBase
 simple	./include/common/crc.hpp	/^enum class crc_t { simple, table };$/;"	m	class:CRC::crc_t
 table	./include/common/crc.hpp	/^    std::array<value_t, table_size> table;$/;"	m	class:CRC::CrcTable32
-test_convert_endian	./tests/common/common_test.cpp	/^test_convert_endian() {$/;"	f
+test_convert_endian	./tests/common/common_test.cpp	/^test_convert_endian() {$/;"	f	namespace:__anon1
 test_crc_iend	./tests/common/crc_test.cpp	/^test_crc_iend( const std::filesystem::directory_entry & data_src ) {$/;"	f
 test_func	./tests/png/png_types_test.cpp	/^test_func( const Test<double, std::runtime_error, double, double> auto tmp ) {}$/;"	f	namespace:PNG
-test_functions	./tests/common/common_test.cpp	/^const auto test_functions = std::vector<std::function<bool()>>{$/;"	v
-test_lsb_msb	./tests/common/common_test.cpp	/^test_lsb_msb() {$/;"	f
-test_lsb_msb_offset	./tests/common/common_test.cpp	/^test_lsb_msb_offset() {$/;"	f
-test_span_to_integer	./tests/common/common_test.cpp	/^test_span_to_integer() {$/;"	f
+test_functions	./tests/common/common_test.cpp	/^const auto test_functions = std::vector<std::function<bool()>>{$/;"	m	namespace:__anon1	file:
+test_lsb_msb	./tests/common/common_test.cpp	/^test_lsb_msb() {$/;"	f	namespace:__anon1
+test_lsb_msb_offset	./tests/common/common_test.cpp	/^test_lsb_msb_offset() {$/;"	f	namespace:__anon1
+test_span_to_integer	./tests/common/common_test.cpp	/^test_span_to_integer() {$/;"	f	namespace:__anon1
 tmp	./src/main.cpp	/^tmp( const Test<double, std::runtime_error, double> auto & test ) {$/;"	f
 tmp	./tests/png/png_types_test.cpp	/^tmp( const TestError auto error ) {$/;"	f	namespace:PNG
 truecolor	./include/png/png_types.hpp	/^    truecolor = 2,$/;"	m	class:PNG::PngChunkType::PngPixelFormat
