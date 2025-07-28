@@ -6,6 +6,9 @@
 #include <ostream>
 #include <span>
 
+#define STRINGIFY_IMPL( x ) #x
+#define STRINGIFY( x )      STRINGIFY_IMPL( x )
+
 #define NOMOVE( class )         \
     class( class && ) = delete; \
     class & operator=( class && ) = delete;
@@ -47,17 +50,17 @@ convert_endian( const T value ) {
 
 // clang-format off
 // Least Significant Bit
-template <std::endian E, std::size_t N = 32> requires (N != 0) && ValidEndian<E>
+template <std::endian E, std::size_t N> requires (N != 0) && ValidEndian<E>
 constexpr inline std::size_t lsb{ (
     E == std::endian::little ? 0 : N - 1 ) };
 // Most Significant Bit
-template <std::endian E, std::size_t N = 32> requires (N != 0) && ValidEndian<E>
+template <std::endian E, std::size_t N> requires (N != 0) && ValidEndian<E>
 constexpr inline std::size_t msb{ (
     E == std::endian::little ? N - 1 : 0 ) };
 
 // Consteval offset functions for compile time known offsets
-template <std::endian E, std::size_t offset, std::size_t N = 32> requires (offset < N && N != 0) && ValidEndian<E>
-consteval inline std::size_t lsb_offset() {
+template <std::endian E, std::size_t offset, std::size_t N> requires (offset < N && N != 0) && ValidEndian<E>
+consteval std::size_t lsb_offset() {
     if constexpr (E == std::endian::little) {
         return lsb<E, N> + offset;
     }
@@ -65,8 +68,8 @@ consteval inline std::size_t lsb_offset() {
         return lsb<E, N> - offset;
     }
 }
-template <std::endian E, std::size_t offset, std::size_t N = 32> requires (offset < N && N != 0) && ValidEndian<E>
-consteval inline std::size_t msb_offset() {
+template <std::endian E, std::size_t offset, std::size_t N> requires (offset < N && N != 0) && ValidEndian<E>
+consteval std::size_t msb_offset() {
     if constexpr (E == std::endian::little) {
         return msb<E, N> - offset;
     }
@@ -75,8 +78,8 @@ consteval inline std::size_t msb_offset() {
     }
 }
 
-template <std::endian E, std::size_t N = 32> requires (N != 0) && ValidEndian<E>
-constexpr inline std::size_t lsb_offset(const std::size_t offset) {
+template <std::endian E, std::size_t N> requires (N != 0) && ValidEndian<E>
+constexpr std::size_t lsb_offset(const std::size_t offset) {
     if constexpr (E == std::endian::little) {
         return lsb<E, N> + offset;
     }
@@ -85,8 +88,8 @@ constexpr inline std::size_t lsb_offset(const std::size_t offset) {
     }
 }
 
-template <std::endian E, std::size_t N = 32> requires (N != 0) && ValidEndian<E>
-constexpr inline std::size_t msb_offset(const std::size_t offset) {
+template <std::endian E, std::size_t N> requires (N != 0) && ValidEndian<E>
+constexpr std::size_t msb_offset(const std::size_t offset) {
     if constexpr (E == std::endian::little) {
         return msb<E, N> - offset;
     }
@@ -113,59 +116,81 @@ template <typename T, std::endian sourceEndian,
 constexpr T span_to_integer_2( const std::span<const std::byte> & data ) {
     if constexpr ( targetEndian == std::endian::little ) {
         return static_cast<T>( data[lsb<sourceEndian, 2>] )
-               | static_cast<T>( data[msb<sourceEndian, 2>] );
+               | ( static_cast<T>( data[msb<sourceEndian, 2>] ) << byte_bits );
     }
     else if constexpr ( targetEndian == std::endian::big ) {
         return static_cast<T>( data[msb<sourceEndian, 2>] )
-               | static_cast<T>( data[lsb<sourceEndian, 2>] );
+               | ( static_cast<T>( data[lsb<sourceEndian, 2>] ) << byte_bits );
     }
 }
 
 template <typename T, std::endian sourceEndian,
           std::endian targetEndian = std::endian::native>
     requires std::is_integral_v<T> && std::is_unsigned_v<T>
-             && ( sizeof( T ) == 4 )
+             && ( sizeof( T ) == sizeof( std::uint32_t ) )
              && ValidEndian<sourceEndian> && ValidEndian<targetEndian>
 constexpr T span_to_integer_4( const std::span<const std::byte> & data ) {
+    constexpr const auto size{ sizeof( std::uint32_t ) };
     if constexpr ( targetEndian == std::endian::little ) {
-        return static_cast<T>( data[lsb<sourceEndian, 4>] )
-               | static_cast<T>( data[msb_offset<sourceEndian, 2, 4>()] )
-               | static_cast<T>( data[msb_offset<sourceEndian, 1, 4>()] )
-               | static_cast<T>( data[msb<sourceEndian, 4>] );
+        return static_cast<T>( data[lsb<sourceEndian, size>] )
+               | ( static_cast<T>( data[msb_offset<sourceEndian, 2, size>()] )
+                   << byte_bits * 1 )
+               | ( static_cast<T>( data[msb_offset<sourceEndian, 1, size>()] )
+                   << byte_bits * 2 )
+               | ( static_cast<T>( data[msb<sourceEndian, size>] )
+                   << byte_bits * 3 );
     }
-    else if ( targetEndian == std::endian::big ) {
-        return static_cast<T>( data[msb<sourceEndian, 4>] )
-               | static_cast<T>( data[msb_offset<sourceEndian, 1, 4>()] )
-               | static_cast<T>( data[msb_offset<sourceEndian, 2, 4>()] )
-               | static_cast<T>( data[lsb<sourceEndian, 4>] );
+    else if constexpr ( targetEndian == std::endian::big ) {
+        return static_cast<T>( data[msb<sourceEndian, size>] )
+               | ( static_cast<T>( data[msb_offset<sourceEndian, 1, size>()] )
+                   << byte_bits * 1 )
+               | ( static_cast<T>( data[msb_offset<sourceEndian, 2, size>()] )
+                   << byte_bits * 2 )
+               | ( static_cast<T>( data[lsb<sourceEndian, size>] )
+                   << byte_bits * 3 );
     }
 }
 
 template <typename T, std::endian sourceEndian,
           std::endian targetEndian = std::endian::native>
     requires std::is_integral_v<T> && std::is_unsigned_v<T>
-             && ( sizeof( T ) == 8 )
+             && ( sizeof( T ) == sizeof( std::uint64_t ) )
              && ValidEndian<sourceEndian> && ValidEndian<targetEndian>
 constexpr T span_to_integer_8( const std::span<const std::byte> & data ) {
+    constexpr const auto size{ sizeof( std::uint64_t ) };
     if constexpr ( targetEndian == std::endian::little ) {
-        return static_cast<T>( data[lsb<sourceEndian, 8>] )
-               | static_cast<T>( data[msb_offset<sourceEndian, 6, 8>()] )
-               | static_cast<T>( data[msb_offset<sourceEndian, 5, 8>()] )
-               | static_cast<T>( data[msb_offset<sourceEndian, 4, 8>()] )
-               | static_cast<T>( data[msb_offset<sourceEndian, 3, 8>()] )
-               | static_cast<T>( data[msb_offset<sourceEndian, 2, 8>()] )
-               | static_cast<T>( data[msb_offset<sourceEndian, 1, 8>()] )
-               | static_cast<T>( data[msb<sourceEndian, 8>] );
+        return static_cast<T>( data[lsb<sourceEndian, size>] )
+               | ( static_cast<T>( data[msb_offset<sourceEndian, 6, size>()] )
+                   << byte_bits )
+               | ( static_cast<T>( data[msb_offset<sourceEndian, 5, size>()] )
+                   << byte_bits * 2 )
+               | ( static_cast<T>( data[msb_offset<sourceEndian, 4, size>()] )
+                   << byte_bits * 3 )
+               | ( static_cast<T>( data[msb_offset<sourceEndian, 3, size>()] )
+                   << byte_bits * 4 )
+               | ( static_cast<T>( data[msb_offset<sourceEndian, 2, size>()] )
+                   << byte_bits * 5 )
+               | ( static_cast<T>( data[msb_offset<sourceEndian, 1, size>()] )
+                   << byte_bits * 6 )
+               | ( static_cast<T>( data[msb<sourceEndian, size>] )
+                   << byte_bits * 7 );
     }
-    else if ( targetEndian == std::endian::big ) {
-        return static_cast<T>( data[msb<sourceEndian, 8>] )
-               | static_cast<T>( data[msb_offset<sourceEndian, 1, 8>()] )
-               | static_cast<T>( data[msb_offset<sourceEndian, 2, 8>()] )
-               | static_cast<T>( data[msb_offset<sourceEndian, 3, 8>()] )
-               | static_cast<T>( data[msb_offset<sourceEndian, 4, 8>()] )
-               | static_cast<T>( data[msb_offset<sourceEndian, 5, 8>()] )
-               | static_cast<T>( data[msb_offset<sourceEndian, 6, 8>()] )
-               | static_cast<T>( data[lsb<sourceEndian, 8>] );
+    else if constexpr ( targetEndian == std::endian::big ) {
+        return static_cast<T>( data[msb<sourceEndian, size>] )
+               | ( static_cast<T>( data[msb_offset<sourceEndian, 1, size>()] )
+                   << byte_bits )
+               | ( static_cast<T>( data[msb_offset<sourceEndian, 2, size>()] )
+                   << byte_bits * 2 )
+               | ( static_cast<T>( data[msb_offset<sourceEndian, 3, size>()] )
+                   << byte_bits * 3 )
+               | ( static_cast<T>( data[msb_offset<sourceEndian, 4, size>()] )
+                   << byte_bits * 4 )
+               | ( static_cast<T>( data[msb_offset<sourceEndian, 5, size>()] )
+                   << byte_bits * 5 )
+               | ( static_cast<T>( data[msb_offset<sourceEndian, 6, size>()] )
+                   << byte_bits * 6 )
+               | ( static_cast<T>( data[lsb<sourceEndian, size>] )
+                   << byte_bits * 7 );
     }
 }
 
@@ -179,22 +204,27 @@ span_to_integer( const std::span<const std::byte> & data ) {
     assert( sizeof( T ) == data.size() );
 
     // Specialisations for common integer sizes
-    if constexpr ( sizeof( T ) == 1 )
+    if constexpr ( sizeof( T ) == sizeof( std::uint8_t ) ) {
         return span_to_integer_1<T, sourceEndian, targetEndian>( data );
-    if constexpr ( sizeof( T ) == 2 )
+    }
+    if constexpr ( sizeof( T ) == sizeof( std::uint16_t ) ) {
         return span_to_integer_2<T, sourceEndian, targetEndian>( data );
-    if constexpr ( sizeof( T ) == 4 )
+    }
+    if constexpr ( sizeof( T ) == sizeof( std::uint32_t ) ) {
         return span_to_integer_4<T, sourceEndian, targetEndian>( data );
-    if constexpr ( sizeof( T ) == 8 )
-        return span_to_integer<T, sourceEndian, targetEndian>( data );
+    }
+    if constexpr ( sizeof( T ) == sizeof( std::uint64_t ) ) {
+        return span_to_integer_8<T, sourceEndian, targetEndian>( data );
+    }
 
     // General calculation for less common sizes
     T result{ 0 };
     for ( std::size_t i{ 0 }; i < sizeof( T ); ++i ) {
-        std::size_t shift_value{ byte_bits
-                                 * ( msb<targetEndian, sizeof( T )> - i ) };
-        result |= static_cast<T>( data[msb<sourceEndian, sizeof( T )> - i] )
-                  << shift_value;
+        const T shift_value{ static_cast<T>( byte_bits )
+                             * msb_offset<targetEndian, sizeof( T )>( i ) };
+        result |=
+            static_cast<T>( data[msb_offset<sourceEndian, sizeof( T )>( i )] )
+            << static_cast<std::size_t>( shift_value );
     }
 
     return result;
