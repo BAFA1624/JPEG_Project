@@ -13,7 +13,7 @@ CrcTable32::calculate_table() noexcept {
         for ( std::uint32_t j{ 0 }; j < 8; ++j ) {
             c = ( c >> 1 )
                 ^ ( ( c & value_t{ 1 } )
-                            .test( lsb<std::endian::native, crc_bits> ) ?
+                            .test( lsb<std::uint32_t, std::endian::native> ) ?
                         polynomial :
                         0 );
         }

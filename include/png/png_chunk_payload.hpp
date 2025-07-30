@@ -57,9 +57,9 @@ class IhdrChunkPayload : protected PngChunkPayloadBase
                 valid_bit_depth = PNG::isValid( bit_depth );
             } break;
             case ColourType::INDEXED_COLOUR: {
-                static constexpr std::array<BitDepth, 4> valid_bit_depths{ 1, 2,
-                                                                           4,
-                                                                           8 };
+                static constexpr std::array<BitDepth, 4> valid_bit_depths{
+                    1, 2, 4, 8
+                };
                 valid_bit_depth =
                     PNG::isValid( bit_depth )
                     && std::ranges::contains( valid_bit_depths, bit_depth );
@@ -87,7 +87,8 @@ class IhdrChunkPayload : protected PngChunkPayloadBase
 
     public:
     IhdrChunkPayload() = delete;
-    explicit IhdrChunkPayload( const std::span<const std::byte> & data );
+    constexpr explicit IhdrChunkPayload(
+        const std::span<const std::byte> & data );
     constexpr IhdrChunkPayload( const BitDepth          bit_depth,
                                 const ColourType        colour_type,
                                 const CompressionMethod compression_method,
