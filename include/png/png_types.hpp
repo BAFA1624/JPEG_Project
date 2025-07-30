@@ -186,6 +186,31 @@ constexpr bool
 isValid( const ColourType colour_type ) {
     return std::ranges::contains( valid_colour_types, colour_type );
 }
+constexpr bool
+isValid( const ColourType colour_type, const BitDepth bit_depth ) {
+    bool is_valid{ false };
+    switch ( colour_type ) {
+    case ColourType::GREYSCALE: {
+        is_valid = PNG::isValid( bit_depth );
+    } break;
+    case ColourType::INDEXED_COLOUR: {
+        constexpr std::array<BitDepth, 4> valid_bit_depths{ 1, 2, 4, 8 };
+        is_valid = PNG::isValid( bit_depth )
+                   && std::ranges::contains( valid_bit_depths, bit_depth );
+    } break;
+    case ColourType::TRUE_COLOUR: [[fallthrough]];
+    case ColourType::GREYSCALE_ALPHA: [[fallthrough]];
+    case ColourType::TRUE_COLOUR_ALPHA: {
+        constexpr std::array<BitDepth, 3> valid_bit_depths{ 8, 16 };
+        is_valid = PNG::isValid( bit_depth )
+                   && std::ranges::contains( valid_bit_depths, bit_depth );
+    } break;
+    case ColourType::INVALID: [[fallthrough]];
+    default: is_valid = false;
+    }
+
+    return is_valid;
+}
 
 enum class CompressionMethod : std::uint8_t {
     COMPRESSION_METHOD_0 = 0,

@@ -11,72 +11,59 @@ namespace PNG
 class PngChunkPayloadBase
 {
     private:
+    protected:
+    std::uint32_t size;
+    PngChunkType  chunk_type;
+
     public:
-    VIRTUAL_BASE_CLASS( PngChunkPayloadBase )
-    [[nodiscard]] virtual constexpr std::uint32_t getSize() const = 0;
+    PngChunkPayloadBase( const std::uint32_t size,
+                         const PngChunkType  chunk_type ) :
+        size( size ), chunk_type( chunk_type ) {}
+    virtual ~PngChunkPayloadBase() = default;
+    PngChunkPayloadBase( const PngChunkPayloadBase & other );
+
     [[nodiscard]] virtual constexpr bool          isValid() const = 0;
+    [[nodiscard]] virtual constexpr std::uint32_t getSize() const {
+        return size;
+    }
+    [[nodiscard]] virtual constexpr PngChunkType getChunkType() const {
+        return chunk_type;
+    }
 };
 
 // Critical Chunks:
 
-class IhdrChunkPayload : protected PngChunkPayloadBase
+class IhdrChunkPayload final : protected PngChunkPayloadBase
 {
     private:
-    constexpr static std::uint32_t m_size{ 13 };
-
     // IHDR Chunk Members:
-    std::uint32_t     m_width;
-    std::uint32_t     m_height;
-    BitDepth          m_bit_depth;
-    ColourType        m_colour_type;
-    CompressionMethod m_compression_method;
-    FilterMethod      m_filter_method;
-    InterlaceMethod   m_interlace_method;
+    std::uint32_t     width;
+    std::uint32_t     height;
+    BitDepth          bit_depth;
+    ColourType        colour_type;
+    CompressionMethod compression_method;
+    FilterMethod      filter_method;
+    InterlaceMethod   interlace_method;
 
     struct ValidChecker
     {
+        private:
         bool valid_bit_depth;
         bool valid_colour_type;
         bool valid_compression_method;
         bool valid_filter_method;
         bool valid_interlace_method;
 
+        public:
         ValidChecker( const BitDepth bit_depth, const ColourType colour_type,
                       const CompressionMethod compression_method,
                       const FilterMethod      filter_method,
                       const InterlaceMethod   interlace_method ) :
+            valid_bit_depth( PNG::isValid( colour_type, bit_depth ) ),
             valid_colour_type( PNG::isValid( colour_type ) ),
             valid_compression_method( PNG::isValid( compression_method ) ),
             valid_filter_method( PNG::isValid( filter_method ) ),
-            valid_interlace_method( PNG::isValid( interlace_method ) ) {
-            if ( !valid_colour_type )
-                return;
-
-            switch ( colour_type ) {
-            case ColourType::GREYSCALE: {
-                valid_bit_depth = PNG::isValid( bit_depth );
-            } break;
-            case ColourType::INDEXED_COLOUR: {
-                static constexpr std::array<BitDepth, 4> valid_bit_depths{
-                    1, 2, 4, 8
-                };
-                valid_bit_depth =
-                    PNG::isValid( bit_depth )
-                    && std::ranges::contains( valid_bit_depths, bit_depth );
-            } break;
-            case ColourType::TRUE_COLOUR: [[fallthrough]];
-            case ColourType::GREYSCALE_ALPHA: [[fallthrough]];
-            case ColourType::TRUE_COLOUR_ALPHA: {
-                static constexpr std::array<BitDepth, 3> valid_bit_depths{ 8,
-                                                                           16 };
-                valid_bit_depth =
-                    PNG::isValid( bit_depth )
-                    && std::ranges::contains( valid_bit_depths, bit_depth );
-            } break;
-            case ColourType::INVALID: [[fallthrough]];
-            default: valid_bit_depth = false;
-            }
-        };
+            valid_interlace_method( PNG::isValid( interlace_method ) ) {};
 
         [[nodiscard]] constexpr bool isValid() const {
             return valid_bit_depth && valid_colour_type
@@ -87,37 +74,38 @@ class IhdrChunkPayload : protected PngChunkPayloadBase
 
     public:
     IhdrChunkPayload() = delete;
-    constexpr explicit IhdrChunkPayload(
-        const std::span<const std::byte> & data );
-    constexpr IhdrChunkPayload( const BitDepth          bit_depth,
+    constexpr IhdrChunkPayload( const std::uint32_t     width,
+                                const std::uint32_t     height,
+                                const BitDepth          bit_depth,
                                 const ColourType        colour_type,
                                 const CompressionMethod compression_method,
                                 const FilterMethod      filter_method,
                                 const InterlaceMethod   interlace_method );
+    explicit IhdrChunkPayload( const std::span<const std::byte> & data );
     IhdrChunkPayload( const IhdrChunkPayload & other );
-    IhdrChunkPayload( IhdrChunkPayload && other );
+    IhdrChunkPayload & operator=( const IhdrChunkPayload & other );
+    IhdrChunkPayload( IhdrChunkPayload && other ) noexcept;
+    IhdrChunkPayload & operator=( IhdrChunkPayload && other ) noexcept;
+    ~IhdrChunkPayload() override = default;
 
     // Overrides
-    [[nodiscard]] constexpr std::uint32_t getSize() const override {
-        return m_size;
-    }
     [[nodiscard]] constexpr bool isValid() const override {
-        return m_width > 0 && m_height > 0;
+        return width > 0 && height > 0;
     }
 
     // Getters
-    [[nodiscard]] constexpr auto getWidth() const { return m_width; }
-    [[nodiscard]] constexpr auto getHeight() const { return m_height; }
-    [[nodiscard]] constexpr auto getBitDepth() const { return m_bit_depth; }
-    [[nodiscard]] constexpr auto getColourType() const { return m_colour_type; }
+    [[nodiscard]] constexpr auto getWidth() const { return width; }
+    [[nodiscard]] constexpr auto getHeight() const { return height; }
+    [[nodiscard]] constexpr auto getBitDepth() const { return bit_depth; }
+    [[nodiscard]] constexpr auto getColourType() const { return colour_type; }
     [[nodiscard]] constexpr auto getCompressionMethod() const {
-        return m_compression_method;
+        return compression_method;
     }
     [[nodiscard]] constexpr auto getFilterMethod() const {
-        return m_filter_method;
+        return filter_method;
     }
     [[nodiscard]] constexpr auto getInterlaceMethod() const {
-        return m_interlace_method;
+        return interlace_method;
     }
 };
 
