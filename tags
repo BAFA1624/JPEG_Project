@@ -25,8 +25,8 @@ INVALID	./include/png/png_types.hpp	/^    INVALID = 1$/;"	m	class:PNG::PngChunkT
 INVALID	./include/png/png_types.hpp	/^enum class FilterMethod : std::uint8_t { FILTER_METHOD_0 = 0, INVALID = 1 };$/;"	m	class:PNG::PngChunkType::PngPixelFormat::ColourType::CompressionMethod::FilterMethod
 IdatChunkPayload	./include/png/png_chunk_payload.hpp	/^class IdatChunkPayload : protected PngChunkPayloadBase$/;"	c	namespace:PNG
 IendChunkPayload	./include/png/png_chunk_payload.hpp	/^class IendChunkPayload : protected PngChunkPayloadBase$/;"	c	namespace:PNG
-IhdrChunkPayload	./include/png/png_chunk_payload.hpp	/^class IhdrChunkPayload : protected PngChunkPayloadBase$/;"	c	namespace:PNG
 IhdrChunkPayload	./src/png/png_chunk_payload.cpp	/^IhdrChunkPayload::IhdrChunkPayload($/;"	f	class:PNG::IhdrChunkPayload
+IhdrChunkPayload	./src/png/png_chunk_payload.cpp	/^constexpr IhdrChunkPayload::IhdrChunkPayload($/;"	f	class:PNG::IhdrChunkPayload
 InterlaceMethod	./include/png/png_types.hpp	/^enum class InterlaceMethod : std::uint8_t {$/;"	c	class:PNG::PngChunkType::PngPixelFormat::ColourType::CompressionMethod::FilterMethod
 NOCOPY	./include/common/common.hpp	/^#define NOCOPY(/;"	d
 NOMOVE	./include/common/common.hpp	/^#define NOMOVE(/;"	d
@@ -53,6 +53,7 @@ PngChunkIDAT	./include/png/png_chunk.hpp	/^class PngChunkIDAT : public PngChunkB
 PngChunkIEND	./include/png/png_chunk.hpp	/^class PngChunkIEND : public PngChunkBase$/;"	c	namespace:PNG
 PngChunkIHDR	./include/png/png_chunk.hpp	/^class PngChunkIHDR : public PngChunkBase$/;"	c	namespace:PNG
 PngChunkPLTE	./include/png/png_chunk.hpp	/^class PngChunkPLTE : public PngChunkBase$/;"	c	namespace:PNG
+PngChunkPayloadBase	./include/png/png_chunk_payload.hpp	/^    PngChunkPayloadBase( const std::uint32_t size,$/;"	f	class:PNG::PngChunkPayloadBase
 PngChunkPayloadBase	./include/png/png_chunk_payload.hpp	/^class PngChunkPayloadBase$/;"	c	namespace:PNG
 PngChunkType	./include/png/png_types.hpp	/^enum class PngChunkType : std::uint32_t {$/;"	c	namespace:PNG
 PngPixelFormat	./include/png/png_types.hpp	/^enum class PngPixelFormat : std::uint32_t {$/;"	c	class:PNG::PngChunkType
@@ -64,60 +65,67 @@ Test	./include/common/test_interfaces.hpp	/^concept Test = requires( TestType no
 TestError	./include/common/test_interfaces.hpp	/^concept TestError = std::derived_from<TestErrorType, std::runtime_error>;$/;"	v
 TestError	./include/common/test_interfaces.hpp	/^static_assert( TestError<NullError> );$/;"	v
 VIRTUAL_BASE_CLASS	./include/common/common.hpp	/^#define VIRTUAL_BASE_CLASS(/;"	d
-ValidChecker	./include/png/png_chunk_payload.hpp	/^        ValidChecker( const BitDepth bit_depth, const ColourType colour_type,$/;"	f	struct:PNG::IhdrChunkPayload::ValidChecker
-ValidChecker	./include/png/png_chunk_payload.hpp	/^    struct ValidChecker$/;"	s	class:PNG::IhdrChunkPayload
+ValidChecker	./include/png/png_chunk_payload.hpp	/^        ValidChecker( const BitDepth bit_depth, const ColourType colour_type,$/;"	f	struct:PNG::final::ValidChecker
+ValidChecker	./include/png/png_chunk_payload.hpp	/^    struct ValidChecker$/;"	s	class:PNG::final
 ValidChild	./include/png/png_chunk_base.hpp	/^concept ValidChild =$/;"	m	namespace:PNG
 ValidEndian	./include/common/common.hpp	/^concept ValidEndian = E == std::endian::little || E == std::endian::big;$/;"	v
 accepts	./include/png/png_chunk_base.hpp	/^    static consteval bool accepts() {$/;"	f	class:PNG::PngChunkBase
 alpha_grayscale	./include/png/png_types.hpp	/^    alpha_grayscale = 4,$/;"	m	class:PNG::PngChunkType::PngPixelFormat
 alpha_truecolor	./include/png/png_types.hpp	/^    alpha_truecolor = 6$/;"	m	class:PNG::PngChunkType::PngPixelFormat
+bit_depth	./include/png/png_chunk_payload.hpp	/^    BitDepth          bit_depth;$/;"	m	class:PNG::final
+chunk_type	./include/png/png_chunk_payload.hpp	/^    PngChunkType  chunk_type;$/;"	m	class:PNG::PngChunkPayloadBase
+colour_type	./include/png/png_chunk_payload.hpp	/^    ColourType        colour_type;$/;"	m	class:PNG::final
 common_test	./tests/common/common_test.cpp	/^common_test( [[maybe_unused]] int argc, [[maybe_unused]] char ** argv ) {$/;"	f
+compression_method	./include/png/png_chunk_payload.hpp	/^    CompressionMethod compression_method;$/;"	m	class:PNG::final
 convert_endian	./include/common/common.hpp	/^convert_endian( const T value ) {$/;"	f
 crc	./src/common/crc.cpp	/^CrcTable32::crc( const std::span<const std::byte> input_bytes ) {$/;"	f	class:CRC::CrcTable32
 crc_calculator	./include/png/png.hpp	/^    CRC::CrcTable32          crc_calculator;$/;"	m	class:PNG::PNG
 crc_t	./include/common/crc.hpp	/^enum class crc_t { simple, table };$/;"	c	namespace:CRC
 crc_test	./tests/common/crc_test.cpp	/^crc_test( [[maybe_unused]] int argc, [[maybe_unused]] char ** argv ) {$/;"	f
 current_error	./include/png/png.hpp	/^    png_error_t              current_error;$/;"	m	class:PNG::PNG
-getBitDepth	./include/png/png_chunk_payload.hpp	/^    [[nodiscard]] constexpr auto getBitDepth() const { return m_bit_depth; }$/;"	f	class:PNG::IhdrChunkPayload
-getColourType	./include/png/png_chunk_payload.hpp	/^    [[nodiscard]] constexpr auto getColourType() const { return m_colour_type; }$/;"	f	class:PNG::IhdrChunkPayload
-getCompressionMethod	./include/png/png_chunk_payload.hpp	/^    [[nodiscard]] constexpr auto getCompressionMethod() const {$/;"	f	class:PNG::IhdrChunkPayload
-getFilterMethod	./include/png/png_chunk_payload.hpp	/^    [[nodiscard]] constexpr auto getFilterMethod() const {$/;"	f	class:PNG::IhdrChunkPayload
-getHeight	./include/png/png_chunk_payload.hpp	/^    [[nodiscard]] constexpr auto getHeight() const { return m_height; }$/;"	f	class:PNG::IhdrChunkPayload
-getInterlaceMethod	./include/png/png_chunk_payload.hpp	/^    [[nodiscard]] constexpr auto getInterlaceMethod() const {$/;"	f	class:PNG::IhdrChunkPayload
-getWidth	./include/png/png_chunk_payload.hpp	/^    [[nodiscard]] constexpr auto getWidth() const { return m_width; }$/;"	f	class:PNG::IhdrChunkPayload
+filter_method	./include/png/png_chunk_payload.hpp	/^    FilterMethod      filter_method;$/;"	m	class:PNG::final
+final	./include/png/png_chunk_payload.hpp	/^class IhdrChunkPayload final : protected PngChunkPayloadBase$/;"	c	namespace:PNG
+getBitDepth	./include/png/png_chunk_payload.hpp	/^    [[nodiscard]] constexpr auto getBitDepth() const { return bit_depth; }$/;"	f	class:PNG::final
+getChunkType	./include/png/png_chunk_payload.hpp	/^    [[nodiscard]] virtual constexpr PngChunkType getChunkType() const {$/;"	f	class:PNG::PngChunkPayloadBase
+getColourType	./include/png/png_chunk_payload.hpp	/^    [[nodiscard]] constexpr auto getColourType() const { return colour_type; }$/;"	f	class:PNG::final
+getCompressionMethod	./include/png/png_chunk_payload.hpp	/^    [[nodiscard]] constexpr auto getCompressionMethod() const {$/;"	f	class:PNG::final
+getFilterMethod	./include/png/png_chunk_payload.hpp	/^    [[nodiscard]] constexpr auto getFilterMethod() const {$/;"	f	class:PNG::final
+getHeight	./include/png/png_chunk_payload.hpp	/^    [[nodiscard]] constexpr auto getHeight() const { return height; }$/;"	f	class:PNG::final
+getInterlaceMethod	./include/png/png_chunk_payload.hpp	/^    [[nodiscard]] constexpr auto getInterlaceMethod() const {$/;"	f	class:PNG::final
+getSize	./include/png/png_chunk_payload.hpp	/^    [[nodiscard]] virtual constexpr std::uint32_t getSize() const {$/;"	f	class:PNG::PngChunkPayloadBase
+getWidth	./include/png/png_chunk_payload.hpp	/^    [[nodiscard]] constexpr auto getWidth() const { return width; }$/;"	f	class:PNG::final
 grayscale	./include/png/png_types.hpp	/^    grayscale = 0,$/;"	m	class:PNG::PngChunkType::PngPixelFormat
 header_bytes	./include/png/png.hpp	/^    std::bitset<header_bits> header_bytes;$/;"	m	class:PNG::PNG
+height	./include/png/png_chunk_payload.hpp	/^    std::uint32_t     height;$/;"	m	class:PNG::final
 indexed	./include/png/png_types.hpp	/^    indexed = 3,$/;"	m	class:PNG::PngChunkType::PngPixelFormat
 integral_to_bytes	./tests/include/common/common_test.hpp	/^integral_to_bytes( const T integer ) {$/;"	f
 integral_to_bytes	./tests/include/common/common_test.hpp	/^integral_to_bytes() {$/;"	f
-isValid	./include/png/png_chunk_payload.hpp	/^        [[nodiscard]] constexpr bool isValid() const {$/;"	f	struct:PNG::IhdrChunkPayload::ValidChecker
+interlace_method	./include/png/png_chunk_payload.hpp	/^    InterlaceMethod   interlace_method;$/;"	m	class:PNG::final
+isValid	./include/png/png_chunk_payload.hpp	/^        [[nodiscard]] constexpr bool isValid() const {$/;"	f	struct:PNG::final::ValidChecker
 isValid	./include/png/png_types.hpp	/^isValid( const BitDepth bit_depth ) {$/;"	f	class:PNG::PngChunkType::PngPixelFormat
 isValid	./include/png/png_types.hpp	/^isValid( const ColourType colour_type ) {$/;"	f	class:PNG::PngChunkType::PngPixelFormat::ColourType
+isValid	./include/png/png_types.hpp	/^isValid( const ColourType colour_type, const BitDepth bit_depth ) {$/;"	f	class:PNG::PngChunkType::PngPixelFormat::ColourType
 isValid	./include/png/png_types.hpp	/^isValid( const CompressionMethod compression_method ) {$/;"	f	class:PNG::PngChunkType::PngPixelFormat::ColourType::CompressionMethod
 isValid	./include/png/png_types.hpp	/^isValid( const FilterMethod filter_method ) {$/;"	f	class:PNG::PngChunkType::PngPixelFormat::ColourType::CompressionMethod::FilterMethod
 isValid	./include/png/png_types.hpp	/^isValid( const InterlaceMethod interlace_method ) {$/;"	f	class:PNG::PngChunkType::PngPixelFormat::ColourType::CompressionMethod::FilterMethod::InterlaceMethod
 isValid	./include/png/png_types.hpp	/^isValid( const PngChunkType png_chunk_type ) {$/;"	f	class:PNG::PngChunkType
 is_table_computed	./include/common/crc.hpp	/^    bool                            is_table_computed;$/;"	m	class:CRC::CrcTable32
-m_bit_depth	./include/png/png_chunk_payload.hpp	/^    BitDepth          m_bit_depth;$/;"	m	class:PNG::IhdrChunkPayload
-m_colour_type	./include/png/png_chunk_payload.hpp	/^    ColourType        m_colour_type;$/;"	m	class:PNG::IhdrChunkPayload
-m_compression_method	./include/png/png_chunk_payload.hpp	/^    CompressionMethod m_compression_method;$/;"	m	class:PNG::IhdrChunkPayload
-m_filter_method	./include/png/png_chunk_payload.hpp	/^    FilterMethod      m_filter_method;$/;"	m	class:PNG::IhdrChunkPayload
-m_height	./include/png/png_chunk_payload.hpp	/^    std::uint32_t     m_height;$/;"	m	class:PNG::IhdrChunkPayload
-m_interlace_method	./include/png/png_chunk_payload.hpp	/^    InterlaceMethod   m_interlace_method;$/;"	m	class:PNG::IhdrChunkPayload
 m_next_chunk	./include/png/png_chunk_base.hpp	/^    base_pointer_t m_next_chunk;$/;"	m	class:PNG::PngChunkBase
 m_previous_chunk	./include/png/png_chunk_base.hpp	/^    base_pointer_t m_previous_chunk;$/;"	m	class:PNG::PngChunkBase
-m_width	./include/png/png_chunk_payload.hpp	/^    std::uint32_t     m_width;$/;"	m	class:PNG::IhdrChunkPayload
 main	./src/main.cpp	/^main( [[maybe_unused]] int argc, [[maybe_unused]] char * argv[] ) {$/;"	f
 next_chunk	./include/png/png_chunk_base.hpp	/^    [[nodiscard]] base_pointer_t       next_chunk() { return m_next_chunk; }$/;"	f	class:PNG::PngChunkBase
 next_chunk	./include/png/png_chunk_base.hpp	/^    [[nodiscard]] const_base_pointer_t next_chunk() const {$/;"	f	class:PNG::PngChunkBase
 noexcept	./include/common/crc.hpp	/^                const std::span<const std::byte> input_bytes ) noexcept;$/;"	m	class:CRC::CrcTable32
 noexcept	./include/common/crc.hpp	/^    void calculate_table() noexcept;$/;"	m	class:CRC::CrcTable32
 noexcept	./include/png/png.hpp	/^    verify_png_header( const std::bitset<header_bits> & header ) noexcept;$/;"	m	class:PNG::PNG
+noexcept	./include/png/png_chunk_payload.hpp	/^    IhdrChunkPayload & operator=( IhdrChunkPayload && other ) noexcept;$/;"	m	class:PNG::final
+noexcept	./include/png/png_chunk_payload.hpp	/^    IhdrChunkPayload( IhdrChunkPayload && other ) noexcept;$/;"	m	class:PNG::final
 operator <<	./include/common/common.hpp	/^operator<<( std::ostream & out_stream, const std::byte byte ) {$/;"	f
 operator <<	./src/png/png_types.cpp	/^operator<<( std::ostream & out_stream, const PngChunkType chunk_type ) {$/;"	f	namespace:PNG
 operator <<	./src/png/png_types.cpp	/^operator<<( std::ostream & out_stream, const PngPixelFormat pixel_format ) {$/;"	f	namespace:PNG
 other	./include/png/png_chunk_base.hpp	/^    PngChunkBase( PngChunkBase && other ) = delete;$/;"	m	class:PNG::PngChunkBase
 other	./include/png/png_chunk_base.hpp	/^    PngChunkBase( const PngChunkBase & other ) = delete;$/;"	m	class:PNG::PngChunkBase
+override	./include/png/png_chunk_payload.hpp	/^    ~IhdrChunkPayload() override = default;$/;"	m	class:PNG::final
 parse_chunk	./src/png/png.cpp	/^PNG::parse_chunk( const std::string_view chunk_data,$/;"	f	class:PNG::PNG
 png_chunk_test	./tests/png/png_chunk_test.cpp	/^png_chunk_test( [[maybe_unused]] int argc, [[maybe_unused]] char ** argv ) {$/;"	f
 png_chunks	./include/png/png.hpp	/^    std::vector<PNGChunk>    png_chunks;$/;"	m	class:PNG::PNG
@@ -131,20 +139,26 @@ print_bits	./tests/common/common_test.cpp	/^print_bits( const T value ) {$/;"	f	
 rhs	./include/png/png_chunk_base.hpp	/^    PngChunkBase & operator=( PngChunkBase && rhs ) = delete;$/;"	m	class:PNG::PngChunkBase
 rhs	./include/png/png_chunk_base.hpp	/^    PngChunkBase & operator=( const PngChunkBase & rhs ) = delete;$/;"	m	class:PNG::PngChunkBase
 simple	./include/common/crc.hpp	/^enum class crc_t { simple, table };$/;"	m	class:CRC::crc_t
+size	./include/png/png_chunk_payload.hpp	/^    std::uint32_t size;$/;"	m	class:PNG::PngChunkPayloadBase
 table	./include/common/crc.hpp	/^    std::array<value_t, table_size> table;$/;"	m	class:CRC::CrcTable32
 test_convert_endian	./tests/common/common_test.cpp	/^test_convert_endian() {$/;"	f	namespace:__anon1
 test_crc_iend	./tests/common/crc_test.cpp	/^test_crc_iend( const std::filesystem::directory_entry & data_src ) {$/;"	f
 test_func	./tests/png/png_types_test.cpp	/^test_func( const Test<double, std::runtime_error, double, double> auto tmp ) {}$/;"	f	namespace:PNG
-test_functions	./tests/common/common_test.cpp	/^const auto test_functions = std::vector<std::function<bool()>>{$/;"	m	namespace:__anon1	file:
+test_functions	./tests/common/common_test.cpp	/^const auto test_functions =$/;"	m	namespace:__anon1	file:
+test_lsB_msB	./tests/common/common_test.cpp	/^test_lsB_msB() {$/;"	f	namespace:__anon1
+test_lsB_msB_offset_consteval	./tests/common/common_test.cpp	/^test_lsB_msB_offset_consteval() {$/;"	f	namespace:__anon1
+test_lsB_msB_offset_constexpr	./tests/common/common_test.cpp	/^test_lsB_msB_offset_constexpr() {$/;"	f	namespace:__anon1
 test_lsb_msb	./tests/common/common_test.cpp	/^test_lsb_msb() {$/;"	f	namespace:__anon1
-test_lsb_msb_offset	./tests/common/common_test.cpp	/^test_lsb_msb_offset() {$/;"	f	namespace:__anon1
+test_lsb_msb_offset_consteval	./tests/common/common_test.cpp	/^test_lsb_msb_offset_consteval() {$/;"	f	namespace:__anon1
+test_lsb_msb_offset_constexpr	./tests/common/common_test.cpp	/^test_lsb_msb_offset_constexpr() {$/;"	f	namespace:__anon1
 test_span_to_integer	./tests/common/common_test.cpp	/^test_span_to_integer() {$/;"	f	namespace:__anon1
 tmp	./src/main.cpp	/^tmp( const Test<double, std::runtime_error, double> auto & test ) {$/;"	f
 tmp	./tests/png/png_types_test.cpp	/^tmp( const TestError auto error ) {$/;"	f	namespace:PNG
 truecolor	./include/png/png_types.hpp	/^    truecolor = 2,$/;"	m	class:PNG::PngChunkType::PngPixelFormat
-valid_bit_depth	./include/png/png_chunk_payload.hpp	/^        bool valid_bit_depth;$/;"	m	struct:PNG::IhdrChunkPayload::ValidChecker
-valid_colour_type	./include/png/png_chunk_payload.hpp	/^        bool valid_colour_type;$/;"	m	struct:PNG::IhdrChunkPayload::ValidChecker
-valid_compression_method	./include/png/png_chunk_payload.hpp	/^        bool valid_compression_method;$/;"	m	struct:PNG::IhdrChunkPayload::ValidChecker
-valid_filter_method	./include/png/png_chunk_payload.hpp	/^        bool valid_filter_method;$/;"	m	struct:PNG::IhdrChunkPayload::ValidChecker
-valid_interlace_method	./include/png/png_chunk_payload.hpp	/^        bool valid_interlace_method;$/;"	m	struct:PNG::IhdrChunkPayload::ValidChecker
+valid_bit_depth	./include/png/png_chunk_payload.hpp	/^        bool valid_bit_depth;$/;"	m	struct:PNG::final::ValidChecker
+valid_colour_type	./include/png/png_chunk_payload.hpp	/^        bool valid_colour_type;$/;"	m	struct:PNG::final::ValidChecker
+valid_compression_method	./include/png/png_chunk_payload.hpp	/^        bool valid_compression_method;$/;"	m	struct:PNG::final::ValidChecker
+valid_filter_method	./include/png/png_chunk_payload.hpp	/^        bool valid_filter_method;$/;"	m	struct:PNG::final::ValidChecker
+valid_interlace_method	./include/png/png_chunk_payload.hpp	/^        bool valid_interlace_method;$/;"	m	struct:PNG::final::ValidChecker
 valid_png	./include/png/png.hpp	/^    bool                     valid_png;$/;"	m	class:PNG::PNG
+width	./include/png/png_chunk_payload.hpp	/^    std::uint32_t     width;$/;"	m	class:PNG::final
