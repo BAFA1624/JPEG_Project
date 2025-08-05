@@ -3,9 +3,12 @@
 #include "common/common.hpp"
 
 #include <array>
+#include <format>
+#include <functional>
 #include <iostream>
 #include <limits>
 #include <print>
+#include <random>
 #include <vector>
 
 template <auto T, std::endian E>
@@ -56,4 +59,49 @@ integral_to_bytes( const T integer ) {
     return bytes;
 }
 
+template <typename T>
+    requires std::is_integral_v<T> && std::is_unsigned_v<T>
+void
+print_bits( const T value ) {
+    constexpr const auto  endian = std::endian::native;
+    constexpr std::size_t byte_count = sizeof( T );
+
+    constexpr auto print_byte = []( const std::uint8_t byte ) {
+        for ( int i{ 7 }; i >= 0; --i ) { std::cout << ( ( byte >> i ) & 1 ); }
+    };
+
+    const uint8_t * bytes = std::bit_cast<uint8_t *>( &value );
+
+    for ( std::size_t i = 0; i < byte_count; ++i ) {
+        print_byte( bytes[i] );
+        std::cout << " ";
+    }
+
+    std::cout << '\n';
+}
+
+// Tests:
+
+constexpr bool test_convert_endian();
+constexpr bool test_lsb_msb();
+constexpr bool test_lsB_msB();
+constexpr bool test_lsb_msb_offset_consteval();
+constexpr bool test_lsB_msB_offset_consteval();
+constexpr bool test_lsb_msb_offset_constexpr();
+constexpr bool test_lsB_msB_offset_constexpr();
+bool           test_span_to_integer();
+
+const auto test_functions =
+    std::vector<std::tuple<std::string_view, std::function<bool()>>>{
+        { "test_convert_endian", test_convert_endian },
+        { "test_lsb_msb", test_lsb_msb },
+        { "test_lsB_msB", test_lsB_msB },
+        { "test_lsb_msb_offset_consteval", test_lsb_msb_offset_consteval },
+        { "test_lsB_msB_offset_consteval", test_lsB_msB_offset_consteval },
+        { "test_lsb_msb_offset_constexpr", test_lsb_msb_offset_constexpr },
+        { "test_lsB_msB_offset_constexpr", test_lsB_msB_offset_constexpr },
+        { "test_span_to_integer", test_span_to_integer }
+    };
+
+// Required by CTest
 int common_test( [[maybe_unused]] int argc, [[maybe_unused]] char ** argv );
