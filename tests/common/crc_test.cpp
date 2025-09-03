@@ -1,44 +1,25 @@
-#include "common/crc.hpp"
-// #include "common/test_interfaces.hpp"
+#include "common/crc_test.hpp"
 
 #include <cassert>
-#include <filesystem>
-#include <fstream>
 #include <iostream>
-#include <sstream>
+
+namespace CRC_TEST
+{
+
+constexpr auto
+test_iend( const std::filesystem::directory_entry & data_src ) {
+    return TEST_INTERFACE::test_function(
+        get_crc, std::bitset<CRC::crc_bits>{ 0xAE426082 }, data_src,
+        std::streamsize{ 4 } );
+}
 
 constexpr bool
 test_crc_iend( const std::filesystem::directory_entry & data_src ) {
-    if ( !data_src.exists() ) {
-        std::cerr << data_src.path().string() << " does not exist."
-                  << std::endl;
-        return false;
-    }
-    assert( data_src.exists() );
-
-    std::ifstream iend_sample_file{ data_src.path(), std::ios::in };
-    if ( !iend_sample_file.is_open() ) {
-        std::cerr << "Unable to open file: " << data_src.path().string()
-                  << std::endl;
-        return false;
-    }
-
-    iend_sample_file.seekg( 0, std::ios_base::end );
-    const auto data_sz{ static_cast<std::size_t>( iend_sample_file.tellg() ) };
-    iend_sample_file.clear();
-    iend_sample_file.seekg( 0, std::ios_base::beg );
-
-    if ( data_sz != 4 ) {
-        std::cerr << "IEND data should be 4 bytes in size. Parsed " << data_sz
-                  << " bytes." << std::endl;
-        return false;
-    }
-
-    std::stringstream file_buf;
-    file_buf << iend_sample_file.rdbuf();
+    const auto file_buf = get_file_data( data_src, 4 );
 
     const std::span<const std::byte> data_stream{
-        reinterpret_cast<const std::byte *>( file_buf.view().data() ), data_sz
+        reinterpret_cast<const std::byte *>( file_buf /*.view()*/.data() ),
+        /*data_sz*/ file_buf.size()
     };
 
     CRC::CrcTable32 crc_calculator(
@@ -61,6 +42,8 @@ test_crc_iend( const std::filesystem::directory_entry & data_src ) {
     return true;
 }
 
+} // namespace CRC_TEST
+
 int
 crc_test( [[maybe_unused]] int argc, [[maybe_unused]] char ** argv ) {
     const int n_tests{ 1 };
@@ -70,7 +53,7 @@ crc_test( [[maybe_unused]] int argc, [[maybe_unused]] char ** argv ) {
         std::filesystem::current_path() / ".." / ".." / ".." / "tests" / "data"
         / "iend_bytes.bin"
     };
-    test_passes += ( test_crc_iend( iend_file ) ? 1 : 0 );
+    test_passes += ( CRC_TEST::test_iend( iend_file ) ? 1 : 0 );
 
     return n_tests - test_passes;
 }
