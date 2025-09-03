@@ -64,7 +64,6 @@ template <typename T>
     requires std::is_integral_v<T> && std::is_unsigned_v<T>
 void
 print_bits( const T value ) {
-    constexpr const auto  endian = std::endian::native;
     constexpr std::size_t byte_count = sizeof( T );
 
     constexpr auto print_byte = []( const std::uint8_t byte ) {
