@@ -3,13 +3,14 @@
 #include "common/common.hpp"
 
 #include <array>
-#include <format>
 #include <functional>
 #include <iostream>
 #include <limits>
 #include <print>
-#include <random>
 #include <vector>
+
+namespace COMMON_TEST
+{
 
 template <auto T, std::endian E>
     requires std::is_integral_v<decltype( T )>
@@ -102,6 +103,8 @@ const auto test_functions =
         { "test_lsB_msB_offset_constexpr", test_lsB_msB_offset_constexpr },
         { "test_span_to_integer", test_span_to_integer }
     };
+
+} // namespace COMMON_TEST
 
 // Required by CTest
 int common_test( [[maybe_unused]] int argc, [[maybe_unused]] char ** argv );

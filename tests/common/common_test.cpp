@@ -1,8 +1,9 @@
 #include "common/common_test.hpp"
 
+#include <format>
+#include <random>
 
-
-namespace
+namespace COMMON_TEST
 {
 
 constexpr bool
@@ -543,8 +544,7 @@ test_span_to_integer() {
     }
     // 2 byte uinteger:
     auto test_2_byte_uint_little_cis{
-        span_to_integer<std::uint16_t,
-                        std::endian::little,
+        span_to_integer<std::uint16_t, std::endian::little,
                         std::endian::little>( vector_16_little )
         == convert_endian<std::endian::native, std::endian::little>( uint_16 )
     };
@@ -565,8 +565,7 @@ test_span_to_integer() {
     }
     // 4 byte uinteger:
     auto test_4_byte_uint_little_cis{
-        span_to_integer<std::uint32_t,
-                        std::endian::little,
+        span_to_integer<std::uint32_t, std::endian::little,
                         std::endian::little>( vector_32_little )
         == convert_endian<std::endian::native, std::endian::little>( uint_32 )
     };
@@ -587,8 +586,7 @@ test_span_to_integer() {
     }
     // 8 byte uinteger:
     auto test_8_byte_uint_little_cis{
-        span_to_integer<std::uint64_t,
-                        std::endian::little,
+        span_to_integer<std::uint64_t, std::endian::little,
                         std::endian::little>( vector_64_little )
         == convert_endian<std::endian::native, std::endian::little>( uint_64 )
     };
@@ -752,18 +750,18 @@ test_span_to_integer() {
            && test_large_uint_little_trans && test_large_uint_big_trans;
 }
 
-} // namespace
+} // namespace COMMON_TEST
 
 int
 common_test( [[maybe_unused]] int argc, [[maybe_unused]] char ** argv ) {
     std::size_t test_passes{ 0 };
 
-    for ( const auto & [name, test] : test_functions ) {
+    for ( const auto & [name, test] : COMMON_TEST::test_functions ) {
         std::println( "Running {}... ", name );
         const auto result{ test() };
         test_passes += static_cast<std::size_t>( result );
         std::println( "\t{}.", ( result ? "Passed" : "Failed" ) );
     }
 
-    return static_cast<int>( test_functions.size() - test_passes );
+    return static_cast<int>( COMMON_TEST::test_functions.size() - test_passes );
 }
