@@ -52,8 +52,7 @@ IhdrChunkPayload::IhdrChunkPayload(
     constexpr std::size_t colour_type_offset{ bit_depth_offset
                                               + sizeof( colour_type ) };
     colour_type = static_cast<ColourType>(
-        span_to_integer<std::underlying_type_t<ColourType>,
-                        std::endian::big,
+        span_to_integer<std::underlying_type_t<ColourType>, std::endian::big,
                         std::endian::native>(
             raw_data.subspan( bit_depth_offset, colour_type_offset ) ) );
 
@@ -62,15 +61,14 @@ IhdrChunkPayload::IhdrChunkPayload(
     };
     compression_method = static_cast<CompressionMethod>(
         span_to_integer<std::underlying_type_t<CompressionMethod>,
-                        std::endian::big,
-                        std::endian::native>( raw_data.subspan(
-            colour_type_offset, compression_method_offset ) ) );
+                        std::endian::big, std::endian::native>(
+            raw_data.subspan( colour_type_offset,
+                              compression_method_offset ) ) );
 
     constexpr std::size_t filter_method_offset{ compression_method_offset
                                                 + sizeof( filter_method ) };
     filter_method = static_cast<FilterMethod>(
-        span_to_integer<std::underlying_type_t<FilterMethod>,
-                        std::endian::big,
+        span_to_integer<std::underlying_type_t<FilterMethod>, std::endian::big,
                         std::endian::native>( raw_data.subspan(
             compression_method_offset, filter_method_offset ) ) );
 
@@ -79,9 +77,9 @@ IhdrChunkPayload::IhdrChunkPayload(
     };
     interlace_method = static_cast<InterlaceMethod>(
         span_to_integer<std::underlying_type_t<InterlaceMethod>,
-                        std::endian::big,
-                        std::endian::native>( raw_data.subspan(
-            filter_method_offset, interlace_method_offset ) ) );
+                        std::endian::big, std::endian::native>(
+            raw_data.subspan( filter_method_offset,
+                              interlace_method_offset ) ) );
 }
 
 } // namespace PNG
