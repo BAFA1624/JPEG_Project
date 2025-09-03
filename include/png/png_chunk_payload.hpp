@@ -2,8 +2,6 @@
 
 #include "png/png_types.hpp"
 
-#include <array>
-
 namespace PNG
 {
 
