@@ -14,7 +14,6 @@ enable_testing()
 
 # Compiler info
 set(CMAKE_CXX_COMPILER g++-15)
-set(CMAKE_CXX_STANDARD 23)
 
 # Generate compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -30,11 +29,15 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 set(CMAKE_CXX_FLAGS_DEBUG "-Wall -Wextra -Wconversion -pedantic -O0 -ggdb -fpic")
 set(CMAKE_CXX_FLAGS_RELEASE "-Werror -DNDEBUG -march=native -Wall -Wextra -pedantic -Wconversion -O3 -fpic")
 
+# Default compile features
+set(DEFAULT_COMPILE_FEATURES cxx_std_23)
+
 # Important subdirectories
 add_subdirectory(src)
 add_subdirectory(tests)
 
 add_executable(main src/main.cpp)
+target_compile_features(main PUBLIC ${DEFAULT_COMPILE_FEATURES})
 
 target_link_libraries(main PRIVATE ${LINK_LIBS})
 target_include_directories(main PRIVATE ${INCLUDE_DIRS})
