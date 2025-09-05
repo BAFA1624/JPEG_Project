@@ -10,8 +10,8 @@ namespace CRC_TEST
 constexpr bool
 test_iend( const std::filesystem::directory_entry & data_src ) {
     constexpr std::bitset<CRC::crc_bits> iend_crc{ 0xAE426082 };
-    return TEST_INTERFACE::test_function(
-        get_crc, iend_crc, data_src, std::streamsize{ 4 } );
+    return TEST_INTERFACE::test_function( get_crc, iend_crc, data_src,
+                                          std::streamsize{ 4 } );
 }
 
 } // namespace CRC_TEST

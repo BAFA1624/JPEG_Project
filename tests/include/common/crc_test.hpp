@@ -5,8 +5,8 @@
 
 #include <filesystem>
 #include <fstream>
-#include <functional>
 #include <stdexcept>
+#include <vector>
 
 namespace CRC_TEST
 {
@@ -53,14 +53,17 @@ get_crc( const std::filesystem::directory_entry & data_src,
          const std::streamsize                    expected_size ) {
     const auto file_buf = get_file_data( data_src, expected_size );
 
-    const std::span<const std::byte> data_stream{
-        reinterpret_cast<const std::byte *>( file_buf.data() ), file_buf.size()
-    };
+    const auto data_stream{ std::as_bytes(
+        std::span{ file_buf.data(), file_buf.size() } ) };
 
     CRC::CrcTable32 crc_calculator(
         CRC::PNG::png_polynomial<std::endian::big>() );
 
     return crc_calculator.crc( data_stream );
 }
+
+constexpr bool test_iend( const std::filesystem::directory_entry & data_src );
+
+const auto crc_test_functions = std::vector{ test_iend };
 
 } // namespace CRC_TEST
