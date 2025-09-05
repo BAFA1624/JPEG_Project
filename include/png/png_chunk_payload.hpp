@@ -2,6 +2,8 @@
 
 #include "png/png_types.hpp"
 
+#include <vector>
+
 namespace PNG
 {
 
@@ -31,6 +33,9 @@ class PngChunkPayloadBase
 
 // Critical Chunks:
 
+namespace IHDR
+{
+
 class IhdrChunkPayload final : protected PngChunkPayloadBase
 {
     private:
@@ -57,11 +62,12 @@ class IhdrChunkPayload final : protected PngChunkPayloadBase
                       const CompressionMethod compression_method,
                       const FilterMethod      filter_method,
                       const InterlaceMethod   interlace_method ) :
-            valid_bit_depth( PNG::isValid( colour_type, bit_depth ) ),
-            valid_colour_type( PNG::isValid( colour_type ) ),
-            valid_compression_method( PNG::isValid( compression_method ) ),
-            valid_filter_method( PNG::isValid( filter_method ) ),
-            valid_interlace_method( PNG::isValid( interlace_method ) ) {};
+            valid_bit_depth( PNG::IHDR::isValid( colour_type, bit_depth ) ),
+            valid_colour_type( PNG::IHDR::isValid( colour_type ) ),
+            valid_compression_method(
+                PNG::IHDR::isValid( compression_method ) ),
+            valid_filter_method( PNG::IHDR::isValid( filter_method ) ),
+            valid_interlace_method( PNG::IHDR::isValid( interlace_method ) ) {};
 
         [[nodiscard]] constexpr bool isValid() const {
             return valid_bit_depth && valid_colour_type
@@ -107,14 +113,42 @@ class IhdrChunkPayload final : protected PngChunkPayloadBase
     }
 };
 
-class PlteChunkPayload : protected PngChunkPayloadBase
+} // namespace IHDR
+
+namespace PLTE
+{
+
+class PlteChunkPayload final : protected PngChunkPayloadBase
+{
+    private:
+    std::vector<Palette> palettes;
+
+    protected:
+    public:
+    PlteChunkPayload() = delete;
+    constexpr explicit PlteChunkPayload(
+        const std::vector<Palette> & palettes );
+    constexpr explicit PlteChunkPayload(
+        const std::span<const std::byte> & data );
+};
+
+} // namespace PLTE
+
+namespace IDAT
+{
+
+class IdatChunkPayload final : protected PngChunkPayloadBase
 {};
 
-class IdatChunkPayload : protected PngChunkPayloadBase
+} // namespace IDAT
+
+namespace IEND
+{
+
+class IendChunkPayload final : protected PngChunkPayloadBase
 {};
 
-class IendChunkPayload : protected PngChunkPayloadBase
-{};
+} // namespace IEND
 
 // Ancillary Chunks
 

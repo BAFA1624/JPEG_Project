@@ -5,6 +5,9 @@
 namespace PNG
 {
 
+namespace IHDR
+{
+
 constexpr IhdrChunkPayload::IhdrChunkPayload(
     const std::uint32_t width, const std::uint32_t height,
     const BitDepth bit_depth, const ColourType colour_type,
@@ -81,5 +84,24 @@ IhdrChunkPayload::IhdrChunkPayload(
             raw_data.subspan( filter_method_offset,
                               interlace_method_offset ) ) );
 }
+
+} // namespace IHDR
+
+namespace PLTE
+{
+
+constexpr PlteChunkPayload::PlteChunkPayload(
+    const std::vector<Palette> & palettes ) :
+    PngChunkPayloadBase( sizeof( Palette )
+                             * static_cast<std::uint32_t>( palettes.size() ),
+                         PngChunkType::PLTE ),
+    palettes( palettes ) {}
+constexpr PlteChunkPayload::PlteChunkPayload(
+    const std::span<const std::byte> & data ) :
+    PngChunkPayloadBase( static_cast<std::uint32_t>( data.size() ),
+                         PngChunkType::PLTE ),
+    palettes() {}
+
+} // namespace PLTE
 
 } // namespace PNG
