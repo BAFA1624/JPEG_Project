@@ -109,7 +109,7 @@ enum class PngChunkType : std::uint32_t {
      * even if application doesn't * understand it.*/
 };
 
-static constinit std::array<PngChunkType, 21> valid_png_chunk_t{
+static constinit std::array<PngChunkType, 21> valid_png_chunk{
     // clang-format off
     PngChunkType::IHDR,
     PngChunkType::PLTE,
@@ -135,7 +135,7 @@ static constinit std::array<PngChunkType, 21> valid_png_chunk_t{
     // clang-format on
 };
 
-constexpr bool isValid( const PngChunkType png_chunk_type );
+constexpr bool is_valid( const PngChunkType png_chunk_type );
 
 // ostream operators for png_types
 std::ostream & operator<<( std::ostream &     out_stream,
@@ -151,8 +151,21 @@ enum class PngPixelFormat : std::uint32_t {
     alpha_truecolor = 6
 };
 
+static constinit std::array<PngPixelFormat, 5> valid_png_pixel_format{
+    // clang-format off
+    PngPixelFormat::grayscale,
+    PngPixelFormat::truecolor,
+    PngPixelFormat::indexed,
+    PngPixelFormat::alpha_grayscale,
+    PngPixelFormat::alpha_truecolor
+    // clang-format on
+};
+
+constexpr bool is_valid( const PngPixelFormat png_pixel_format );
+
 std::ostream & operator<<( std::ostream &       out_stream,
                            const PngPixelFormat pixel_format );
+
 
 // Types for the IHDR chunk
 namespace IHDR
@@ -164,7 +177,7 @@ using BitDepth = std::uint8_t;
 
 static constinit std::array<BitDepth, 5> valid_bit_depths{ 1, 2, 4, 8, 16 };
 
-constexpr bool isValid( const BitDepth bit_depth );
+constexpr bool is_valid( const BitDepth bit_depth );
 
 std::ostream & operator<<( std::ostream & out_stream, const BitDepth );
 
@@ -191,10 +204,10 @@ static constinit std::array<ColourType, 5> valid_colour_types{
     // clang-format on
 };
 
-constexpr bool isValid( const ColourType colour_type );
+constexpr bool is_valid( const ColourType colour_type );
 
-constexpr bool isValid( const ColourType colour_type,
-                        const BitDepth   bit_depth );
+constexpr bool is_valid( const ColourType colour_type,
+                         const BitDepth   bit_depth );
 
 std::ostream & operator<<( std::ostream &   out_stream,
                            const ColourType colour_type );
@@ -206,13 +219,13 @@ enum class CompressionMethod : std::uint8_t {
     INVALID = 1
 };
 
-constexpr bool isValid( const CompressionMethod compression_method );
+constexpr bool is_valid( const CompressionMethod compression_method );
 
 // FilterMethod:
 
 enum class FilterMethod : std::uint8_t { FILTER_METHOD_0 = 0, INVALID = 1 };
 
-constexpr bool isValid( const FilterMethod filter_method );
+constexpr bool is_valid( const FilterMethod filter_method );
 
 // InterlaceMethod:
 
@@ -223,7 +236,7 @@ enum class InterlaceMethod : std::uint8_t {
     // clang-format on
 };
 
-constexpr bool isValid( const InterlaceMethod interlace_method );
+constexpr bool is_valid( const InterlaceMethod interlace_method );
 
 } // namespace IHDR
 
@@ -240,7 +253,7 @@ struct Palette
 std::ostream & operator<<( std::ostream & out_stream, const Palette palette );
 
 constexpr std::vector<Palette>
-bytesToPalettes( const std::vector<const std::byte> & data );
+bytes_to_palette( const std::vector<const std::byte> & data );
 
 } // namespace PLTE
 

@@ -10,8 +10,8 @@ namespace PNG
 {
 
 constexpr bool
-isValid( const PngChunkType png_chunk_type ) {
-    return std::ranges::contains( valid_png_chunk_t, png_chunk_type );
+is_valid( const PngChunkType png_chunk_type ) {
+    return std::ranges::contains( valid_png_chunk, png_chunk_type );
 }
 
 std::ostream &
@@ -20,94 +20,37 @@ operator<<( std::ostream & out_stream, const PngChunkType chunk_type ) {
         convert_endian<std::endian::little, std::endian::big>(
             static_cast<std::uint32_t>( chunk_type ) )
     };
-    const auto * type_ptr = reinterpret_cast<const char *>( &type_copy );
-    const auto   type_string{ std::string{ type_ptr, 4 } };
+    const auto type_string{ std::string{
+        reinterpret_cast<const char *>( &type_copy ), 4 } };
     out_stream << type_string;
 
     switch ( chunk_type ) {
     case PngChunkType::INVALID: {
         out_stream << "INVALID (internal)";
     } break;
-    case PngChunkType::IHDR: {
-        out_stream << " (critical)";
-        break;
-    }
-    case PngChunkType::PLTE: {
-        out_stream << " (critical)";
-        break;
-    }
-    case PngChunkType::IDAT: {
-        out_stream << " (critical)";
-        break;
-    }
+    case PngChunkType::IHDR: [[fallthrough]];
+    case PngChunkType::PLTE: [[fallthrough]];
+    case PngChunkType::IDAT: [[fallthrough]];
     case PngChunkType::IEND: {
         out_stream << " (critical)";
         break;
     }
-    case PngChunkType::bKGD: {
-        out_stream << " (ancillary)";
-        break;
-    }
-    case PngChunkType::cHRM: {
-        out_stream << " (ancillary)";
-        break;
-    }
-    case PngChunkType::dSIG: {
-        out_stream << " (ancillary)";
-        break;
-    }
-    case PngChunkType::eXIF: {
-        out_stream << " (ancillary)";
-        break;
-    }
-    case PngChunkType::gAMA: {
-        out_stream << " (ancillary)";
-        break;
-    }
-    case PngChunkType::hIST: {
-        out_stream << " (ancillary)";
-        break;
-    }
-    case PngChunkType::iCCP: {
-        out_stream << " (ancillary)";
-        break;
-    }
-    case PngChunkType::iTXt: {
-        out_stream << " (ancillary)";
-        break;
-    }
-    case PngChunkType::pHYs: {
-        out_stream << " (ancillary)";
-        break;
-    }
-    case PngChunkType::sBIT: {
-        out_stream << " (ancillary)";
-        break;
-    }
-    case PngChunkType::sPLT: {
-        out_stream << " (ancillary)";
-        break;
-    }
-    case PngChunkType::sRGB: {
-        out_stream << " (ancillary)";
-        break;
-    }
-    case PngChunkType::sTER: {
-        out_stream << " (ancillary)";
-        break;
-    }
-    case PngChunkType::tEXt: {
-        out_stream << " (ancillary)";
-        break;
-    }
-    case PngChunkType::tIME: {
-        out_stream << " (ancillary)";
-        break;
-    }
-    case PngChunkType::tRNS: {
-        out_stream << " (ancillary)";
-        break;
-    }
+    case PngChunkType::bKGD: [[fallthrough]];
+    case PngChunkType::cHRM: [[fallthrough]];
+    case PngChunkType::dSIG: [[fallthrough]];
+    case PngChunkType::eXIF: [[fallthrough]];
+    case PngChunkType::gAMA: [[fallthrough]];
+    case PngChunkType::hIST: [[fallthrough]];
+    case PngChunkType::iCCP: [[fallthrough]];
+    case PngChunkType::iTXt: [[fallthrough]];
+    case PngChunkType::pHYs: [[fallthrough]];
+    case PngChunkType::sBIT: [[fallthrough]];
+    case PngChunkType::sPLT: [[fallthrough]];
+    case PngChunkType::sRGB: [[fallthrough]];
+    case PngChunkType::sTER: [[fallthrough]];
+    case PngChunkType::tEXt: [[fallthrough]];
+    case PngChunkType::tIME: [[fallthrough]];
+    case PngChunkType::tRNS: [[fallthrough]];
     case PngChunkType::zTXt: {
         out_stream << " (ancillary)";
     } break;
@@ -121,6 +64,11 @@ operator<<( std::ostream & out_stream, const PngChunkType chunk_type ) {
     }
 
     return out_stream;
+}
+
+constexpr bool
+is_valid( const PngPixelFormat png_pixel_format ) {
+    return std::ranges::contains( valid_png_pixel_format, png_pixel_format );
 }
 
 std::ostream &
@@ -156,7 +104,7 @@ namespace IHDR
 // BitDepth
 
 constexpr bool
-isValid( const BitDepth bit_depth ) {
+is_valid( const BitDepth bit_depth ) {
     return std::ranges::contains( valid_bit_depths, bit_depth );
 }
 
@@ -179,27 +127,27 @@ operator<<( std::ostream & out_stream, const BitDepth bit_depth ) {
 // ColourType
 
 constexpr bool
-isValid( const ColourType colour_type ) {
+is_valid( const ColourType colour_type ) {
     return std::ranges::contains( valid_colour_types, colour_type );
 }
 
 constexpr bool
-isValid( const ColourType colour_type, const BitDepth bit_depth ) {
+is_valid( const ColourType colour_type, const BitDepth bit_depth ) {
     bool is_valid{ false };
     switch ( colour_type ) {
     case ColourType::GREYSCALE: {
-        is_valid = PNG::IHDR::isValid( bit_depth );
+        is_valid = PNG::IHDR::is_valid( bit_depth );
     } break;
     case ColourType::INDEXED_COLOUR: {
         constexpr std::array<BitDepth, 4> valid_bit_depths{ 1, 2, 4, 8 };
-        is_valid = PNG::IHDR::isValid( bit_depth )
+        is_valid = PNG::IHDR::is_valid( bit_depth )
                    && std::ranges::contains( valid_bit_depths, bit_depth );
     } break;
     case ColourType::TRUE_COLOUR: [[fallthrough]];
     case ColourType::GREYSCALE_ALPHA: [[fallthrough]];
     case ColourType::TRUE_COLOUR_ALPHA: {
         constexpr std::array<BitDepth, 3> valid_bit_depths{ 8, 16 };
-        is_valid = PNG::IHDR::isValid( bit_depth )
+        is_valid = PNG::IHDR::is_valid( bit_depth )
                    && std::ranges::contains( valid_bit_depths, bit_depth );
     } break;
     case ColourType::INVALID: [[fallthrough]];
@@ -250,7 +198,7 @@ operator<<( std::ostream & out_stream, const ColourType colour_type ) {
 // CompressionMethod
 
 constexpr bool
-isValid( const CompressionMethod compression_method ) {
+is_valid( const CompressionMethod compression_method ) {
     return compression_method == CompressionMethod::COMPRESSION_METHOD_0;
 }
 
@@ -276,7 +224,7 @@ operator<<( std::ostream &          out_stream,
 // FilterMethod
 
 constexpr bool
-isValid( const FilterMethod filter_method ) {
+is_valid( const FilterMethod filter_method ) {
     return filter_method == FilterMethod::FILTER_METHOD_0;
 }
 
@@ -301,7 +249,7 @@ operator<<( std::ostream & out_stream, const FilterMethod filter_method ) {
 // InterlaceMethod
 
 constexpr bool
-isValid( const InterlaceMethod interlace_method ) {
+is_valid( const InterlaceMethod interlace_method ) {
     return interlace_method == InterlaceMethod::NO_INTERLACE
            || interlace_method == InterlaceMethod::ADAM_7;
 }
@@ -343,7 +291,7 @@ operator<<( std::ostream & out_stream, const Palette palette ) {
 }
 
 constexpr std::vector<Palette>
-bytesToPalettes( const std::span<const std::byte> & data ) {
+bytes_to_palette( const std::span<const std::byte> & data ) {
     std::vector<Palette> result;
     result.reserve( data.size() / 3 );
 
