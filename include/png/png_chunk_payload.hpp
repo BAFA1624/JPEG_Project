@@ -22,6 +22,9 @@ class PngChunkPayloadBase
     virtual ~PngChunkPayloadBase() = default;
     PngChunkPayloadBase( const PngChunkPayloadBase & other );
 
+    [[nodiscard]] virtual constexpr bool isBaseValid() const noexcept {
+        return chunk_type != PngChunkType::INVALID;
+    }
     [[nodiscard]] virtual constexpr bool          isValid() const = 0;
     [[nodiscard]] virtual constexpr std::uint32_t getSize() const {
         return size;
@@ -29,6 +32,12 @@ class PngChunkPayloadBase
     [[nodiscard]] virtual constexpr PngChunkType getChunkType() const {
         return chunk_type;
     }
+
+    constexpr void setBaseInvalid() noexcept {
+        size = 0;
+        chunk_type = PngChunkType::INVALID;
+    }
+    virtual constexpr void setInvalid() noexcept = 0;
 };
 
 // Critical Chunks:
@@ -62,12 +71,13 @@ class IhdrChunkPayload final : protected PngChunkPayloadBase
                       const CompressionMethod compression_method,
                       const FilterMethod      filter_method,
                       const InterlaceMethod   interlace_method ) :
-            valid_bit_depth( PNG::IHDR::isValid( colour_type, bit_depth ) ),
-            valid_colour_type( PNG::IHDR::isValid( colour_type ) ),
+            valid_bit_depth( PNG::IHDR::is_valid( colour_type, bit_depth ) ),
+            valid_colour_type( PNG::IHDR::is_valid( colour_type ) ),
             valid_compression_method(
-                PNG::IHDR::isValid( compression_method ) ),
-            valid_filter_method( PNG::IHDR::isValid( filter_method ) ),
-            valid_interlace_method( PNG::IHDR::isValid( interlace_method ) ) {};
+                PNG::IHDR::is_valid( compression_method ) ),
+            valid_filter_method( PNG::IHDR::is_valid( filter_method ) ),
+            valid_interlace_method( PNG::IHDR::is_valid( interlace_method ) ) {
+            };
 
         [[nodiscard]] constexpr bool isValid() const {
             return valid_bit_depth && valid_colour_type
@@ -78,24 +88,25 @@ class IhdrChunkPayload final : protected PngChunkPayloadBase
 
     public:
     IhdrChunkPayload() = delete;
-    constexpr IhdrChunkPayload( const std::uint32_t     width,
-                                const std::uint32_t     height,
-                                const BitDepth          bit_depth,
-                                const ColourType        colour_type,
-                                const CompressionMethod compression_method,
-                                const FilterMethod      filter_method,
-                                const InterlaceMethod   interlace_method );
-    explicit IhdrChunkPayload( const std::span<const std::byte> & data );
-    IhdrChunkPayload( const IhdrChunkPayload & other );
-    IhdrChunkPayload & operator=( const IhdrChunkPayload & other );
+    constexpr IhdrChunkPayload(
+        const std::uint32_t width, const std::uint32_t height,
+        const BitDepth bit_depth, const ColourType colour_type,
+        const CompressionMethod compression_method,
+        const FilterMethod      filter_method,
+        const InterlaceMethod   interlace_method ) noexcept;
+    explicit IhdrChunkPayload(
+        const std::span<const std::byte> & data ) noexcept;
+    IhdrChunkPayload( const IhdrChunkPayload & other ) noexcept;
+    IhdrChunkPayload & operator=( const IhdrChunkPayload & other ) noexcept;
     IhdrChunkPayload( IhdrChunkPayload && other ) noexcept;
     IhdrChunkPayload & operator=( IhdrChunkPayload && other ) noexcept;
     ~IhdrChunkPayload() override = default;
 
     // Overrides
     [[nodiscard]] constexpr bool isValid() const override {
-        return width > 0 && height > 0;
+        return isBaseValid() && width > 0 && height > 0;
     }
+    constexpr void setInvalid() noexcept;
 
     // Getters
     [[nodiscard]] constexpr auto getWidth() const { return width; }

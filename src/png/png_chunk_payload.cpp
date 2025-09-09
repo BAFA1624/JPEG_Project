@@ -12,7 +12,8 @@ constexpr IhdrChunkPayload::IhdrChunkPayload(
     const std::uint32_t width, const std::uint32_t height,
     const BitDepth bit_depth, const ColourType colour_type,
     const CompressionMethod compression_method,
-    const FilterMethod filter_method, const InterlaceMethod interlace_method ) :
+    const FilterMethod      filter_method,
+    const InterlaceMethod   interlace_method ) noexcept :
     PngChunkPayloadBase(
         sizeof( width ) + sizeof( height ) + sizeof( bit_depth )
             + sizeof( colour_type ) + sizeof( compression_method )
@@ -27,7 +28,7 @@ constexpr IhdrChunkPayload::IhdrChunkPayload(
     interlace_method( interlace_method ) {}
 
 IhdrChunkPayload::IhdrChunkPayload(
-    const std::span<const std::byte> & raw_data ) :
+    const std::span<const std::byte> & raw_data ) noexcept :
     PngChunkPayloadBase(
         sizeof( width ) + sizeof( height ) + sizeof( bit_depth )
             + sizeof( colour_type ) + sizeof( compression_method )
@@ -83,6 +84,57 @@ IhdrChunkPayload::IhdrChunkPayload(
                         std::endian::big, std::endian::native>(
             raw_data.subspan( filter_method_offset,
                               interlace_method_offset ) ) );
+}
+
+IhdrChunkPayload::IhdrChunkPayload( const IhdrChunkPayload & other ) noexcept :
+    PngChunkPayloadBase(
+        sizeof( width ) + sizeof( height ) + sizeof( bit_depth )
+            + sizeof( colour_type ) + sizeof( compression_method )
+            + sizeof( filter_method ) + sizeof( interlace_method ),
+        PngChunkType::IHDR ),
+    width( other.getWidth() ),
+    height( other.getHeight() ),
+    bit_depth( other.getBitDepth() ),
+    colour_type( other.getColourType() ),
+    compression_method( other.getCompressionMethod() ),
+    filter_method( other.getFilterMethod() ),
+    interlace_method( other.getInterlaceMethod() ) {}
+
+IhdrChunkPayload &
+IhdrChunkPayload::operator=( const IhdrChunkPayload & other ) noexcept {
+    width = other.getWidth();
+    height = other.getHeight();
+    bit_depth = other.getBitDepth();
+    colour_type = other.getColourType();
+    compression_method = other.getCompressionMethod();
+    filter_method = other.getFilterMethod();
+    interlace_method = other.getInterlaceMethod();
+
+    return *this;
+}
+
+IhdrChunkPayload::IhdrChunkPayload( IhdrChunkPayload && other ) noexcept :
+    PngChunkPayloadBase(
+        sizeof( width ) + sizeof( height ) + sizeof( bit_depth )
+            + sizeof( colour_type ) + sizeof( compression_method )
+            + sizeof( filter_method ) + sizeof( interlace_method ),
+        PngChunkType::IHDR ),
+    width( other.getWidth() ),
+    height( other.getHeight() ),
+    bit_depth( other.getBitDepth() ),
+    colour_type( other.getColourType() ),
+    compression_method( other.getCompressionMethod() ),
+    filter_method( other.getFilterMethod() ),
+    interlace_method( other.getInterlaceMethod() ) {
+    other.setInvalid();
+}
+
+constexpr void
+IhdrChunkPayload::setInvalid() noexcept {
+    setBaseInvalid();
+
+    width = 0;
+    height = 0;
 }
 
 } // namespace IHDR
