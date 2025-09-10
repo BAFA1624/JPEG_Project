@@ -1,5 +1,0 @@
-CompileFlags:
-  BuildInHeaders: QueryDriver
-  Add: [-std=gnu++23]
-
-QueryDriver: [g++15]
