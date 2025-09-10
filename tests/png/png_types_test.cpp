@@ -5,7 +5,7 @@
 namespace PNG
 {
 
-constexpr bool
+bool
 test_png_types() {
     constexpr auto png_chunk_type_test_set =
         std::array{ std::tuple{ PngChunkType::INVALID, false },
@@ -45,13 +45,13 @@ test_png_types() {
 
     return validate_type<PngChunkType>(
                png_chunk_type_test_set,
-               []( const PngChunkType x ) { return is_valid( x ); } )
+               []( const PngChunkType input ) { return is_valid( input ); } )
            && validate_type<PngPixelFormat>(
                png_pixel_format_test_set,
-               []( const PngPixelFormat x ) { return is_valid( x ); } );
+               []( const PngPixelFormat input ) { return is_valid( input ); } );
 }
 
-constexpr bool
+bool
 test_ihdr_types() {
     // constexpr auto bit_depth_test_set = std::array{};
 
@@ -66,10 +66,13 @@ test_ihdr_types() {
                     std::tuple{ IHDR::ColourType{ 5 }, false },
                     std::tuple{ IHDR::ColourType{ 8 }, false } };
 
-    return true;
+    return validate_type<IHDR::ColourType>( colour_type_test_set,
+                                            []( const IHDR::ColourType input ) {
+                                                return IHDR::is_valid( input );
+                                            } );
 }
 
-constexpr bool
+bool
 test_plte_types() {
     return true;
 }

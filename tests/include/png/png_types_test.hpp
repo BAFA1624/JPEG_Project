@@ -11,25 +11,31 @@ namespace PNG
 template <typename T>
 concept EnumOrIntegral = std::is_enum_v<T> || std::is_integral_v<T>;
 
+template <typename F, typename... Ts>
+concept ValidFunction = ( EnumOrIntegral<Ts> && ... )
+                        && requires( const F & func, const Ts &... inputs ) {
+                               {
+                                   func( std::forward<const Ts>( inputs )... )
+                               } -> std::same_as<bool>;
+                           };
+
 template <typename... Ts>
 constexpr auto
 args_tuple( const std::tuple<Ts..., bool> & tup ) {
-    constexpr std::size_t N = std::tuple_size_v<std::tuple<Ts..., bool>> - 1;
+    constexpr std::size_t tup_size =
+        std::tuple_size_v<std::tuple<Ts..., bool>> - 1;
 
-    return [&tup]<std::size_t... I>(
-               const std::index_sequence<I...> sequence ) constexpr {
-        std::cout << sequence.size() << std::endl;
-        return std::tuple{ std::get<I>( tup )... };
-    }( std::make_index_sequence<N>{} );
+    return
+        [&tup]<std::size_t... I>( const std::index_sequence<I...> ) constexpr {
+            return std::tuple{ std::get<I>( tup )... };
+        }( std::make_index_sequence<tup_size>{} );
 }
 
-template <typename... Ts, std::size_t N>
-    requires( EnumOrIntegral<Ts> && ... ) && requires( const Ts &... args ) {
-        { is_valid( args... ) } -> std::same_as<bool>;
-    }
+template <typename... Ts, typename F, std::size_t N>
+    requires( EnumOrIntegral<Ts> && ... ) && ValidFunction<F, Ts...>
 constexpr bool
 validate_type( const std::array<std::tuple<Ts..., bool>, N> & test_set,
-               const std::function<bool( const Ts... )> &     valid_function ) {
+               F &&                                           valid_function ) {
     std::size_t test_passes{ 0 };
 
     for ( const auto & tup : test_set ) {
@@ -39,7 +45,7 @@ validate_type( const std::array<std::tuple<Ts..., bool>, N> & test_set,
 
         const bool result = std::apply(
             [&valid_function]( const auto &... args ) {
-                return valid_function( args... );
+                return std::forward<F>( valid_function )( args... );
             },
             args_tuple<Ts...>( tup ) );
 
@@ -51,9 +57,9 @@ validate_type( const std::array<std::tuple<Ts..., bool>, N> & test_set,
 
 // Testing Functions
 
-constexpr bool test_png_types();
-constexpr bool test_ihdr_types();
-constexpr bool test_plte_types();
+bool test_png_types();
+bool test_ihdr_types();
+bool test_plte_types();
 
 constexpr auto test_functions =
     std::array{ test_png_types, test_ihdr_types, test_plte_types };
