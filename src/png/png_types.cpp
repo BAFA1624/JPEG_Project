@@ -2,17 +2,34 @@
 
 #include "common/crc.hpp"
 
-#include <algorithm>
 #include <cassert>
 #include <ranges>
 
 namespace PNG
 {
 
-constexpr bool
-is_valid( const PngChunkType png_chunk_type ) {
-    return std::ranges::contains( valid_png_chunk, png_chunk_type );
+namespace PLTE
+{
+
+constexpr std::vector<Palette>
+bytes_to_palette( const std::span<const std::byte> & data ) {
+    std::vector<Palette> result;
+    result.reserve( data.size() / 3 );
+
+    for ( const auto [i, palette_values] :
+          data | std::views::chunk( sizeof( Palette ) /* = 3 */ )
+              | std::views::enumerate ) {
+        result[i] =
+            Palette{ std::to_integer<std::uint8_t>( palette_values[0] ),
+                     std::to_integer<std::uint8_t>( palette_values[1] ),
+                     std::to_integer<std::uint8_t>( palette_values[2] ) };
+    }
+
+    return result;
 }
+
+} // namespace PLTE
+
 
 std::ostream &
 operator<<( std::ostream & out_stream, const PngChunkType chunk_type ) {
@@ -66,11 +83,6 @@ operator<<( std::ostream & out_stream, const PngChunkType chunk_type ) {
     return out_stream;
 }
 
-constexpr bool
-is_valid( const PngPixelFormat png_pixel_format ) {
-    return std::ranges::contains( valid_png_pixel_format, png_pixel_format );
-}
-
 std::ostream &
 operator<<( std::ostream & out_stream, const PngPixelFormat pixel_format ) {
     switch ( pixel_format ) {
@@ -103,11 +115,6 @@ namespace IHDR
 
 // BitDepth
 
-constexpr bool
-is_valid( const BitDepth bit_depth ) {
-    return std::ranges::contains( valid_bit_depths, bit_depth );
-}
-
 std::ostream &
 operator<<( std::ostream & out_stream, const BitDepth bit_depth ) {
     switch ( static_cast<std::uint32_t>( bit_depth ) ) {
@@ -125,37 +132,6 @@ operator<<( std::ostream & out_stream, const BitDepth bit_depth ) {
 }
 
 // ColourType
-
-constexpr bool
-is_valid( const ColourType colour_type ) {
-    return std::ranges::contains( valid_colour_types, colour_type );
-}
-
-constexpr bool
-is_valid( const ColourType colour_type, const BitDepth bit_depth ) {
-    bool is_valid{ false };
-    switch ( colour_type ) {
-    case ColourType::GREYSCALE: {
-        is_valid = PNG::IHDR::is_valid( bit_depth );
-    } break;
-    case ColourType::INDEXED_COLOUR: {
-        constexpr std::array<BitDepth, 4> valid_bit_depths{ 1, 2, 4, 8 };
-        is_valid = PNG::IHDR::is_valid( bit_depth )
-                   && std::ranges::contains( valid_bit_depths, bit_depth );
-    } break;
-    case ColourType::TRUE_COLOUR: [[fallthrough]];
-    case ColourType::GREYSCALE_ALPHA: [[fallthrough]];
-    case ColourType::TRUE_COLOUR_ALPHA: {
-        constexpr std::array<BitDepth, 3> valid_bit_depths{ 8, 16 };
-        is_valid = PNG::IHDR::is_valid( bit_depth )
-                   && std::ranges::contains( valid_bit_depths, bit_depth );
-    } break;
-    case ColourType::INVALID: [[fallthrough]];
-    default: is_valid = false;
-    }
-
-    return is_valid;
-}
 
 std::ostream &
 operator<<( std::ostream & out_stream, const ColourType colour_type ) {
@@ -197,11 +173,6 @@ operator<<( std::ostream & out_stream, const ColourType colour_type ) {
 
 // CompressionMethod
 
-constexpr bool
-is_valid( const CompressionMethod compression_method ) {
-    return compression_method == CompressionMethod::COMPRESSION_METHOD_0;
-}
-
 std::ostream &
 operator<<( std::ostream &          out_stream,
             const CompressionMethod compression_method ) {
@@ -223,11 +194,6 @@ operator<<( std::ostream &          out_stream,
 
 // FilterMethod
 
-constexpr bool
-is_valid( const FilterMethod filter_method ) {
-    return filter_method == FilterMethod::FILTER_METHOD_0;
-}
-
 std::ostream &
 operator<<( std::ostream & out_stream, const FilterMethod filter_method ) {
     switch ( filter_method ) {
@@ -247,12 +213,6 @@ operator<<( std::ostream & out_stream, const FilterMethod filter_method ) {
 }
 
 // InterlaceMethod
-
-constexpr bool
-is_valid( const InterlaceMethod interlace_method ) {
-    return interlace_method == InterlaceMethod::NO_INTERLACE
-           || interlace_method == InterlaceMethod::ADAM_7;
-}
 
 std::ostream &
 operator<<( std::ostream &        out_stream,
@@ -286,27 +246,10 @@ namespace PLTE
 std::ostream &
 operator<<( std::ostream & out_stream, const Palette palette ) {
     return out_stream << std::format( "Palette( r: {}, g: {}, b: {} )",
-                                      palette.red, palette.green,
+                                      palette.red,
+                                      palette.green,
                                       palette.blue );
 }
-
-constexpr std::vector<Palette>
-bytes_to_palette( const std::span<const std::byte> & data ) {
-    std::vector<Palette> result;
-    result.reserve( data.size() / 3 );
-
-    for ( const auto [i, palette_values] :
-          data | std::views::chunk( sizeof( Palette ) /* = 3 */ )
-              | std::views::enumerate ) {
-        result[i] =
-            Palette{ std::to_integer<std::uint8_t>( palette_values[0] ),
-                     std::to_integer<std::uint8_t>( palette_values[1] ),
-                     std::to_integer<std::uint8_t>( palette_values[2] ) };
-    }
-
-    return result;
-}
-
 } // namespace PLTE
 
 } // namespace PNG

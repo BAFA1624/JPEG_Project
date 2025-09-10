@@ -135,7 +135,10 @@ static constinit std::array<PngChunkType, 21> valid_png_chunk{
     // clang-format on
 };
 
-constexpr bool is_valid( const PngChunkType png_chunk_type );
+constexpr bool
+is_valid( const PngChunkType png_chunk_type ) {
+    return std::ranges::contains( valid_png_chunk, png_chunk_type );
+}
 
 // ostream operators for png_types
 std::ostream & operator<<( std::ostream &     out_stream,
@@ -161,7 +164,10 @@ static constinit std::array<PngPixelFormat, 5> valid_png_pixel_format{
     // clang-format on
 };
 
-constexpr bool is_valid( const PngPixelFormat png_pixel_format );
+constexpr bool
+is_valid( const PngPixelFormat png_pixel_format ) {
+    return std::ranges::contains( valid_png_pixel_format, png_pixel_format );
+}
 
 std::ostream & operator<<( std::ostream &       out_stream,
                            const PngPixelFormat pixel_format );
@@ -177,7 +183,10 @@ using BitDepth = std::uint8_t;
 
 static constinit std::array<BitDepth, 5> valid_bit_depths{ 1, 2, 4, 8, 16 };
 
-constexpr bool is_valid( const BitDepth bit_depth );
+constexpr bool
+is_valid( const BitDepth bit_depth ) {
+    return std::ranges::contains( valid_bit_depths, bit_depth );
+}
 
 std::ostream & operator<<( std::ostream & out_stream, const BitDepth );
 
@@ -204,10 +213,36 @@ static constinit std::array<ColourType, 5> valid_colour_types{
     // clang-format on
 };
 
-constexpr bool is_valid( const ColourType colour_type );
+constexpr bool
+is_valid( const ColourType colour_type ) {
+    return std::ranges::contains( valid_colour_types, colour_type );
+}
 
-constexpr bool is_valid( const ColourType colour_type,
-                         const BitDepth   bit_depth );
+constexpr bool
+is_valid( const ColourType colour_type, const BitDepth bit_depth ) {
+    bool is_valid{ false };
+    switch ( colour_type ) {
+    case ColourType::GREYSCALE: {
+        is_valid = PNG::IHDR::is_valid( bit_depth );
+    } break;
+    case ColourType::INDEXED_COLOUR: {
+        constexpr std::array<BitDepth, 4> valid_bit_depths{ 1, 2, 4, 8 };
+        is_valid = PNG::IHDR::is_valid( bit_depth )
+                   && std::ranges::contains( valid_bit_depths, bit_depth );
+    } break;
+    case ColourType::TRUE_COLOUR: [[fallthrough]];
+    case ColourType::GREYSCALE_ALPHA: [[fallthrough]];
+    case ColourType::TRUE_COLOUR_ALPHA: {
+        constexpr std::array<BitDepth, 3> valid_bit_depths{ 8, 16 };
+        is_valid = PNG::IHDR::is_valid( bit_depth )
+                   && std::ranges::contains( valid_bit_depths, bit_depth );
+    } break;
+    case ColourType::INVALID: [[fallthrough]];
+    default: is_valid = false;
+    }
+
+    return is_valid;
+}
 
 std::ostream & operator<<( std::ostream &   out_stream,
                            const ColourType colour_type );
@@ -219,13 +254,19 @@ enum class CompressionMethod : std::uint8_t {
     INVALID = 1
 };
 
-constexpr bool is_valid( const CompressionMethod compression_method );
+constexpr bool
+is_valid( const CompressionMethod compression_method ) {
+    return compression_method == CompressionMethod::COMPRESSION_METHOD_0;
+}
 
 // FilterMethod:
 
 enum class FilterMethod : std::uint8_t { FILTER_METHOD_0 = 0, INVALID = 1 };
 
-constexpr bool is_valid( const FilterMethod filter_method );
+constexpr bool
+is_valid( const FilterMethod filter_method ) {
+    return filter_method == FilterMethod::FILTER_METHOD_0;
+}
 
 // InterlaceMethod:
 
@@ -236,7 +277,11 @@ enum class InterlaceMethod : std::uint8_t {
     // clang-format on
 };
 
-constexpr bool is_valid( const InterlaceMethod interlace_method );
+constexpr bool
+is_valid( const InterlaceMethod interlace_method ) {
+    return interlace_method == InterlaceMethod::NO_INTERLACE
+           || interlace_method == InterlaceMethod::ADAM_7;
+}
 
 } // namespace IHDR
 
