@@ -26,7 +26,8 @@ set(TEST_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/tests/include ${INCLUDE_DIRS})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 
 # Default compiler flags
-set(CMAKE_CXX_FLAGS_DEBUG "-Wall -Wextra -Wconversion -pedantic -O0 -ggdb -fpic")
+set(JANKY_VIM_LINTING_FLAGS "-Wno-pragma-once-outside-header")
+set(CMAKE_CXX_FLAGS_DEBUG "${JANKY_VIM_LINTING_FLAGS} -Wall -Wextra -Wconversion -pedantic -O0 -ggdb -fpic -fconcepts-diagnostics-depth=2")
 set(CMAKE_CXX_FLAGS_RELEASE "-Werror -DNDEBUG -march=native -Wall -Wextra -pedantic -Wconversion -O3 -fpic")
 
 # Default compile features
