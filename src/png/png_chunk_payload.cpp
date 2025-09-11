@@ -148,6 +148,7 @@ constexpr PlteChunkPayload::PlteChunkPayload(
                              * static_cast<std::uint32_t>( palettes.size() ),
                          PngChunkType::PLTE ),
     palettes( palettes ) {}
+
 constexpr PlteChunkPayload::PlteChunkPayload(
     const std::span<const std::byte> & data ) :
     PngChunkPayloadBase( static_cast<std::uint32_t>( data.size() ),
