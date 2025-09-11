@@ -233,7 +233,7 @@ is_valid( const ColourType colour_type, const BitDepth bit_depth ) {
     case ColourType::TRUE_COLOUR: [[fallthrough]];
     case ColourType::GREYSCALE_ALPHA: [[fallthrough]];
     case ColourType::TRUE_COLOUR_ALPHA: {
-        constexpr std::array<BitDepth, 3> valid_bit_depths{ 8, 16 };
+        constexpr std::array<BitDepth, 2> valid_bit_depths{ 8, 16 };
         is_valid = PNG::IHDR::is_valid( bit_depth )
                    && std::ranges::contains( valid_bit_depths, bit_depth );
     } break;
@@ -273,7 +273,8 @@ is_valid( const FilterMethod filter_method ) {
 enum class InterlaceMethod : std::uint8_t {
     // clang-format off
     NO_INTERLACE = 0,
-    ADAM_7 = 1
+    ADAM_7 = 1,
+    INVALID = 2
     // clang-format on
 };
 

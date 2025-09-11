@@ -135,6 +135,11 @@ IhdrChunkPayload::setInvalid() noexcept {
 
     width = 0;
     height = 0;
+    bit_depth = BitDepth{ 0 };
+    colour_type = ColourType::INVALID;
+    compression_method = CompressionMethod::INVALID;
+    filter_method = FilterMethod::INVALID;
+    interlace_method = InterlaceMethod::INVALID;
 }
 
 } // namespace IHDR
