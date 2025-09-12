@@ -8,29 +8,6 @@
 namespace PNG
 {
 
-namespace PLTE
-{
-
-constexpr std::vector<Palette>
-bytes_to_palette( const std::span<const std::byte> & data ) {
-    std::vector<Palette> result;
-    result.reserve( data.size() / 3 );
-
-    for ( const auto [i, palette_values] :
-          data | std::views::chunk( sizeof( Palette ) /* = 3 */ )
-              | std::views::enumerate ) {
-        result[i] =
-            Palette{ std::to_integer<std::uint8_t>( palette_values[0] ),
-                     std::to_integer<std::uint8_t>( palette_values[1] ),
-                     std::to_integer<std::uint8_t>( palette_values[2] ) };
-    }
-
-    return result;
-}
-
-} // namespace PLTE
-
-
 std::ostream &
 operator<<( std::ostream & out_stream, const PngChunkType chunk_type ) {
     const std::uint32_t type_copy{
@@ -249,6 +226,7 @@ operator<<( std::ostream & out_stream, const Palette palette ) {
                                       palette.red, palette.green,
                                       palette.blue );
 }
+
 } // namespace PLTE
 
 } // namespace PNG

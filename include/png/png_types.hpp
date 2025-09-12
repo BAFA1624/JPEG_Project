@@ -298,9 +298,6 @@ struct Palette
 
 std::ostream & operator<<( std::ostream & out_stream, const Palette palette );
 
-constexpr std::vector<Palette>
-bytes_to_palette( const std::vector<const std::byte> & data );
-
 } // namespace PLTE
 
 namespace IDAT

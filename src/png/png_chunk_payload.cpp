@@ -8,25 +8,6 @@ namespace PNG
 namespace IHDR
 {
 
-constexpr IhdrChunkPayload::IhdrChunkPayload(
-    const std::uint32_t width, const std::uint32_t height,
-    const BitDepth bit_depth, const ColourType colour_type,
-    const CompressionMethod compression_method,
-    const FilterMethod      filter_method,
-    const InterlaceMethod   interlace_method ) noexcept :
-    PngChunkPayloadBase(
-        sizeof( width ) + sizeof( height ) + sizeof( bit_depth )
-            + sizeof( colour_type ) + sizeof( compression_method )
-            + sizeof( filter_method ) + sizeof( interlace_method ),
-        PngChunkType::IHDR ),
-    width( width ),
-    height( height ),
-    bit_depth( bit_depth ),
-    colour_type( colour_type ),
-    compression_method( compression_method ),
-    filter_method( filter_method ),
-    interlace_method( interlace_method ) {}
-
 IhdrChunkPayload::IhdrChunkPayload(
     const std::span<const std::byte> & raw_data ) noexcept :
     PngChunkPayloadBase(
@@ -129,37 +110,10 @@ IhdrChunkPayload::IhdrChunkPayload( IhdrChunkPayload && other ) noexcept :
     other.setInvalid();
 }
 
-constexpr void
-IhdrChunkPayload::setInvalid() noexcept {
-    setBaseInvalid();
-
-    width = 0;
-    height = 0;
-    bit_depth = BitDepth{ 0 };
-    colour_type = ColourType::INVALID;
-    compression_method = CompressionMethod::INVALID;
-    filter_method = FilterMethod::INVALID;
-    interlace_method = InterlaceMethod::INVALID;
-}
-
 } // namespace IHDR
 
 namespace PLTE
-{
+{} // namespace PLTE
 
-constexpr PlteChunkPayload::PlteChunkPayload(
-    const std::vector<Palette> & palettes ) :
-    PngChunkPayloadBase( sizeof( Palette )
-                             * static_cast<std::uint32_t>( palettes.size() ),
-                         PngChunkType::PLTE ),
-    palettes( palettes ) {}
-
-constexpr PlteChunkPayload::PlteChunkPayload(
-    const std::span<const std::byte> & data ) :
-    PngChunkPayloadBase( static_cast<std::uint32_t>( data.size() ),
-                         PngChunkType::PLTE ),
-    palettes() {}
-
-} // namespace PLTE
 
 } // namespace PNG

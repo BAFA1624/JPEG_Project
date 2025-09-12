@@ -2,6 +2,7 @@
 
 #include "png/png_types.hpp"
 
+#include <ranges>
 #include <vector>
 
 namespace PNG
@@ -20,11 +21,16 @@ class PngChunkPayloadBase
                          const PngChunkType  chunk_type ) :
         size( size ), chunk_type( chunk_type ) {}
     virtual ~PngChunkPayloadBase() = default;
-    PngChunkPayloadBase( const PngChunkPayloadBase & other );
+    explicit PngChunkPayloadBase( const PngChunkPayloadBase & other ) = default;
+    PngChunkPayloadBase &
+    operator=( const PngChunkPayloadBase & other ) = default;
+    explicit PngChunkPayloadBase( PngChunkPayloadBase && other ) = default;
+    PngChunkPayloadBase & operator=( PngChunkPayloadBase && other ) = default;
 
     [[nodiscard]] virtual constexpr bool isBaseValid() const noexcept {
-        return chunk_type != PngChunkType::INVALID;
+        return is_valid( chunk_type );
     }
+
     [[nodiscard]] virtual constexpr bool          isValid() const = 0;
     [[nodiscard]] virtual constexpr std::uint32_t getSize() const {
         return size;
@@ -60,6 +66,8 @@ class IhdrChunkPayload final : protected PngChunkPayloadBase
     struct ValidChecker
     {
         private:
+        bool valid_width;
+        bool valid_height;
         bool valid_bit_depth;
         bool valid_colour_type;
         bool valid_compression_method;
@@ -67,10 +75,13 @@ class IhdrChunkPayload final : protected PngChunkPayloadBase
         bool valid_interlace_method;
 
         public:
-        ValidChecker( const BitDepth bit_depth, const ColourType colour_type,
+        ValidChecker( const std::uint32_t width, const std::uint32_t height,
+                      const BitDepth bit_depth, const ColourType colour_type,
                       const CompressionMethod compression_method,
                       const FilterMethod      filter_method,
                       const InterlaceMethod   interlace_method ) :
+            valid_width( width > 0 ),
+            valid_height( height > 0 ),
             valid_bit_depth( PNG::IHDR::is_valid( colour_type, bit_depth ) ),
             valid_colour_type( PNG::IHDR::is_valid( colour_type ) ),
             valid_compression_method(
@@ -80,9 +91,9 @@ class IhdrChunkPayload final : protected PngChunkPayloadBase
             };
 
         [[nodiscard]] constexpr bool isValid() const {
-            return valid_bit_depth && valid_colour_type
-                   && valid_compression_method && valid_filter_method
-                   && valid_interlace_method;
+            return valid_width & valid_height && valid_bit_depth
+                   && valid_colour_type && valid_compression_method
+                   && valid_filter_method && valid_interlace_method;
         }
     };
 
@@ -93,7 +104,19 @@ class IhdrChunkPayload final : protected PngChunkPayloadBase
         const BitDepth bit_depth, const ColourType colour_type,
         const CompressionMethod compression_method,
         const FilterMethod      filter_method,
-        const InterlaceMethod   interlace_method ) noexcept;
+        const InterlaceMethod   interlace_method ) noexcept :
+        PngChunkPayloadBase(
+            sizeof( width ) + sizeof( height ) + sizeof( bit_depth )
+                + sizeof( colour_type ) + sizeof( compression_method )
+                + sizeof( filter_method ) + sizeof( interlace_method ),
+            PngChunkType::IHDR ),
+        width( width ),
+        height( height ),
+        bit_depth( bit_depth ),
+        colour_type( colour_type ),
+        compression_method( compression_method ),
+        filter_method( filter_method ),
+        interlace_method( interlace_method ) {}
     explicit IhdrChunkPayload(
         const std::span<const std::byte> & data ) noexcept;
     IhdrChunkPayload( const IhdrChunkPayload & other ) noexcept;
@@ -102,11 +125,26 @@ class IhdrChunkPayload final : protected PngChunkPayloadBase
     IhdrChunkPayload & operator=( IhdrChunkPayload && other ) noexcept;
     ~IhdrChunkPayload() override = default;
 
-    // Overrides
-    [[nodiscard]] constexpr bool isValid() const override {
-        return isBaseValid() && width > 0 && height > 0;
+    [[nodiscard]] constexpr operator bool() const noexcept {
+        const ValidChecker valid_check( width, height, bit_depth, colour_type,
+                                        compression_method, filter_method,
+                                        interlace_method );
+        return isBaseValid() && valid_check.isValid();
     }
-    constexpr void setInvalid() noexcept;
+
+    // Overrides
+    [[nodiscard]] constexpr bool isValid() const override { return *this; }
+    constexpr void               setInvalid() noexcept {
+        setBaseInvalid();
+
+        width = 0;
+        height = 0;
+        bit_depth = BitDepth{ 0 };
+        colour_type = ColourType::INVALID;
+        compression_method = CompressionMethod::INVALID;
+        filter_method = FilterMethod::INVALID;
+        interlace_method = InterlaceMethod::INVALID;
+    }
 
     // Getters
     [[nodiscard]] constexpr auto getWidth() const { return width; }
@@ -129,6 +167,23 @@ class IhdrChunkPayload final : protected PngChunkPayloadBase
 namespace PLTE
 {
 
+constexpr std::vector<Palette>
+bytes_to_palette( const std::span<const std::byte> & data ) {
+    std::vector<Palette> result;
+    result.reserve( data.size() / 3 );
+
+    for ( const auto [i, palette_values] :
+          data | std::views::chunk( sizeof( Palette ) /* = 3 */ )
+              | std::views::enumerate ) {
+        result[i] =
+            Palette{ std::to_integer<std::uint8_t>( palette_values[0] ),
+                     std::to_integer<std::uint8_t>( palette_values[1] ),
+                     std::to_integer<std::uint8_t>( palette_values[2] ) };
+    }
+
+    return result;
+}
+
 class PlteChunkPayload final : protected PngChunkPayloadBase
 {
     private:
@@ -137,10 +192,24 @@ class PlteChunkPayload final : protected PngChunkPayloadBase
     protected:
     public:
     PlteChunkPayload() = delete;
-    constexpr explicit PlteChunkPayload(
-        const std::vector<Palette> & palettes );
-    constexpr explicit PlteChunkPayload(
-        const std::span<const std::byte> & data );
+    constexpr PlteChunkPayload( const std::vector<Palette> & palettes ) :
+        PngChunkPayloadBase(
+            sizeof( Palette ) * static_cast<std::uint32_t>( palettes.size() ),
+            PngChunkType::PLTE ),
+        palettes( palettes ) {}
+    constexpr PlteChunkPayload( const std::span<const std::byte> & data ) :
+        PngChunkPayloadBase( static_cast<std::uint32_t>( data.size() ),
+                             PngChunkType::PLTE ),
+        palettes( bytes_to_palette( data ) ) {
+        if ( data.size() % 3 != 0 ) {
+            setInvalid();
+        }
+    }
+
+    [[nodiscard]] constexpr bool isValid() const noexcept {
+        return this->isBaseValid();
+    }
+    constexpr void setInvalid() noexcept { this->setBaseInvalid(); }
 };
 
 } // namespace PLTE
