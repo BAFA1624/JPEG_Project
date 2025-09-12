@@ -2,6 +2,7 @@
 
 set(PNG_SUB_TEST_SOURCES
     png_types_test.cpp
+    png_chunk_payload_test.cpp
     png_chunk_test.cpp
     #png_class_test.cpp
 )
