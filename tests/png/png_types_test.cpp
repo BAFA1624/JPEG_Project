@@ -53,7 +53,12 @@ test_png_types() {
 
 bool
 test_ihdr_types() {
-    // constexpr auto bit_depth_test_set = std::array{};
+    constexpr auto bit_depth_test_set =
+        std::array{ std::tuple{ IHDR::BitDepth{ 1 }, true },
+                    std::tuple{ IHDR::BitDepth{ 2 }, true },
+                    std::tuple{ IHDR::BitDepth{ 4 }, true },
+                    std::tuple{ IHDR::BitDepth{ 8 }, true },
+                    std::tuple{ IHDR::BitDepth{ 16 }, true } };
 
     constexpr auto colour_type_test_set =
         std::array{ std::tuple{ IHDR::ColourType::GREYSCALE, true },
@@ -66,15 +71,100 @@ test_ihdr_types() {
                     std::tuple{ IHDR::ColourType{ 5 }, false },
                     std::tuple{ IHDR::ColourType{ 8 }, false } };
 
-    return validate_type<IHDR::ColourType>( colour_type_test_set,
-                                            []( const IHDR::ColourType input ) {
-                                                return IHDR::is_valid( input );
-                                            } );
-}
 
-bool
-test_plte_types() {
-    return true;
+    constexpr auto f = []( const IHDR::ColourType colour_type,
+                           const IHDR::BitDepth bit_depth, const bool result )
+        -> std::tuple<IHDR::ColourType, IHDR::BitDepth, bool> {
+        return std::make_tuple( colour_type, bit_depth, result );
+    };
+    constexpr auto colour_type_bit_depth_test_set = std::array{
+        f( IHDR::ColourType::GREYSCALE, IHDR::BitDepth{ 1 }, true ),
+        f( IHDR::ColourType::GREYSCALE, IHDR::BitDepth{ 2 }, true ),
+        f( IHDR::ColourType::GREYSCALE, IHDR::BitDepth{ 4 }, true ),
+        f( IHDR::ColourType::GREYSCALE, IHDR::BitDepth{ 8 }, true ),
+        f( IHDR::ColourType::GREYSCALE, IHDR::BitDepth{ 16 }, true ),
+        f( IHDR::ColourType::GREYSCALE, IHDR::BitDepth{ 0 }, false ),
+        f( IHDR::ColourType::GREYSCALE, IHDR::BitDepth{ 5 }, false ),
+        f( IHDR::ColourType::GREYSCALE, IHDR::BitDepth{ 17 }, false ),
+        f( IHDR::ColourType::TRUE_COLOUR, IHDR::BitDepth{ 8 }, true ),
+        f( IHDR::ColourType::TRUE_COLOUR, IHDR::BitDepth{ 16 }, true ),
+        f( IHDR::ColourType::TRUE_COLOUR, IHDR::BitDepth{ 0 }, false ),
+        f( IHDR::ColourType::TRUE_COLOUR, IHDR::BitDepth{ 5 }, false ),
+        f( IHDR::ColourType::TRUE_COLOUR, IHDR::BitDepth{ 17 }, false ),
+        f( IHDR::ColourType::INDEXED_COLOUR, IHDR::BitDepth{ 1 }, true ),
+        f( IHDR::ColourType::INDEXED_COLOUR, IHDR::BitDepth{ 2 }, true ),
+        f( IHDR::ColourType::INDEXED_COLOUR, IHDR::BitDepth{ 4 }, true ),
+        f( IHDR::ColourType::INDEXED_COLOUR, IHDR::BitDepth{ 8 }, true ),
+        f( IHDR::ColourType::INDEXED_COLOUR, IHDR::BitDepth{ 0 }, false ),
+        f( IHDR::ColourType::INDEXED_COLOUR, IHDR::BitDepth{ 5 }, false ),
+        f( IHDR::ColourType::INDEXED_COLOUR, IHDR::BitDepth{ 17 }, false ),
+        f( IHDR::ColourType::GREYSCALE_ALPHA, IHDR::BitDepth{ 8 }, true ),
+        f( IHDR::ColourType::GREYSCALE_ALPHA, IHDR::BitDepth{ 16 }, true ),
+        f( IHDR::ColourType::GREYSCALE_ALPHA, IHDR::BitDepth{ 0 }, false ),
+        f( IHDR::ColourType::GREYSCALE_ALPHA, IHDR::BitDepth{ 5 }, false ),
+        f( IHDR::ColourType::GREYSCALE_ALPHA, IHDR::BitDepth{ 17 }, false ),
+        f( IHDR::ColourType::TRUE_COLOUR_ALPHA, IHDR::BitDepth{ 8 }, true ),
+        f( IHDR::ColourType::TRUE_COLOUR_ALPHA, IHDR::BitDepth{ 16 }, true ),
+        f( IHDR::ColourType::TRUE_COLOUR_ALPHA, IHDR::BitDepth{ 0 }, false ),
+        f( IHDR::ColourType::TRUE_COLOUR_ALPHA, IHDR::BitDepth{ 5 }, false ),
+        f( IHDR::ColourType::TRUE_COLOUR_ALPHA, IHDR::BitDepth{ 17 }, false ),
+        f( IHDR::ColourType::INVALID, IHDR::BitDepth{ 1 }, false ),
+        f( IHDR::ColourType::INVALID, IHDR::BitDepth{ 2 }, false ),
+        f( IHDR::ColourType::INVALID, IHDR::BitDepth{ 4 }, false ),
+        f( IHDR::ColourType::INVALID, IHDR::BitDepth{ 8 }, false ),
+        f( IHDR::ColourType::INVALID, IHDR::BitDepth{ 16 }, false ),
+        f( IHDR::ColourType::INVALID, IHDR::BitDepth{ 0 }, false ),
+        f( IHDR::ColourType::INVALID, IHDR::BitDepth{ 5 }, false ),
+        f( IHDR::ColourType::INVALID, IHDR::BitDepth{ 17 }, false )
+    };
+
+    constexpr auto compression_method_test_set =
+        std::array{ std::tuple{ IHDR::CompressionMethod::COMPRESSION_METHOD_0,
+                                true },
+                    std::tuple{ IHDR::CompressionMethod::INVALID, false },
+                    std::tuple{ IHDR::CompressionMethod{ 2 }, false } };
+
+    constexpr auto filter_method_test_set =
+        std::array{ std::tuple{ IHDR::FilterMethod::FILTER_METHOD_0, true },
+                    std::tuple{ IHDR::FilterMethod::INVALID, false },
+                    std::tuple{ IHDR::FilterMethod{ 2 }, false } };
+
+    constexpr auto interlace_method_test_set =
+        std::array{ std::tuple{ IHDR::InterlaceMethod::NO_INTERLACE, true },
+                    std::tuple{ IHDR::InterlaceMethod::ADAM_7, true },
+                    std::tuple{ IHDR::InterlaceMethod::INVALID, false },
+                    std::tuple{ IHDR::InterlaceMethod{ 3 }, false } };
+
+    return validate_type<IHDR::BitDepth>( bit_depth_test_set,
+                                          []( const IHDR::BitDepth input ) {
+                                              return IHDR::is_valid( input );
+                                          } )
+           && validate_type<IHDR::ColourType>(
+               colour_type_test_set,
+               []( const IHDR::ColourType input ) {
+                   return IHDR::is_valid( input );
+               } )
+           && validate_type<IHDR::ColourType, IHDR::BitDepth>(
+               colour_type_bit_depth_test_set,
+               []( const IHDR::ColourType input1,
+                   const IHDR::BitDepth   input2 ) {
+                   return IHDR::is_valid( input1, input2 );
+               } )
+           && validate_type<IHDR::CompressionMethod>(
+               compression_method_test_set,
+               []( const IHDR::CompressionMethod input ) {
+                   return IHDR::is_valid( input );
+               } )
+           && validate_type<IHDR::FilterMethod>(
+               filter_method_test_set,
+               []( const IHDR::FilterMethod input ) {
+                   return IHDR::is_valid( input );
+               } )
+           && validate_type<IHDR::InterlaceMethod>(
+               interlace_method_test_set,
+               []( const IHDR::InterlaceMethod input ) {
+                   return IHDR::is_valid( input );
+               } );
 }
 
 } // namespace PNG

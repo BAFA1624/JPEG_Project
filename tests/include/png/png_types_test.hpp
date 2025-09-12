@@ -13,9 +13,10 @@ concept EnumOrIntegral = std::is_enum_v<T> || std::is_integral_v<T>;
 
 template <typename F, typename... Ts>
 concept ValidFunction = ( EnumOrIntegral<Ts> && ... )
-                        && requires( const F & func, const Ts &... inputs ) {
+                        && requires( const F && func, const Ts &... inputs ) {
                                {
-                                   func( std::forward<const Ts>( inputs )... )
+                                   std::forward<const F>( func )(
+                                       std::forward<const Ts>( inputs )... )
                                } -> std::same_as<bool>;
                            };
 
@@ -35,7 +36,7 @@ template <typename... Ts, typename F, std::size_t N>
     requires( EnumOrIntegral<Ts> && ... ) && ValidFunction<F, Ts...>
 constexpr bool
 validate_type( const std::array<std::tuple<Ts..., bool>, N> & test_set,
-               F &&                                           valid_function ) {
+               const F &&                                     valid_function ) {
     std::size_t test_passes{ 0 };
 
     for ( const auto & tup : test_set ) {
@@ -45,7 +46,7 @@ validate_type( const std::array<std::tuple<Ts..., bool>, N> & test_set,
 
         const bool result = std::apply(
             [&valid_function]( const auto &... args ) {
-                return std::forward<F>( valid_function )( args... );
+                return std::forward<const F>( valid_function )( args... );
             },
             args_tuple<Ts...>( tup ) );
 
@@ -59,9 +60,7 @@ validate_type( const std::array<std::tuple<Ts..., bool>, N> & test_set,
 
 bool test_png_types();
 bool test_ihdr_types();
-bool test_plte_types();
 
-constexpr auto test_functions =
-    std::array{ test_png_types, test_ihdr_types, test_plte_types };
+constexpr auto test_functions = std::array{ test_png_types, test_ihdr_types };
 
 } // namespace PNG
