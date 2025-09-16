@@ -1,32 +1,21 @@
 #pragma once // PNG_CHUNK_HPP
 
+#include "common/crc.hpp"
 #include "png/png_chunk_base.hpp"
 
 namespace PNG
 {
 
-class PngChunkIHDR : public PngChunkBase
+class PngChunk
 {
     private:
-    static constexpr auto m_chunk_type{ PngChunkType::IHDR };
-};
+    // Pointer to held payload
+    std::unique_ptr<PngChunkPayloadBase> m_payload;
+    // Cyclic Redundancy Check for this chunk
+    CRC::crc_t m_crc;
 
-class PngChunkPLTE : public PngChunkBase
-{
-    private:
-    static constexpr auto m_chunk_type{ PngChunkType::PLTE };
-};
-
-class PngChunkIDAT : public PngChunkBase
-{
-    private:
-    static constexpr auto m_chunk_type{ PngChunkType::IDAT };
-};
-
-class PngChunkIEND : public PngChunkBase
-{
-    private:
-    static constexpr auto m_chunk_type{ PngChunkType::IEND };
+    protected:
+    public:
 };
 
 } // namespace PNG
