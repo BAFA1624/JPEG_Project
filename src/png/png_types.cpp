@@ -3,7 +3,6 @@
 #include "common/crc.hpp"
 
 #include <cassert>
-#include <ranges>
 
 namespace PNG
 {
@@ -223,7 +222,8 @@ namespace PLTE
 std::ostream &
 operator<<( std::ostream & out_stream, const Palette palette ) {
     return out_stream << std::format( "Palette( r: {}, g: {}, b: {} )",
-                                      palette.red, palette.green,
+                                      palette.red,
+                                      palette.green,
                                       palette.blue );
 }
 
