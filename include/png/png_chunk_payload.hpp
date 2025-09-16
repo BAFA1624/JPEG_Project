@@ -75,11 +75,13 @@ class IhdrChunkPayload final : protected PngChunkPayloadBase
         bool valid_interlace_method;
 
         public:
-        ValidChecker( const std::uint32_t width, const std::uint32_t height,
-                      const BitDepth bit_depth, const ColourType colour_type,
-                      const CompressionMethod compression_method,
-                      const FilterMethod      filter_method,
-                      const InterlaceMethod   interlace_method ) :
+        constexpr ValidChecker( const std::uint32_t     width,
+                                const std::uint32_t     height,
+                                const BitDepth          bit_depth,
+                                const ColourType        colour_type,
+                                const CompressionMethod compression_method,
+                                const FilterMethod      filter_method,
+                                const InterlaceMethod   interlace_method ) :
             valid_width( width > 0 ),
             valid_height( height > 0 ),
             valid_bit_depth( PNG::IHDR::is_valid( colour_type, bit_depth ) ),
@@ -87,8 +89,7 @@ class IhdrChunkPayload final : protected PngChunkPayloadBase
             valid_compression_method(
                 PNG::IHDR::is_valid( compression_method ) ),
             valid_filter_method( PNG::IHDR::is_valid( filter_method ) ),
-            valid_interlace_method( PNG::IHDR::is_valid( interlace_method ) ) {
-            };
+            valid_interlace_method( PNG::IHDR::is_valid( interlace_method ) ) {}
 
         [[nodiscard]] constexpr bool isValid() const {
             return valid_width & valid_height && valid_bit_depth
