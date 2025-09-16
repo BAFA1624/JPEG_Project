@@ -8,6 +8,9 @@
 #include <expected>
 #include <iostream>
 // #include <memory>
+#include <map>
+#include <ranges>
+#include <variant>
 #include <vector>
 
 namespace PNG
@@ -108,36 +111,74 @@ enum class PngChunkType : std::uint32_t {
      * Lower case last letter = safe to copy,
      * even if application doesn't * understand it.*/
 };
+enum class ChunkSizeType { Constant, Variable };
 
-constexpr std::array<PngChunkType, 21> valid_png_chunk{
+template <ChunkSizeType SizeType>
+struct PngChunkSize
+{
+    static constexpr ChunkSizeType m_size_type{ SizeType };
+    std::size_t                    m_size;
+
+    constexpr PngChunkSize()
+        requires( m_size_type == ChunkSizeType::Variable )
+        : m_size( 0 ) {}
+    constexpr explicit PngChunkSize( const std::size_t size )
+        requires( m_size_type == ChunkSizeType::Constant )
+        : m_size( size ) {}
+    constexpr ~PngChunkSize() = default;
+    constexpr explicit PngChunkSize( const PngChunkSize & other ) = default;
+    constexpr explicit PngChunkSize( PngChunkSize && other ) noexcept = default;
+    constexpr PngChunkSize & operator=( const PngChunkSize & other ) = default;
+    constexpr PngChunkSize &
+    operator=( PngChunkSize && other ) noexcept = default;
+
+    [[nodiscard]] constexpr ChunkSizeType sizeType() const noexcept {
+        return m_size_type;
+    }
+    [[nodiscard]] constexpr std::size_t size() const noexcept
+        requires( m_size_type == ChunkSizeType::Constant )
+    {
+        return m_size;
+    }
+};
+
+PngChunkSize( const std::size_t ) -> PngChunkSize<ChunkSizeType::Constant>;
+PngChunkSize() -> PngChunkSize<ChunkSizeType::Variable>;
+
+using SizeType = std::variant<PngChunkSize<ChunkSizeType::Constant>,
+                              PngChunkSize<ChunkSizeType::Variable>>;
+
+
+constexpr std::map<PngChunkType, SizeType> valid_png_chunk{
     // clang-format off
-    PngChunkType::IHDR,
-    PngChunkType::PLTE,
-    PngChunkType::IDAT,
-    PngChunkType::IEND,
-    PngChunkType::bKGD,
-    PngChunkType::cHRM,
-    PngChunkType::dSIG,
-    PngChunkType::eXIF,
-    PngChunkType::gAMA,
-    PngChunkType::hIST,
-    PngChunkType::iCCP,
-    PngChunkType::iTXt,
-    PngChunkType::pHYs,
-    PngChunkType::sBIT,
-    PngChunkType::sPLT,
-    PngChunkType::sRGB,
-    PngChunkType::sTER,
-    PngChunkType::tEXt,
-    PngChunkType::tIME,
-    PngChunkType::tRNS,
-    PngChunkType::zTXt
+    { PngChunkType::IHDR, PngChunkSize{}},
+    { PngChunkType::PLTE, PngChunkSize{}},
+    { PngChunkType::IDAT, PngChunkSize{}},
+    { PngChunkType::IEND, PngChunkSize{}},
+    { PngChunkType::bKGD, PngChunkSize{}},
+    { PngChunkType::cHRM, PngChunkSize{}},
+    { PngChunkType::dSIG, PngChunkSize{}},
+    { PngChunkType::eXIF, PngChunkSize{}},
+    { PngChunkType::gAMA, PngChunkSize{}},
+    { PngChunkType::hIST, PngChunkSize{}},
+    { PngChunkType::iCCP, PngChunkSize{}},
+    { PngChunkType::iTXt, PngChunkSize{}},
+    { PngChunkType::pHYs, PngChunkSize{}},
+    { PngChunkType::sBIT, PngChunkSize{}},
+    { PngChunkType::sPLT, PngChunkSize{}},
+    { PngChunkType::sRGB, PngChunkSize{}},
+    { PngChunkType::sTER, PngChunkSize{}},
+    { PngChunkType::tEXt, PngChunkSize{}},
+    { PngChunkType::tIME, PngChunkSize{}},
+    { PngChunkType::tRNS, PngChunkSize{}},
+    { PngChunkType::zTXt, PngChunkSize{}}
     // clang-format on
 };
 
 constexpr bool
 is_valid( const PngChunkType png_chunk_type ) {
-    return std::ranges::contains( valid_png_chunk, png_chunk_type );
+    return std::ranges::contains( valid_png_chunk | std::views::keys,
+                                  png_chunk_type );
 }
 
 // ostream operators for png_types
