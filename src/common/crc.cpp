@@ -9,10 +9,10 @@ namespace CRC
 void
 CrcTable32::calculate_table() noexcept {
     for ( std::uint32_t i{ 0 }; i < 256; ++i ) {
-        auto c = value_t{ i };
+        auto c = crc_t{ i };
         for ( std::uint32_t j{ 0 }; j < 8; ++j ) {
             c = ( c >> 1 )
-                ^ ( ( c & value_t{ 1 } )
+                ^ ( ( c & crc_t{ 1 } )
                             .test( lsb<std::uint32_t, std::endian::native> ) ?
                         polynomial :
                         0 );
@@ -24,11 +24,11 @@ CrcTable32::calculate_table() noexcept {
     is_table_computed = true;
 }
 
-CrcTable32::value_t
+crc_t
 CrcTable32::update_crc(
-    const value_t &                  initial_crc,
+    const crc_t &                    initial_crc,
     const std::span<const std::byte> input_bytes ) noexcept {
-    constexpr auto pad_byte = []( const std::byte b ) -> value_t {
+    constexpr auto pad_byte = []( const std::byte b ) -> crc_t {
         return std::to_integer<std::uint32_t>( b );
     };
 
@@ -39,7 +39,7 @@ CrcTable32::update_crc(
     auto crc = initial_crc;
     for ( const auto & [i, byte] : input_bytes | std::views::enumerate ) {
         const auto idx{
-            ( ( crc ^ pad_byte( byte ) ) & value_t{ 0xFF } ).to_ulong()
+            ( ( crc ^ pad_byte( byte ) ) & crc_t{ 0xFF } ).to_ulong()
         };
         crc = ( crc >> 8 ) ^ table[idx];
     }
@@ -47,9 +47,9 @@ CrcTable32::update_crc(
     return crc;
 }
 
-CrcTable32::value_t
+crc_t
 CrcTable32::crc( const std::span<const std::byte> input_bytes ) {
-    return update_crc( 0xffffffffL, input_bytes ) ^ value_t { 0xffffffffL };
+    return update_crc( 0xffffffffL, input_bytes ) ^ crc_t { 0xffffffffL };
 }
 
 } // namespace CRC
