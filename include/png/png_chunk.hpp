@@ -1,7 +1,9 @@
 #pragma once // PNG_CHUNK_HPP
 
 #include "common/crc.hpp"
-#include "png/png_chunk_base.hpp"
+#include "png/png_chunk_payload.hpp"
+
+#include <memory>
 
 namespace PNG
 {
