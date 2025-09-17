@@ -27,9 +27,14 @@ class PngChunkPayloadBase
     explicit PngChunkPayloadBase( PngChunkPayloadBase && other ) = default;
     PngChunkPayloadBase & operator=( PngChunkPayloadBase && other ) = default;
 
+    [[nodiscard]] virtual constexpr operator bool() const noexcept {
+        return is_valid( chunk_type );
+    }
+
     [[nodiscard]] virtual constexpr bool isBaseValid() const noexcept {
         return is_valid( chunk_type );
     }
+
 
     [[nodiscard]] virtual constexpr bool          isValid() const = 0;
     [[nodiscard]] virtual constexpr std::uint32_t getSize() const {
@@ -126,16 +131,29 @@ class IhdrChunkPayload final : protected PngChunkPayloadBase
     IhdrChunkPayload & operator=( IhdrChunkPayload && other ) noexcept;
     ~IhdrChunkPayload() override = default;
 
-    [[nodiscard]] constexpr operator bool() const noexcept {
-        const ValidChecker valid_check( width, height, bit_depth, colour_type,
-                                        compression_method, filter_method,
+    [[nodiscard]] constexpr operator bool() const noexcept override {
+        const ValidChecker valid_check( width,
+                                        height,
+                                        bit_depth,
+                                        colour_type,
+                                        compression_method,
+                                        filter_method,
                                         interlace_method );
         return isBaseValid() && valid_check.isValid();
     }
 
     // Overrides
-    [[nodiscard]] constexpr bool isValid() const override { return *this; }
-    constexpr void               setInvalid() noexcept {
+    [[nodiscard]] constexpr bool isValid() const override {
+        const ValidChecker valid_check( width,
+                                        height,
+                                        bit_depth,
+                                        colour_type,
+                                        compression_method,
+                                        filter_method,
+                                        interlace_method );
+        return isBaseValid() && valid_check.isValid();
+    }
+    constexpr void setInvalid() noexcept {
         setBaseInvalid();
 
         width = 0;
