@@ -1,11 +1,33 @@
 #include "png/png_chunk_payload_test.hpp"
 
+#include <print>
+
 namespace PNG
 {
 
 bool
 test_png_chunk_payload_base() {
-    return true;
+    return false;
+}
+
+bool
+test_ihdr_payload() {
+    return false;
+}
+
+bool
+test_plte_payload() {
+    return false;
+}
+
+bool
+test_idat_payload() {
+    return false;
+}
+
+bool
+test_iend_payload() {
+    return false;
 }
 
 } // namespace PNG
@@ -13,11 +35,5 @@ test_png_chunk_payload_base() {
 int
 png_chunk_payload_test( [[maybe_unused]] int     argc,
                         [[maybe_unused]] char ** argv ) {
-    std::size_t test_passes{ 0 };
-
-    for ( const auto & func : PNG::test_functions ) {
-        test_passes += ( func() ? 1 : 0 );
-    }
-
-    return static_cast<int>( PNG::test_functions.size() - test_passes );
+    return TEST_INTERFACE::run_tests( PNG::test_functions );
 }

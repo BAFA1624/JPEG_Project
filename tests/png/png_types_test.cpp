@@ -73,7 +73,8 @@ test_ihdr_types() {
 
 
     constexpr auto f = []( const IHDR::ColourType colour_type,
-                           const IHDR::BitDepth bit_depth, const bool result )
+                           const IHDR::BitDepth   bit_depth,
+                           const bool             result )
         -> std::tuple<IHDR::ColourType, IHDR::BitDepth, bool> {
         return std::make_tuple( colour_type, bit_depth, result );
     };
@@ -171,11 +172,5 @@ test_ihdr_types() {
 
 int
 png_types_test( [[maybe_unused]] int argc, [[maybe_unused]] char ** argv ) {
-    std::size_t test_passes{ 0 };
-
-    for ( const auto & func : PNG::test_functions ) {
-        test_passes += ( func() ? 1 : 0 );
-    }
-
-    return static_cast<int>( PNG::test_functions.size() - test_passes );
+    return TEST_INTERFACE::run_tests( PNG::test_functions );
 }

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "common/test_interfaces.hpp"
 #include "png/png_types.hpp"
+#include "test_interface.hpp"
 
 #include <functional>
 
@@ -13,7 +13,7 @@ concept EnumOrIntegral = std::is_enum_v<T> || std::is_integral_v<T>;
 
 template <typename F, typename... Ts>
 concept ValidFunction = ( EnumOrIntegral<Ts> && ... )
-                        && requires( const F && func, const Ts &... inputs ) {
+                        && requires( const F && func, const Ts &&... inputs ) {
                                {
                                    std::forward<const F>( func )(
                                        std::forward<const Ts>( inputs )... )
@@ -61,6 +61,6 @@ validate_type( const std::array<std::tuple<Ts..., bool>, N> & test_set,
 bool test_png_types();
 bool test_ihdr_types();
 
-constexpr auto test_functions = std::array{ test_png_types, test_ihdr_types };
+const auto test_functions = std::vector{ test_png_types, test_ihdr_types };
 
 } // namespace PNG
