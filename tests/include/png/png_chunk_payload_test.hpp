@@ -11,7 +11,7 @@ template <typename Payload, typename... Args>
     requires std::constructible_from<Payload, Args...>
 constexpr bool
 test_payload( const Args &&... args ) {
-    constexpr auto payload = Payload{ std::forward<Args>( args )... };
+    const Payload payload{ std::forward<const Args>( args )... };
     return payload.isValid();
 }
 
