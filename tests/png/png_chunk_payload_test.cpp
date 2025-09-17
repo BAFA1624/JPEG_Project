@@ -26,7 +26,15 @@ class PngChunkPayloadBaseWrapper : public PngChunkPayloadBase
 bool
 test_png_chunk_payload_base() {
     return !test_payload<PngChunkPayloadBaseWrapper>( std::uint32_t{ 0 },
-                                                      PngChunkType::INVALID );
+                                                      PngChunkType::INVALID )
+           && test_payload<PngChunkPayloadBaseWrapper>( std::uint32_t{ 13 },
+                                                        PngChunkType::IHDR )
+           && test_payload<PngChunkPayloadBaseWrapper>( std::uint32_t{ 0 },
+                                                        PngChunkType::PLTE )
+           && test_payload<PngChunkPayloadBaseWrapper>( std::uint32_t{ 0 },
+                                                        PngChunkType::IDAT )
+           && test_payload<PngChunkPayloadBaseWrapper>( std::uint32_t{ 0 },
+                                                        PngChunkType::IEND );
 }
 
 bool
