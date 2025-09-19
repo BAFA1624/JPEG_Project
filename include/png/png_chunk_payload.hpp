@@ -132,14 +132,7 @@ class IhdrChunkPayload final : protected PngChunkPayloadBase
     ~IhdrChunkPayload() override = default;
 
     [[nodiscard]] constexpr operator bool() const noexcept override {
-        const ValidChecker valid_check( width,
-                                        height,
-                                        bit_depth,
-                                        colour_type,
-                                        compression_method,
-                                        filter_method,
-                                        interlace_method );
-        return isBaseValid() && valid_check.isValid();
+        return isValid();
     }
 
     // Overrides
@@ -153,7 +146,7 @@ class IhdrChunkPayload final : protected PngChunkPayloadBase
                                         interlace_method );
         return isBaseValid() && valid_check.isValid();
     }
-    constexpr void setInvalid() noexcept {
+    constexpr void setInvalid() noexcept override {
         setBaseInvalid();
 
         width = 0;
@@ -225,10 +218,13 @@ class PlteChunkPayload final : protected PngChunkPayloadBase
         }
     }
 
-    [[nodiscard]] constexpr bool isValid() const noexcept {
-        return this->isBaseValid();
+    [[nodiscard]] constexpr operator bool() const noexcept override {
+        return isValid();
     }
-    constexpr void setInvalid() noexcept { this->setBaseInvalid(); }
+    [[nodiscard]] constexpr bool isValid() const noexcept override {
+        return isBaseValid();
+    }
+    constexpr void setInvalid() noexcept override { setBaseInvalid(); }
 };
 
 } // namespace PLTE
@@ -237,15 +233,94 @@ namespace IDAT
 {
 
 class IdatChunkPayload final : protected PngChunkPayloadBase
-{};
+{
+    private:
+    std::vector<std::byte> m_data;
+
+    protected:
+    public:
+    IdatChunkPayload() = delete;
+    constexpr explicit IdatChunkPayload(
+        const std::span<const std::byte> & data_span ) :
+        PngChunkPayloadBase( static_cast<std::uint32_t>( data_span.size() ),
+                             PngChunkType::IDAT ),
+        m_data( data_span.cbegin(), data_span.cend() ) {
+        assert( data_span.size() <= std::numeric_limits<std::uint32_t>::max() );
+    }
+    ~IdatChunkPayload() = default;
+    IdatChunkPayload( const IdatChunkPayload & other ) = default;
+    IdatChunkPayload & operator=( const IdatChunkPayload & other ) = default;
+    IdatChunkPayload( IdatChunkPayload && other ) noexcept = default;
+    IdatChunkPayload &
+    operator=( IdatChunkPayload && other ) noexcept = default;
+
+    [[nodiscard]] constexpr std::uint32_t getSize() const noexcept override {
+        assert(
+            m_data.size()
+            == static_cast<std::uint64_t>( PngChunkPayloadBase::getSize() ) );
+        return PngChunkPayloadBase::getSize();
+    }
+
+    [[nodiscard]] constexpr operator bool() const noexcept override {
+        return isValid();
+    }
+    [[nodiscard]] constexpr bool isValid() const noexcept override {
+        return isBaseValid() && !m_data.empty() && getSize() == m_data.size();
+    }
+    constexpr void setInvalid() noexcept override {
+        setBaseInvalid();
+        m_data.clear();
+    }
+
+    [[nodiscard]] constexpr auto
+    operator[]( const std::size_t i ) const noexcept {
+        return m_data[i];
+    }
+    [[nodiscard]] constexpr auto
+    operator[]( const std::size_t i, const std::size_t j,
+                const bool endpoint_inclusive = false ) const noexcept {
+        assert( i < j );
+        return std::span{ std::next( m_data.cbegin(), i ),
+                          std::next( m_data.cbegin(),
+                                     j + ( endpoint_inclusive ? 1 : 0 ) ) };
+    }
+    [[nodiscard]] constexpr auto at( const std::size_t i ) const {
+        return m_data.at( i );
+    }
+    [[nodiscard]] constexpr auto
+    at( const std::size_t i, const std::size_t j,
+        const bool endpoint_inclusive = false ) const {
+        assert( i < j && i < m_data.size() && j < m_data.size() );
+        return std::span{ std::next( m_data.cbegin(), i ),
+                          std::next( m_data.cbegin(),
+                                     j + ( endpoint_inclusive ? 1 : 0 ) ) };
+    }
+
+    [[nodiscard]] constexpr auto & data() const noexcept { return m_data; }
+
+    // Access functions to be added?
+};
 
 } // namespace IDAT
 
 namespace IEND
 {
-
 class IendChunkPayload final : protected PngChunkPayloadBase
-{};
+{
+    private:
+    protected:
+    public:
+    constexpr IendChunkPayload() :
+        PngChunkPayloadBase( 0, PngChunkType::IEND ) {}
+
+    [[nodiscard]] constexpr operator bool() const noexcept override {
+        return isValid();
+    }
+    [[nodiscard]] constexpr bool isValid() const noexcept override {
+        return isBaseValid();
+    }
+    constexpr void setInvalid() noexcept override { setBaseInvalid(); }
+};
 
 } // namespace IEND
 
