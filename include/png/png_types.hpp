@@ -109,7 +109,7 @@ enum class PngChunkType : std::uint32_t {
      * even if application doesn't * understand it.*/
 };
 
-static constinit std::array<PngChunkType, 21> valid_png_chunk{
+constexpr std::array<PngChunkType, 21> valid_png_chunk{
     // clang-format off
     PngChunkType::IHDR,
     PngChunkType::PLTE,
@@ -154,7 +154,7 @@ enum class PngPixelFormat : std::uint32_t {
     alpha_truecolor = 6
 };
 
-static constinit std::array<PngPixelFormat, 5> valid_png_pixel_format{
+constexpr std::array<PngPixelFormat, 5> valid_png_pixel_format{
     // clang-format off
     PngPixelFormat::grayscale,
     PngPixelFormat::truecolor,
@@ -181,7 +181,7 @@ namespace IHDR
 
 using BitDepth = std::uint8_t;
 
-static constinit std::array<BitDepth, 5> valid_bit_depths{ 1, 2, 4, 8, 16 };
+constexpr std::array<BitDepth, 5> valid_bit_depths{ 1, 2, 4, 8, 16 };
 
 constexpr bool
 is_valid( const BitDepth bit_depth ) {
@@ -203,7 +203,7 @@ enum class ColourType : std::uint8_t {
     // clang-format on
 };
 
-static constinit std::array<ColourType, 5> valid_colour_types{
+constexpr std::array<ColourType, 5> valid_colour_types{
     // clang-format off
     ColourType::GREYSCALE,
     ColourType::TRUE_COLOUR,

@@ -17,15 +17,18 @@ class PngChunkPayloadBase
     PngChunkType  chunk_type;
 
     public:
-    PngChunkPayloadBase( const std::uint32_t size,
-                         const PngChunkType  chunk_type ) :
+    constexpr PngChunkPayloadBase( const std::uint32_t size,
+                                   const PngChunkType  chunk_type ) :
         size( size ), chunk_type( chunk_type ) {}
-    virtual ~PngChunkPayloadBase() = default;
-    explicit PngChunkPayloadBase( const PngChunkPayloadBase & other ) = default;
-    PngChunkPayloadBase &
+    constexpr virtual ~PngChunkPayloadBase() = default;
+    constexpr explicit PngChunkPayloadBase(
+        const PngChunkPayloadBase & other ) = default;
+    constexpr PngChunkPayloadBase &
     operator=( const PngChunkPayloadBase & other ) = default;
-    explicit PngChunkPayloadBase( PngChunkPayloadBase && other ) = default;
-    PngChunkPayloadBase & operator=( PngChunkPayloadBase && other ) = default;
+    constexpr explicit PngChunkPayloadBase( PngChunkPayloadBase && other ) =
+        default;
+    constexpr PngChunkPayloadBase &
+    operator=( PngChunkPayloadBase && other ) = default;
 
     [[nodiscard]] virtual constexpr operator bool() const noexcept {
         return is_valid( chunk_type );
