@@ -39,7 +39,17 @@ test_png_chunk_payload_base() {
 
 bool
 test_ihdr_payload() {
-    return false;
+    const auto chunk = IHDR::IhdrChunkPayload{
+        IHDR::generate_ihdr_bytes<std::uint32_t{ 1 },
+                                  std::uint32_t{ 1 },
+                                  IHDR::BitDepth{ 1 },
+                                  IHDR::ColourType::GREYSCALE,
+                                  IHDR::CompressionMethod::COMPRESSION_METHOD_0,
+                                  IHDR::FilterMethod::FILTER_METHOD_0,
+                                  IHDR::InterlaceMethod::ADAM_7,
+                                  true>()
+    };
+    return chunk.isValid();
 }
 
 bool
