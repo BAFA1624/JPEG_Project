@@ -149,31 +149,32 @@ using SizeType = std::variant<PngChunkSize<ChunkSizeType::Constant>,
                               PngChunkSize<ChunkSizeType::Variable>>;
 
 
-constexpr std::map<PngChunkType, SizeType> valid_png_chunk{
-    // clang-format off
-    { PngChunkType::IHDR, PngChunkSize{}},
+constexpr auto valid_png_chunk =
+    std::array<std::pair<PngChunkType, SizeType>, 21>{
+        // clang-format off
+    { PngChunkType::IHDR, PngChunkSize{13}},
     { PngChunkType::PLTE, PngChunkSize{}},
     { PngChunkType::IDAT, PngChunkSize{}},
-    { PngChunkType::IEND, PngChunkSize{}},
+    { PngChunkType::IEND, PngChunkSize{0}},
     { PngChunkType::bKGD, PngChunkSize{}},
-    { PngChunkType::cHRM, PngChunkSize{}},
+    { PngChunkType::cHRM, PngChunkSize{32}},
     { PngChunkType::dSIG, PngChunkSize{}},
     { PngChunkType::eXIF, PngChunkSize{}},
-    { PngChunkType::gAMA, PngChunkSize{}},
+    { PngChunkType::gAMA, PngChunkSize{4}},
     { PngChunkType::hIST, PngChunkSize{}},
     { PngChunkType::iCCP, PngChunkSize{}},
     { PngChunkType::iTXt, PngChunkSize{}},
     { PngChunkType::pHYs, PngChunkSize{}},
     { PngChunkType::sBIT, PngChunkSize{}},
     { PngChunkType::sPLT, PngChunkSize{}},
-    { PngChunkType::sRGB, PngChunkSize{}},
+    { PngChunkType::sRGB, PngChunkSize{1}},
     { PngChunkType::sTER, PngChunkSize{}},
     { PngChunkType::tEXt, PngChunkSize{}},
     { PngChunkType::tIME, PngChunkSize{}},
     { PngChunkType::tRNS, PngChunkSize{}},
     { PngChunkType::zTXt, PngChunkSize{}}
-    // clang-format on
-};
+        // clang-format on
+    };
 
 constexpr bool
 is_valid( const PngChunkType png_chunk_type ) {
