@@ -12,6 +12,16 @@ namespace PNG
 class PngChunkPayloadBase
 {
     private:
+    // PngChunkTypes are always 4 bytes.
+    // The property bits are bit 5 in each byte.
+    template <std::size_t Byte>
+        requires( Byte == 0 || Byte == 1 || Byte == 2 || Byte == 3 )
+    [[nodiscard]] constexpr bool test_property_bit() const noexcept {
+        return std::bitset<sizeof( PngChunkType ) * byte_bits>{
+            static_cast<std::underlying_type_t<PngChunkType>>( chunk_type )
+        }[byte_bits * Byte + 5];
+    }
+
     protected:
     std::uint32_t size;
     PngChunkType  chunk_type;
@@ -38,6 +48,28 @@ class PngChunkPayloadBase
         return is_valid( chunk_type );
     }
 
+    [[nodiscard]] constexpr auto isCritical() const noexcept {
+        return !test_property_bit<0>();
+    }
+    [[nodiscard]] constexpr auto isAncillary() const noexcept {
+        return test_property_bit<0>();
+    }
+
+    [[nodiscard]] constexpr auto isPrivate() const noexcept {
+        return test_property_bit<1>();
+    }
+
+    // If a chunk is not reserved:
+    //   -> Chunk defined for more recent PNG specification
+    //      than this implementation uses.
+    //   -> Chunk defined for an unofficial PNG specification.
+    [[nodiscard]] constexpr auto isReserved() const noexcept {
+        return test_property_bit<2>();
+    }
+
+    [[nodiscard]] constexpr auto isSafeToCopy() const noexcept {
+        return test_property_bit<3>();
+    }
 
     [[nodiscard]] virtual constexpr bool          isValid() const = 0;
     [[nodiscard]] virtual constexpr std::uint32_t getSize() const {
