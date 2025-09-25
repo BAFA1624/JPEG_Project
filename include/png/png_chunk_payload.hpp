@@ -126,13 +126,18 @@ class IhdrChunkPayload final : protected PngChunkPayloadBase
         compression_method( compression_method ),
         filter_method( filter_method ),
         interlace_method( interlace_method ) {}
-    explicit IhdrChunkPayload(
-        const std::span<const std::byte> & data ) noexcept;
-    IhdrChunkPayload( const IhdrChunkPayload & other ) noexcept;
-    IhdrChunkPayload & operator=( const IhdrChunkPayload & other ) noexcept;
-    IhdrChunkPayload( IhdrChunkPayload && other ) noexcept;
-    IhdrChunkPayload & operator=( IhdrChunkPayload && other ) noexcept;
-    ~IhdrChunkPayload() override = default;
+    explicit IhdrChunkPayload( const std::span<const std::byte> & data );
+
+    constexpr ~IhdrChunkPayload() override = default;
+
+    constexpr explicit IhdrChunkPayload( const IhdrChunkPayload & other ) =
+        default;
+    constexpr explicit IhdrChunkPayload( IhdrChunkPayload && other ) noexcept;
+
+    constexpr IhdrChunkPayload &
+    operator=( const IhdrChunkPayload & other ) = default;
+    constexpr IhdrChunkPayload &
+    operator=( IhdrChunkPayload && other ) noexcept;
 
     [[nodiscard]] constexpr operator bool() const noexcept override {
         return isValid();
@@ -207,12 +212,14 @@ class PlteChunkPayload final : protected PngChunkPayloadBase
     protected:
     public:
     PlteChunkPayload() = delete;
-    constexpr PlteChunkPayload( const std::vector<Palette> & palettes ) :
+    constexpr explicit PlteChunkPayload(
+        const std::vector<Palette> & palettes ) :
         PngChunkPayloadBase(
             sizeof( Palette ) * static_cast<std::uint32_t>( palettes.size() ),
             PngChunkType::PLTE ),
         palettes( palettes ) {}
-    constexpr PlteChunkPayload( const std::span<const std::byte> & data ) :
+    constexpr explicit PlteChunkPayload(
+        const std::span<const std::byte> & data ) :
         PngChunkPayloadBase( static_cast<std::uint32_t>( data.size() ),
                              PngChunkType::PLTE ),
         palettes( bytes_to_palette( data ) ) {
@@ -220,6 +227,14 @@ class PlteChunkPayload final : protected PngChunkPayloadBase
             setInvalid();
         }
     }
+    constexpr ~PlteChunkPayload() = default;
+
+    constexpr explicit PlteChunkPayload( const PlteChunkPayload & ) = default;
+    constexpr explicit PlteChunkPayload( PlteChunkPayload && ) noexcept;
+
+    constexpr PlteChunkPayload &
+    operator=( const PlteChunkPayload & ) = default;
+    constexpr PlteChunkPayload & operator=( PlteChunkPayload && ) noexcept;
 
     [[nodiscard]] constexpr operator bool() const noexcept override {
         return isValid();
