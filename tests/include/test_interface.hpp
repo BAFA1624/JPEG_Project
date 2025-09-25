@@ -1,6 +1,9 @@
 #pragma once
 
 #include <concepts>
+#include <format>
+#include <iostream>
+#include <print>
 #include <vector>
 
 namespace TEST_INTERFACE
@@ -28,12 +31,17 @@ test_function( Func && function, const Output expected_output,
 }
 
 inline int
-run_tests( const std::vector<bool ( * )()> & test_functions ) {
+run_tests( const std::string_view            test_name,
+           const std::vector<bool ( * )()> & test_functions ) {
     std::size_t test_passes{ 0 };
 
+    std::println( "Running {} tests:", test_name );
     for ( const auto & func : test_functions ) {
-        test_passes += ( func() ? 1 : 0 );
+        const auto pass = func();
+        test_passes += ( pass ? 1 : 0 );
+        std::println( "  - Test Status: {}.", ( pass ? "Success" : "Fail" ) );
     }
+    std::println( "Done." );
 
     return static_cast<int>( test_functions.size() - test_passes );
 }

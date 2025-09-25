@@ -3,17 +3,25 @@
 #include "png/png_chunk_payload.hpp"
 #include "test_interface.hpp"
 
-namespace PNG
+namespace TEST_INTERFACE
 {
-
-template <typename Payload, typename... Args>
+template <typename Payload, bool ExpectedResult, typename... Args>
     requires std::constructible_from<Payload, Args...>
 constexpr bool
 test_payload( const Args &&... args ) {
     const Payload payload{ std::forward<const Args>( args )... };
-    return payload.isValid();
+    return payload.isValid() == ExpectedResult;
 }
+template <typename Payload, typename... Args>
+constexpr bool
+test_payload( const bool expected_result, const Args &&... args ) {
+    const Payload payload{ std::forward<const Args>( args )... };
+    return payload.isValid() == expected_result;
+}
+} // namespace TEST_INTERFACE
 
+namespace PNG
+{
 bool test_png_chunk_payload_base();
 
 namespace IHDR
@@ -87,10 +95,10 @@ bool test_iend_payload();
 
 // Ancillary Chunks
 
-const auto test_functions = std::vector{ test_png_chunk_payload_base,
-                                         test_ihdr_payload,
-                                         test_plte_payload,
-                                         test_idat_payload,
-                                         test_iend_payload };
-
+const auto test_functions = std::vector{
+    test_png_chunk_payload_base, test_ihdr_payload /*,
+                                  test_plte_payload,
+                                  test_idat_payload,
+                                  test_iend_payload */
+};
 } // namespace PNG

@@ -172,5 +172,5 @@ test_ihdr_types() {
 
 int
 png_types_test( [[maybe_unused]] int argc, [[maybe_unused]] char ** argv ) {
-    return TEST_INTERFACE::run_tests( PNG::test_functions );
+    return TEST_INTERFACE::run_tests( "PNG types", PNG::test_functions );
 }
