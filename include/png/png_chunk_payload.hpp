@@ -12,6 +12,9 @@ namespace PNG
 class PngChunkPayloadBase
 {
     private:
+    std::uint32_t size;
+    PngChunkType  chunk_type;
+
     // PngChunkTypes are always 4 bytes.
     // The property bits are bit 5 in each byte.
     template <std::size_t Byte>
@@ -23,9 +26,6 @@ class PngChunkPayloadBase
     }
 
     protected:
-    std::uint32_t size;
-    PngChunkType  chunk_type;
-
     public:
     constexpr PngChunkPayloadBase( const std::uint32_t size,
                                    const PngChunkType  chunk_type ) :
