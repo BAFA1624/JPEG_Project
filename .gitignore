@@ -1,7 +1,7 @@
 debug/
 release/
 lib/*.dylib
-*.swp
+*.sw?
 *.o
 compile_commands.json
 *.ccls-cache
