@@ -11,7 +11,7 @@
 namespace CRC
 {
 
-constexpr inline std::size_t crc_bytes{ 4 };
+constexpr inline std::size_t crc_bytes{ sizeof( std::uint32_t ) };
 constexpr inline std::size_t crc_bits{ byte_bits * crc_bytes };
 
 using crc_t = std::bitset<crc_bits>;
