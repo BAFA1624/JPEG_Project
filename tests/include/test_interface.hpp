@@ -46,4 +46,33 @@ run_tests( const std::string_view            test_name,
     return static_cast<int>( test_functions.size() - test_passes );
 }
 
+class TestFixture
+{
+    private:
+    std::string_view test_id;
+    std::ostream &   os;
+
+    public:
+    TestFixture( const std::string_view id,
+                 std::ostream &         output_stream = std::cerr ) :
+        test_id( id ), os( output_stream ) {
+        os << std::format( "Created {} test fixture.\n", test_id );
+    }
+
+    ~TestFixture() {
+        os << std::format( "Finished {} test fixture.\n", test_id )
+           << std::flush;
+    }
+
+    TestFixture( const TestFixture & ) = default;
+    TestFixture & operator=( const TestFixture & ) = default;
+
+    TestFixture( TestFixture && ) noexcept = default;
+    TestFixture & operator=( TestFixture && ) noexcept = default;
+
+    std::ostream & operator<<( const std::string_view str ) {
+        return os << std::format( " {} | ", test_id ) << str << "\n";
+    }
+};
+
 } // namespace TEST_INTERFACE
