@@ -1,9 +1,11 @@
 #pragma once
 
+#include <algorithm>
 #include <concepts>
 #include <format>
 #include <iostream>
 #include <print>
+#include <ranges>
 #include <vector>
 
 namespace TEST_INTERFACE
@@ -28,6 +30,32 @@ test_function( Func && function, const Output expected_output,
     return expected_output
            == std::forward<Func>( function )(
                std::forward<Inputs>( inputs )... );
+}
+
+#include <iostream>
+template <typename Func, typename Output, typename... Inputs>
+    requires ValidTestCallable<Func, Output, Inputs...>
+bool
+test_function_print( Func && function, const Output expected_output,
+                     Inputs &&... inputs ) {
+    const auto output{ std::forward<Func>( function )(
+        std::forward<Inputs>( inputs )... ) };
+    const auto result{ expected_output == output };
+    std::cout << "output: " << output << std::endl;
+    std::cout << "expected_output: " << expected_output << std::endl;
+    return result;
+}
+
+constexpr auto
+confirm_results( const std::vector<bool> & test_results ) {
+    bool test_result{ true };
+
+    for ( const auto & [i, result] : std::views::enumerate( test_results ) ) {
+        std::println( " [TEST {}] -> {}", i, ( result ? "PASS" : "FAIL" ) );
+        test_result &= result;
+    }
+
+    return test_result;
 }
 
 inline int

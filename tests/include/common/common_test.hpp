@@ -1,9 +1,11 @@
 #pragma once
 
 #include "common/common.hpp"
+#include "test_interface.hpp"
 
 #include <array>
 #include <functional>
+#include <iomanip>
 #include <iostream>
 #include <limits>
 #include <print>
@@ -40,12 +42,12 @@ integral_to_bytes() {
 
 template <typename T, std::endian E>
     requires std::is_integral_v<T> && std::is_unsigned_v<T>
-constexpr std::vector<std::byte>
+constexpr std::array<std::byte, sizeof( T )>
 integral_to_bytes( const T integer ) {
     static_assert( sizeof( T ) < std::numeric_limits<T>::max()
                    && sizeof( T ) < std::numeric_limits<std::size_t>::max() );
 
-    std::vector<std::byte> bytes( sizeof( T ) );
+    std::array<std::byte, sizeof( T )> bytes{};
 
     constexpr const auto byte_index = []( const auto integer, const auto idx ) {
         return ( integer >> ( byte_bits * idx ) ) & ~0x00;
@@ -82,28 +84,103 @@ print_bits( const T value ) {
 
 // Tests:
 
-constexpr bool test_convert_endian();
-constexpr bool test_lsb_msb();
-constexpr bool test_lsB_msB();
-constexpr bool test_lsb_msb_offset_consteval();
-constexpr bool test_lsB_msB_offset_consteval();
-constexpr bool test_lsb_msb_offset_constexpr();
-constexpr bool test_lsB_msB_offset_constexpr();
-bool           test_span_to_integer();
+bool test_convert_endian();
+bool test_lsb_msb();
+bool test_lsB_msB();
+bool test_lsb_msb_offset_constexpr();
+bool test_lsB_msB_offset_constexpr();
+bool test_span_to_integer();
+bool test_get_byte();
+bool test_to_bytes();
 
 const auto test_functions =
     std::vector<std::tuple<std::string_view, std::function<bool()>>>{
         { "test_convert_endian", test_convert_endian },
         { "test_lsb_msb", test_lsb_msb },
         { "test_lsB_msB", test_lsB_msB },
-        { "test_lsb_msb_offset_consteval", test_lsb_msb_offset_consteval },
-        { "test_lsB_msB_offset_consteval", test_lsB_msB_offset_consteval },
         { "test_lsb_msb_offset_constexpr", test_lsb_msb_offset_constexpr },
         { "test_lsB_msB_offset_constexpr", test_lsB_msB_offset_constexpr },
-        { "test_span_to_integer", test_span_to_integer }
+        { "test_span_to_integer", test_span_to_integer },
+        { "test_get_byte", test_get_byte } /*,
+         { "test_to_bytes", test_to_bytes }*/
     };
 
 } // namespace COMMON_TEST
+
+#ifdef __SIZEOF_INT128__
+constexpr std::ostream &
+operator<<( std::ostream & out, const __uint128_t value ) {
+    std::ostream::sentry s( out );
+
+    unsigned     base{ 10 };
+    const char * digits{ "0123456789" };
+
+    const auto basefield{ out.flags() & std::ios_base::basefield };
+    if ( basefield == std::ios_base::hex ) {
+        base = 16;
+        digits = "0123456789ABCDEF";
+    }
+    else if ( basefield == std::ios_base::oct ) {
+        base = 8;
+        digits = "01234567";
+    }
+
+    if ( s ) {
+        __uint128_t tmp = value;
+
+        char   buffer[128];
+        char * d = std::end( buffer );
+
+        do {
+            --d;
+            *d = digits[tmp % base];
+            tmp /= base;
+        } while ( tmp != 0 );
+
+        const auto len{ std::end( buffer ) - d };
+        if ( out.rdbuf()->sputn( d, len ) != len ) {
+            out.setstate( std::ios_base::badbit );
+        }
+    }
+    return out;
+}
+#endif
+
+template <typename T>
+concept Streamable = requires( const T x ) { std::cout << x; };
+template <typename T>
+concept Formattable = requires( const T x ) { std::print( "{}", x ); };
+template <typename T>
+concept Printable = Streamable<T> && Formattable<T>;
+
+template <Streamable T, std::size_t N>
+std::ostream &
+operator<<( std::ostream & os, const std::array<T, N> & arr ) {
+    const auto width{ os.width() };
+    os.width( 2 );
+    os << "{ ";
+    for ( std::size_t i{ 0 }; i < N - 1; ++i ) { os << arr[i] << ", "; }
+    os << arr[N - 1] << " }";
+    os.width( width );
+    return os;
+}
+
+template <typename T1, typename T2>
+concept ComparableElements = requires( const T1 lhs, const T2 rhs ) {
+    { lhs == rhs } -> std::same_as<bool>;
+};
+
+template <typename T1, typename T2, std::size_t N>
+/*requires ComparableElements<T1, T2>*/
+constexpr bool
+operator==( const std::array<T1, N> & lhs, const std::array<T2, N> & rhs ) {
+    bool result = true;
+    for ( const auto & [lhs_element, rhs_element] :
+          std::views::zip( lhs, rhs ) ) {
+        result &= ( lhs_element == rhs_element );
+    }
+    return result;
+}
 
 // Required by CTest
 int common_test( [[maybe_unused]] int argc, [[maybe_unused]] char ** argv );

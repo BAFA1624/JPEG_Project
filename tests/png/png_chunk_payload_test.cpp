@@ -1,5 +1,7 @@
 #include "png/png_chunk_payload_test.hpp"
 
+#include "common/common_io.hpp"
+
 #include <functional>
 #include <numeric>
 #include <print>
@@ -58,20 +60,15 @@ test_png_chunk_payload_base() {
         // getSize
     };
 
-    return std::ranges::all_of(
-        test_results,
-        std::bind( std::equal_to<bool>(), std::placeholders::_1, true ) );
+    return TEST_INTERFACE::confirm_results( test_results );
 }
 
 bool
 test_ihdr_payload() {
-    std::println( "Testing IHDR Chunk Payload:" );
-
     constexpr auto test_valid = []( const std::span<const std::byte> & data ) {
         return test_payload_valid<IHDR::IhdrChunkPayload>( std::cref( data ) );
     };
 
-    std::println( "Running IhdrChunkPayload tests." );
     const auto test_results = std::vector<bool>{
         // Valid Chunk Tests:
         TEST_INTERFACE::test_function(
@@ -205,30 +202,29 @@ test_ihdr_payload() {
         // Multiple Invalid Inputs:
     };
 
-    bool       test_result{ true };
-    const auto tester = [&test_result]( const bool result ) {
-        std::println( " - Test {}", ( result ? "PASS" : "FAIL" ) );
-        test_result &= result;
-    };
-
-    std::ranges::for_each( test_results, tester );
-
-
-    return test_result;
+    return TEST_INTERFACE::confirm_results( test_results );
 }
 
 bool
 test_plte_payload() {
-    return false;
+    const auto test_results = std::vector<bool>{};
+    return TEST_INTERFACE::confirm_results( test_results );
 }
 
 bool
 test_idat_payload() {
-    return false;
+    const auto test_results = std::vector<bool>{};
+    return TEST_INTERFACE::confirm_results( test_results );
 }
 
 bool
 test_iend_payload() {
+    const auto test_results = std::vector<bool>{};
+    return TEST_INTERFACE::confirm_results( test_results );
+}
+
+bool
+test_fail() {
     return false;
 }
 
