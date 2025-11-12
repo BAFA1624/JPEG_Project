@@ -38,7 +38,7 @@ add_subdirectory(src)
 add_subdirectory(tests)
 
 add_executable(main src/main.cpp)
-target_compile_features(main PUBLIC ${DEFAULT_COMPILE_FEATURES})
 
+target_compile_features(main PUBLIC ${DEFAULT_COMPILE_FEATURES})
 target_link_libraries(main PRIVATE ${LINK_LIBS})
 target_include_directories(main PRIVATE ${INCLUDE_DIRS})
