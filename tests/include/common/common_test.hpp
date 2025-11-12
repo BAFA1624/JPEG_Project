@@ -101,8 +101,8 @@ const auto test_functions =
         { "test_lsb_msb_offset_constexpr", test_lsb_msb_offset_constexpr },
         { "test_lsB_msB_offset_constexpr", test_lsB_msB_offset_constexpr },
         { "test_span_to_integer", test_span_to_integer },
-        { "test_get_byte", test_get_byte } /*,
-         { "test_to_bytes", test_to_bytes }*/
+        { "test_get_byte", test_get_byte },
+        { "test_to_bytes", test_to_bytes }
     };
 
 } // namespace COMMON_TEST
@@ -145,42 +145,6 @@ operator<<( std::ostream & out, const __uint128_t value ) {
     return out;
 }
 #endif
-
-template <typename T>
-concept Streamable = requires( const T x ) { std::cout << x; };
-template <typename T>
-concept Formattable = requires( const T x ) { std::print( "{}", x ); };
-template <typename T>
-concept Printable = Streamable<T> && Formattable<T>;
-
-template <Streamable T, std::size_t N>
-std::ostream &
-operator<<( std::ostream & os, const std::array<T, N> & arr ) {
-    const auto width{ os.width() };
-    os.width( 2 );
-    os << "{ ";
-    for ( std::size_t i{ 0 }; i < N - 1; ++i ) { os << arr[i] << ", "; }
-    os << arr[N - 1] << " }";
-    os.width( width );
-    return os;
-}
-
-template <typename T1, typename T2>
-concept ComparableElements = requires( const T1 lhs, const T2 rhs ) {
-    { lhs == rhs } -> std::same_as<bool>;
-};
-
-template <typename T1, typename T2, std::size_t N>
-/*requires ComparableElements<T1, T2>*/
-constexpr bool
-operator==( const std::array<T1, N> & lhs, const std::array<T2, N> & rhs ) {
-    bool result = true;
-    for ( const auto & [lhs_element, rhs_element] :
-          std::views::zip( lhs, rhs ) ) {
-        result &= ( lhs_element == rhs_element );
-    }
-    return result;
-}
 
 // Required by CTest
 int common_test( [[maybe_unused]] int argc, [[maybe_unused]] char ** argv );
