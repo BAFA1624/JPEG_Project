@@ -1,7 +1,5 @@
 #include "png/png_chunk_payload_test.hpp"
 
-#include "common/common_io.hpp"
-
 #include <functional>
 #include <numeric>
 #include <print>
