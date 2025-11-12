@@ -20,7 +20,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Setting project directories
 set(INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
-set(TEST_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/tests/include ${INCLUDE_DIRS})
+set(TEST_INCLUDE_DIRS ${INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/tests/include )
 
 # Set output directories
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
@@ -42,3 +42,11 @@ add_executable(main src/main.cpp)
 target_compile_features(main PUBLIC ${DEFAULT_COMPILE_FEATURES})
 target_link_libraries(main PRIVATE ${LINK_LIBS})
 target_include_directories(main PRIVATE ${INCLUDE_DIRS})
+
+# Creating a dummy library to force correct clangd
+# highlighting in includes that aren't correctly
+# indexed by default
+add_library(CLANGD_DUMMY SHARED ${CLANGD_DUMMY_SOURCES})
+target_compile_features(CLANGD_DUMMY PUBLIC ${DEFAULT_COMPILE_FEATURES})
+target_link_libraries(CLANGD_DUMMY PUBLIC ${CLANGD_DUMMY_LIBS})
+target_include_directories(CLANGD_DUMMY PUBLIC ${TEST_INCLUDE_DIRS})

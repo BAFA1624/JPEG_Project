@@ -3,7 +3,8 @@
 #include <bit>
 #include <bitset>
 #include <cassert>
-#include <ostream>
+#include <cstdint>
+#include <ranges>
 #include <span>
 #include <type_traits>
 #include <utility>
@@ -14,11 +15,6 @@
 #define COLD [[unlikely]]
 
 constexpr inline std::uint8_t byte_bits{ 8 };
-
-constexpr std::ostream &
-operator<<( std::ostream & out_stream, const std::byte byte ) {
-    return out_stream << +std::to_integer<std::uint8_t>( byte );
-}
 
 template <typename T>
 using decayed = std::remove_cv<std::remove_reference_t<T>>;
@@ -45,6 +41,23 @@ as_integral( const T x ) {
     else {
         return x;
     }
+}
+
+template <typename T1, typename T2>
+concept ComparableElements = requires( const T1 lhs, const T2 rhs ) {
+    { lhs == rhs } -> std::same_as<bool>;
+};
+
+template <typename T1, typename T2, std::size_t N>
+    requires ComparableElements<T1, T2>
+constexpr bool
+operator==( const std::array<T1, N> & lhs, const std::array<T2, N> & rhs ) {
+    bool result = true;
+    for ( const auto & [lhs_element, rhs_element] :
+          std::views::zip( lhs, rhs ) ) {
+        result &= ( lhs_element == rhs_element );
+    }
+    return result;
 }
 
 template <std::endian E>
