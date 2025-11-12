@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/test_interface.hpp"
 #include "png/png_chunk.hpp"
 
 namespace PNG

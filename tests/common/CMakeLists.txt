@@ -17,3 +17,9 @@ foreach(test ${COMMON_SUB_TEST_SOURCES})
     get_filename_component(test_name ${test} NAME_WE)
     add_test(NAME ${test_name} COMMAND common_tests ${test_name})
 endforeach()
+
+# Creating a dummy library to force correct clangd highlighting
+# for tests/common/test_interface.hpp
+add_library(TEST_INTERFACE SHARED test_interface.cpp)
+target_include_directories(TEST_INTERFACE PUBLIC ${TEST_INCLUDE_DIRS})
+target_compile_features(TEST_INTERFACE PUBLIC ${DEFAULT_COMPILE_FEATURES})

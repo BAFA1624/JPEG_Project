@@ -1,7 +1,7 @@
 #pragma once
 
+#include "common/test_interface.hpp"
 #include "png/png_types.hpp"
-#include "test_interface.hpp"
 
 #include <functional>
 

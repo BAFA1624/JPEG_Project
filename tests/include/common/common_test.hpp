@@ -1,7 +1,7 @@
 #pragma once
 
 #include "common/common.hpp"
-#include "test_interface.hpp"
+#include "common/test_interface.hpp"
 
 #include <array>
 #include <functional>

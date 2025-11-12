@@ -1,7 +1,7 @@
 #pragma once
 
 #include "common/crc.hpp"
-#include "test_interface.hpp"
+#include "common/test_interface.hpp"
 
 #include <filesystem>
 #include <fstream>
