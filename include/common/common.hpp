@@ -326,39 +326,44 @@ span_to_integer_8( const std::span<const std::byte> & data ) {
 }
 } // namespace
 
-template <typename T, std::endian SourceEndian,
+template <IntOrEnum T, std::endian SourceEndian,
           std::endian TargetEndian = std::endian::native>
-    requires std::is_integral_v<T> && std::is_unsigned_v<T>
-             && ValidEndian<SourceEndian> && ValidEndian<TargetEndian>
+    requires ValidEndian<SourceEndian> && ValidEndian<TargetEndian>
 constexpr T
 span_to_integer( const std::span<const std::byte> & data ) {
     // Error if provided no. bytes != size of output type
     assert( sizeof( T ) == data.size() );
 
+    using U = integral_t<T>;
+
     // Specialisations for common integer sizes
-    if constexpr ( sizeof( T ) == sizeof( std::uint8_t ) ) {
-        return span_to_integer_1<T, SourceEndian, TargetEndian>( data );
+    if constexpr ( sizeof( U ) == sizeof( std::uint8_t ) ) {
+        return static_cast<T>(
+            span_to_integer_1<U, SourceEndian, TargetEndian>( data ) );
     }
-    else if constexpr ( sizeof( T ) == sizeof( std::uint16_t ) ) {
-        return span_to_integer_2<T, SourceEndian, TargetEndian>( data );
+    else if constexpr ( sizeof( U ) == sizeof( std::uint16_t ) ) {
+        return static_cast<T>(
+            span_to_integer_2<U, SourceEndian, TargetEndian>( data ) );
     }
-    else if constexpr ( sizeof( T ) == sizeof( std::uint32_t ) ) {
-        return span_to_integer_4<T, SourceEndian, TargetEndian>( data );
+    else if constexpr ( sizeof( U ) == sizeof( std::uint32_t ) ) {
+        return static_cast<T>(
+            span_to_integer_4<U, SourceEndian, TargetEndian>( data ) );
     }
-    else if constexpr ( sizeof( T ) == sizeof( std::uint64_t ) ) {
-        return span_to_integer_8<T, SourceEndian, TargetEndian>( data );
+    else if constexpr ( sizeof( U ) == sizeof( std::uint64_t ) ) {
+        return static_cast<T>(
+            span_to_integer_8<U, SourceEndian, TargetEndian>( data ) );
     }
     else {
         // General calculation for less common sizes
-        T result{ 0 };
-        for ( T i{ 0 }; i < sizeof( T ); ++i ) {
-            const T shift_value{ static_cast<T>( byte_bits )
-                                 * msB_offset<TargetEndian, T>( i ) };
-            result |= static_cast<const T>( data[static_cast<std::size_t>(
-                          msB_offset<SourceEndian, T>( i ) )] )
+        U result{ 0 };
+        for ( U i{ 0 }; i < sizeof( U ); ++i ) {
+            const U shift_value{ static_cast<U>( byte_bits )
+                                 * msB_offset<TargetEndian, U>( i ) };
+            result |= static_cast<const U>( data[static_cast<std::size_t>(
+                          msB_offset<SourceEndian, U>( i ) )] )
                       << shift_value;
         }
-        return result;
+        return static_cast<T>( result );
     }
 }
 
