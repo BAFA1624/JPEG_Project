@@ -1,7 +1,10 @@
 #include "png/png_chunk_payload_test.hpp"
 
+#include <filesystem>
+#include <fstream>
 #include <functional>
 #include <numeric>
+#include <optional>
 #include <print>
 #include <string_view>
 
@@ -27,6 +30,106 @@ class PngChunkPayloadBaseWrapper : public PngChunkPayloadBase<ChunkType>
     }
     constexpr void setInvalid() noexcept override { setBaseInvalid(); }
 };
+
+static_assert(
+    std::is_default_constructible_v<PngChunkPayloadBaseWrapper<PngChunkType::IHDR>> );
+static_assert(
+    !std::is_constructible_v<PngChunkPayloadBaseWrapper<PngChunkType::IHDR>,
+                             std::uint32_t> );
+static_assert(
+    !std::is_default_constructible_v<PngChunkPayloadBaseWrapper<PngChunkType::PLTE>> );
+static_assert(
+    std::is_constructible_v<PngChunkPayloadBaseWrapper<PngChunkType::PLTE>,
+                            std::uint32_t> );
+static_assert(
+    !std::is_default_constructible_v<PngChunkPayloadBaseWrapper<PngChunkType::IDAT>> );
+static_assert(
+    std::is_constructible_v<PngChunkPayloadBaseWrapper<PngChunkType::IDAT>,
+                            std::uint32_t> );
+static_assert(
+    std::is_default_constructible_v<PngChunkPayloadBaseWrapper<PngChunkType::IEND>> );
+static_assert(
+    !std::is_constructible_v<PngChunkPayloadBaseWrapper<PngChunkType::IEND>,
+                             std::uint32_t> );
+
+namespace
+{
+
+const auto png_signature =
+    std::array{ std::byte{ 0x89 }, std::byte{ 0x50 }, std::byte{ 0x4E },
+                std::byte{ 0x47 }, std::byte{ 0x0D }, std::byte{ 0x0A },
+                std::byte{ 0x1A }, std::byte{ 0x0A } };
+
+[[nodiscard]] std::filesystem::path
+test_data_path( const std::string_view filename ) {
+    return std::filesystem::current_path() / ".." / ".." / ".." / "tests"
+           / "data" / filename;
+}
+
+[[nodiscard]] std::vector<std::byte>
+read_binary_file( const std::filesystem::path & path ) {
+    std::ifstream file{ path, std::ios::binary | std::ios::in };
+    if ( !file.is_open() ) {
+        return {};
+    }
+
+    file.seekg( 0, std::ios_base::end );
+    const auto file_size = file.tellg();
+    if ( file_size < 0 ) {
+        return {};
+    }
+    file.seekg( 0, std::ios_base::beg );
+
+    std::vector<std::byte> file_data( static_cast<std::size_t>( file_size ) );
+    file.read( reinterpret_cast<char *>( file_data.data() ), file_size );
+    if ( !file.good() && !file.eof() ) {
+        return {};
+    }
+
+    return file_data;
+}
+
+[[nodiscard]] std::optional<std::vector<std::byte>>
+find_chunk_payload( const std::filesystem::path & path,
+                    const PngChunkType            chunk_type,
+                    const std::size_t occurrence = 0 ) {
+    const auto file_bytes = read_binary_file( path );
+    if ( file_bytes.size() < png_signature.size()
+         || !std::ranges::equal( file_bytes | std::views::take( 8 ),
+                                 png_signature ) ) {
+        return std::nullopt;
+    }
+
+    std::size_t match_count{ 0 };
+    std::size_t offset{ png_signature.size() };
+    while ( offset + 12 <= file_bytes.size() ) {
+        const auto chunk_size = span_to_integer<std::uint32_t, std::endian::big,
+                                                std::endian::native>(
+            std::span{ file_bytes.data() + offset, std::size_t{ 4 } } );
+        const auto current_chunk_type = static_cast<PngChunkType>(
+            span_to_integer<std::uint32_t, std::endian::big, std::endian::native>(
+                std::span{ file_bytes.data() + offset + 4, std::size_t{ 4 } } ) );
+        offset += 8;
+
+        if ( offset + chunk_size + 4 > file_bytes.size() ) {
+            return std::nullopt;
+        }
+
+        if ( current_chunk_type == chunk_type && match_count++ == occurrence ) {
+            return std::vector<std::byte>{ file_bytes.begin()
+                                               + static_cast<std::ptrdiff_t>( offset ),
+                                           file_bytes.begin()
+                                               + static_cast<std::ptrdiff_t>(
+                                                   offset + chunk_size ) };
+        }
+
+        offset += chunk_size + 4;
+    }
+
+    return std::nullopt;
+}
+
+} // namespace
 
 bool
 test_png_chunk_payload_base() {
@@ -76,6 +179,20 @@ bool
 test_ihdr_payload() {
     constexpr auto test_valid = []( const std::span<const std::byte> & data ) {
         return test_payload_valid<IHDR::IhdrChunkPayload>( data );
+    };
+    const auto test_real_png = []() {
+        const auto payload_bytes =
+            find_chunk_payload( test_data_path( "indexed_palette.png" ),
+                                PngChunkType::IHDR );
+        if ( !payload_bytes ) {
+            return false;
+        }
+
+        const IHDR::IhdrChunkPayload payload{ std::span<const std::byte>{
+            payload_bytes->data(), payload_bytes->size() } };
+        return payload.isValid() && payload.getChunkType() == PngChunkType::IHDR
+               && payload.size() == 13 && payload.getWidth() == 1
+               && payload.getHeight() == 1;
     };
 
     const auto test_results = std::vector<bool>{
@@ -207,7 +324,8 @@ test_ihdr_payload() {
                 IHDR::CompressionMethod::COMPRESSION_METHOD_0,
                 IHDR::FilterMethod::FILTER_METHOD_0,
                 IHDR::InterlaceMethod::INVALID,
-                false>() )
+                false>() ),
+        TEST_INTERFACE::test_function( test_real_png, true )
         // Multiple Invalid Inputs:
     };
 
@@ -216,19 +334,106 @@ test_ihdr_payload() {
 
 bool
 test_plte_payload() {
-    const auto test_results = std::vector<bool>{};
+    constexpr auto test_valid = []( const std::span<const std::byte> & data ) {
+        return test_payload_valid<PLTE::PlteChunkPayload>( data );
+    };
+    const auto test_real_png = []() {
+        const auto payload_bytes =
+            find_chunk_payload( test_data_path( "indexed_palette.png" ),
+                                PngChunkType::PLTE );
+        if ( !payload_bytes ) {
+            return false;
+        }
+
+        const PLTE::PlteChunkPayload payload{ std::span<const std::byte>{
+            payload_bytes->data(), payload_bytes->size() } };
+        return payload.isValid() && payload.getChunkType() == PngChunkType::PLTE
+               && payload.size() == 6 && payload.data().size() == 2
+               && payload.data()[0].red == 0 && payload.data()[0].green == 0
+               && payload.data()[0].blue == 0 && payload.data()[1].red == 255
+               && payload.data()[1].green == 255
+               && payload.data()[1].blue == 255;
+    };
+
+    const auto valid_plte = std::array{ std::byte{ 0x00 }, std::byte{ 0x00 },
+                                        std::byte{ 0x00 }, std::byte{ 0xFF },
+                                        std::byte{ 0xFF }, std::byte{ 0xFF } };
+    const auto invalid_plte = std::array{ std::byte{ 0x00 }, std::byte{ 0x00 },
+                                          std::byte{ 0x00 }, std::byte{ 0xFF } };
+
+    const auto test_results = std::vector<bool>{
+        TEST_INTERFACE::test_function(
+            test_valid, true, std::span<const std::byte>{ valid_plte } ),
+        TEST_INTERFACE::test_function(
+            test_valid, false, std::span<const std::byte>{ invalid_plte } ),
+        TEST_INTERFACE::test_function( test_real_png, true )
+    };
     return TEST_INTERFACE::confirm_results( test_results );
 }
 
 bool
 test_idat_payload() {
-    const auto test_results = std::vector<bool>{};
+    constexpr auto test_valid = []( const std::span<const std::byte> & data ) {
+        return test_payload_valid<IDAT::IdatChunkPayload>( data );
+    };
+    const auto test_real_png = []() {
+        const auto payload_bytes =
+            find_chunk_payload( test_data_path( "indexed_palette.png" ),
+                                PngChunkType::IDAT );
+        if ( !payload_bytes ) {
+            return false;
+        }
+
+        const IDAT::IdatChunkPayload payload{ std::span<const std::byte>{
+            payload_bytes->data(), payload_bytes->size() } };
+        return payload.isValid() && payload.getChunkType() == PngChunkType::IDAT
+               && payload.size() == payload_bytes->size()
+               && payload.data().size() == payload_bytes->size();
+    };
+
+    const auto idat_data =
+        std::array{ std::byte{ 0x78 }, std::byte{ 0x9C }, std::byte{ 0x63 } };
+    const auto empty_data = std::array<std::byte, 0>{};
+
+    const auto test_results = std::vector<bool>{
+        TEST_INTERFACE::test_function(
+            test_valid, true, std::span<const std::byte>{ idat_data } ),
+        TEST_INTERFACE::test_function(
+            test_valid, false, std::span<const std::byte>{ empty_data } ),
+        TEST_INTERFACE::test_function( test_real_png, true )
+    };
     return TEST_INTERFACE::confirm_results( test_results );
 }
 
 bool
 test_iend_payload() {
-    const auto test_results = std::vector<bool>{};
+    constexpr auto test_valid = []( const std::span<const std::byte> & data ) {
+        return test_payload_valid<IEND::IendChunkPayload>( data );
+    };
+    const auto test_real_png = []() {
+        const auto payload_bytes =
+            find_chunk_payload( test_data_path( "indexed_palette.png" ),
+                                PngChunkType::IEND );
+        if ( !payload_bytes ) {
+            return false;
+        }
+
+        const IEND::IendChunkPayload payload{ std::span<const std::byte>{
+            payload_bytes->data(), payload_bytes->size() } };
+        return payload.isValid() && payload.getChunkType() == PngChunkType::IEND
+               && payload.size() == 0;
+    };
+
+    const auto empty_data = std::array<std::byte, 0>{};
+    const auto non_empty_data = std::array{ std::byte{ 0x00 } };
+
+    const auto test_results = std::vector<bool>{
+        TEST_INTERFACE::test_function(
+            test_valid, true, std::span<const std::byte>{ empty_data } ),
+        TEST_INTERFACE::test_function(
+            test_valid, false, std::span<const std::byte>{ non_empty_data } ),
+        TEST_INTERFACE::test_function( test_real_png, true )
+    };
     return TEST_INTERFACE::confirm_results( test_results );
 }
 

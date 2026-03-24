@@ -153,6 +153,18 @@ struct ChunkSizeTraits<PngChunkType::IHDR>
 };
 
 template <>
+struct ChunkSizeTraits<PngChunkType::PLTE>
+{
+    static constexpr ChunkSizeType m_size_type{ ChunkSizeType::Variable };
+};
+
+template <>
+struct ChunkSizeTraits<PngChunkType::IDAT>
+{
+    static constexpr ChunkSizeType m_size_type{ ChunkSizeType::Variable };
+};
+
+template <>
 struct ChunkSizeTraits<PngChunkType::IEND>
 {
     static constexpr ChunkSizeType m_size_type{ ChunkSizeType::Constant };
@@ -251,6 +263,18 @@ static_assert( PngChunkSize<PngChunkType::IHDR>::chunkType()
                == PngChunkType::IHDR );
 static_assert( PngChunkSize<PngChunkType::IEND>().chunkType()
                == PngChunkType::IEND );
+static_assert( !std::is_constructible_v<PngChunkSize<PngChunkType::IHDR>,
+                                        std::uint32_t> );
+static_assert(
+    !std::is_default_constructible_v<PngChunkSize<PngChunkType::PLTE>> );
+static_assert(
+    std::is_constructible_v<PngChunkSize<PngChunkType::PLTE>, std::uint32_t> );
+static_assert(
+    !std::is_default_constructible_v<PngChunkSize<PngChunkType::IDAT>> );
+static_assert(
+    std::is_constructible_v<PngChunkSize<PngChunkType::IDAT>, std::uint32_t> );
+static_assert( !std::is_constructible_v<PngChunkSize<PngChunkType::IEND>,
+                                        std::uint32_t> );
 
 // PngPixelFormat
 

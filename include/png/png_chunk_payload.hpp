@@ -144,6 +144,9 @@ class IhdrChunkPayload final : protected PngChunkPayloadBase<PngChunkType::IHDR>
     };
 
     public:
+    using PngChunkPayloadBase<PngChunkType::IHDR>::getChunkType;
+    using PngChunkPayloadBase<PngChunkType::IHDR>::size;
+
     IhdrChunkPayload() = delete;
     constexpr IhdrChunkPayload(
         const std::uint32_t width, const std::uint32_t height,
@@ -225,13 +228,12 @@ bytes_to_palette( const std::span<const std::byte> & data ) {
     std::vector<Palette> result;
     result.reserve( data.size() / 3 );
 
-    for ( const auto [i, palette_values] :
-          data | std::views::chunk( sizeof( Palette ) /* = 3 */ )
-              | std::views::enumerate ) {
-        result[i] =
+    for ( const auto palette_values :
+          data | std::views::chunk( sizeof( Palette ) /* = 3 */ ) ) {
+        result.emplace_back(
             Palette{ std::to_integer<std::uint8_t>( palette_values[0] ),
                      std::to_integer<std::uint8_t>( palette_values[1] ),
-                     std::to_integer<std::uint8_t>( palette_values[2] ) };
+                     std::to_integer<std::uint8_t>( palette_values[2] ) } );
     }
 
     return result;
@@ -244,6 +246,9 @@ class PlteChunkPayload final : protected PngChunkPayloadBase<PngChunkType::PLTE>
 
     protected:
     public:
+    using PngChunkPayloadBase<PngChunkType::PLTE>::getChunkType;
+    using PngChunkPayloadBase<PngChunkType::PLTE>::size;
+
     PlteChunkPayload() = delete;
     constexpr explicit PlteChunkPayload(
         const std::vector<Palette> & palettes ) :
@@ -274,6 +279,10 @@ class PlteChunkPayload final : protected PngChunkPayloadBase<PngChunkType::PLTE>
         return isBaseValid();
     }
     constexpr void setInvalid() noexcept override { setBaseInvalid(); }
+
+    [[nodiscard]] constexpr const auto & data() const noexcept {
+        return palettes;
+    }
 };
 
 } // namespace PLTE
@@ -288,6 +297,8 @@ class IdatChunkPayload final : protected PngChunkPayloadBase<PngChunkType::IDAT>
 
     protected:
     public:
+    using PngChunkPayloadBase<PngChunkType::IDAT>::getChunkType;
+
     IdatChunkPayload() = delete;
     constexpr explicit IdatChunkPayload(
         const std::span<const std::byte> & data_span ) :
@@ -357,7 +368,16 @@ class IendChunkPayload final : protected PngChunkPayloadBase<PngChunkType::IEND>
     private:
     protected:
     public:
+    using PngChunkPayloadBase<PngChunkType::IEND>::getChunkType;
+    using PngChunkPayloadBase<PngChunkType::IEND>::size;
+
     constexpr IendChunkPayload() : PngChunkPayloadBase() {}
+    constexpr explicit IendChunkPayload( const std::span<const std::byte> & data )
+        : PngChunkPayloadBase() {
+        if ( !data.empty() ) {
+            setInvalid();
+        }
+    }
 
     [[nodiscard]] constexpr operator bool() const noexcept override {
         return isValid();
