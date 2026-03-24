@@ -133,51 +133,11 @@ std::ostream & operator<<( std::ostream &     out_stream,
 
 enum class ChunkSizeType { Constant, Variable };
 
-template <ChunkSizeType SizeType>
-class PngChunkSize
-{
-    private:
-    static constexpr ChunkSizeType m_size_type{ SizeType };
-    std::size_t                    m_size;
-
-    public:
-    constexpr PngChunkSize()
-        requires( m_size_type == ChunkSizeType::Variable )
-        : m_size( 0 ) {}
-    constexpr explicit PngChunkSize( const std::size_t size )
-        requires( m_size_type == ChunkSizeType::Constant )
-        : m_size( size ) {}
-    constexpr ~PngChunkSize() = default;
-    constexpr explicit PngChunkSize( const PngChunkSize & other ) = default;
-    constexpr explicit PngChunkSize( PngChunkSize && other ) noexcept = default;
-    constexpr PngChunkSize & operator=( const PngChunkSize & other )
-        requires( m_size_type == other.m_size_type )
-    = default;
-    constexpr PngChunkSize & operator=( PngChunkSize && other ) noexcept
-        requires( m_size_type == other.m_size_type )
-    = default;
-
-    constexpr void setSize( const std::size_t size ) noexcept
-        requires( m_size_type == ChunkSizeType::Variable )
-    {
-        m_size = size;
-    }
-
-    [[nodiscard]] constexpr auto sizeType() const noexcept {
-        return m_size_type;
-    }
-    [[nodiscard]] constexpr auto size() const noexcept { return m_size; }
-};
-
-PngChunkSize( const std::size_t ) -> PngChunkSize<ChunkSizeType::Constant>;
-PngChunkSize() -> PngChunkSize<ChunkSizeType::Variable>;
-
 // ChunkSizeTraits: This struct indicates whether a given PngChunk is expected
 // to have a constant or variable size. It is used by the PngChunkSize2 class.
 
 // Invalid PNG Chunks will be thrown away / handled gracefully eventually.
 template <PngChunkType ChunkType>
-    requires( is_valid( ChunkType ) )
 struct ChunkSizeTraits
 {
     static constexpr ChunkSizeType m_size_type{ ChunkSizeType::Variable };
@@ -189,55 +149,64 @@ template <>
 struct ChunkSizeTraits<PngChunkType::IHDR>
 {
     static constexpr ChunkSizeType m_size_type{ ChunkSizeType::Constant };
-    static constexpr std::size_t   m_size{ 13 };
+    static constexpr std::uint32_t m_size{ 13 };
 };
 
 template <>
 struct ChunkSizeTraits<PngChunkType::IEND>
 {
     static constexpr ChunkSizeType m_size_type{ ChunkSizeType::Constant };
-    static constexpr std::size_t   m_size{ 0 };
+    static constexpr std::uint32_t m_size{ 0 };
 };
 
 template <>
 struct ChunkSizeTraits<PngChunkType::cHRM>
 {
     static constexpr ChunkSizeType m_size_type{ ChunkSizeType::Constant };
-    static constexpr std::size_t   m_size{ 32 };
+    static constexpr std::uint32_t m_size{ 32 };
 };
 
 template <>
 struct ChunkSizeTraits<PngChunkType::gAMA>
 {
     static constexpr ChunkSizeType m_size_type{ ChunkSizeType::Constant };
-    static constexpr std::size_t   m_size{ 4 };
+    static constexpr std::uint32_t m_size{ 4 };
 };
 
 template <>
 struct ChunkSizeTraits<PngChunkType::sRGB>
 {
     static constexpr ChunkSizeType m_size_type{ ChunkSizeType::Constant };
-    static constexpr std::size_t   m_size{ 1 };
+    static constexpr std::uint32_t m_size{ 1 };
+};
+
+template <>
+struct ChunkSizeTraits<PngChunkType::INVALID>
+{
+    static constexpr ChunkSizeType m_size_type{ ChunkSizeType::Constant };
+    static constexpr std::uint32_t m_size{ 0 };
 };
 
 template <PngChunkType ChunkType>
-class PngChunkSize2
+class PngChunkSize
 {
     private:
     using traits = ChunkSizeTraits<ChunkType>;
     static constexpr bool is_const =
         ( traits::m_size_type == ChunkSizeType::Constant );
 
-    static constexpr ChunkSizeType m_size_type{ ChunkSizeType::Variable };
+    using storage_t =
+        std::conditional_t<is_const, std::monostate, std::uint32_t>;
 
-    using storage_t = std::conditional_t<is_const, std::monostate, std::size_t>;
-    storage_t m_size{};
+    static constexpr ChunkSizeType m_size_type{ ChunkSizeType::Variable };
+    storage_t                      m_size{};
+    bool                           m_is_valid{ true };
 
     public:
-    constexpr PngChunkSize2()
+    constexpr PngChunkSize()
         requires( is_const )
     {};
-    constexpr PngChunkSize2( const std::size_t size )
+    constexpr PngChunkSize( const std::uint32_t size )
         requires( !is_const )
         : m_size( size ) {}
 
@@ -248,31 +217,40 @@ class PngChunkSize2
             return m_size;
     }
 
+    [[nodiscard]] constexpr auto isValid() const noexcept {
+        if constexpr ( ChunkType == PngChunkType::INVALID )
+            return false;
+        else
+            return m_is_valid;
+    }
+
     [[nodiscard]] static consteval auto sizeType() noexcept {
         return traits::m_size_type;
     }
+
     [[nodiscard]] static consteval auto chunkType() noexcept {
         return ChunkType;
     }
 
-    constexpr void setSize( const std::size_t size ) noexcept
+    constexpr void setSize( const std::uint32_t size ) noexcept
         requires( !is_const )
     {
         m_size = size;
     }
+
+    constexpr void setInvalid() noexcept { m_is_valid = false; }
 };
 
-static_assert( PngChunkSize2<PngChunkType::PLTE>( 3 ).sizeType()
+static_assert( PngChunkSize<PngChunkType::PLTE>( 3 ).sizeType()
                == ChunkSizeType::Variable );
 
-static_assert( PngChunkSize2<PngChunkType::IHDR>().size() == 13 );
-static_assert( PngChunkSize2<PngChunkType::IHDR>::sizeType()
+static_assert( PngChunkSize<PngChunkType::IHDR>().size() == 13 );
+static_assert( PngChunkSize<PngChunkType::IHDR>::sizeType()
                == ChunkSizeType::Constant );
-static_assert( PngChunkSize2<PngChunkType::IHDR>::chunkType()
+static_assert( PngChunkSize<PngChunkType::IHDR>::chunkType()
                == PngChunkType::IHDR );
-
-using SizeType = std::variant<PngChunkSize<ChunkSizeType::Constant>,
-                              PngChunkSize<ChunkSizeType::Variable>>;
+static_assert( PngChunkSize<PngChunkType::IEND>().chunkType()
+               == PngChunkType::IEND );
 
 // PngPixelFormat
 

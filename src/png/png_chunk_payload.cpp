@@ -10,12 +10,8 @@ namespace IHDR
 
 IhdrChunkPayload::IhdrChunkPayload(
     const std::span<const std::byte> & raw_data ) :
-    PngChunkPayloadBase(
-        sizeof( width ) + sizeof( height ) + sizeof( bit_depth )
-            + sizeof( colour_type ) + sizeof( compression_method )
-            + sizeof( filter_method ) + sizeof( interlace_method ),
-        PngChunkType::IHDR ) {
-    assert( raw_data.size() == getSize() );
+    PngChunkPayloadBase() {
+    assert( raw_data.size() == size() );
 
     // Parsing in data members:
     constexpr std::size_t width_offset{ 0 + sizeof( width ) };
@@ -64,7 +60,7 @@ IhdrChunkPayload::IhdrChunkPayload(
 
 constexpr IhdrChunkPayload::IhdrChunkPayload(
     IhdrChunkPayload && other ) noexcept :
-    PngChunkPayloadBase( other.getSize(), other.getChunkType() ),
+    PngChunkPayloadBase(),
     width( other.getWidth() ),
     height( other.getHeight() ),
     bit_depth( other.getBitDepth() ),

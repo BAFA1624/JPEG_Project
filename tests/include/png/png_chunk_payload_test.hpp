@@ -16,8 +16,8 @@ namespace PNG
 namespace
 {
 
-template <typename Payload>
-    requires std::is_base_of_v<PngChunkPayloadBase, Payload>
+template <PngChunkType ChunkType, typename Payload>
+    requires std::is_base_of_v<PngChunkPayloadBase<ChunkType>, Payload>
 class PayloadTestFixture : public TEST_INTERFACE::TestFixture
 {
     private:

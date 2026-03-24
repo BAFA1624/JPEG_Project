@@ -8,17 +8,19 @@
 namespace PNG
 {
 
-class PngChunkPayloadBaseWrapper : public PngChunkPayloadBase
+template <PngChunkType ChunkType>
+class PngChunkPayloadBaseWrapper : public PngChunkPayloadBase<ChunkType>
 {
     public:
-    using PngChunkPayloadBase::PngChunkPayloadBase;
+    using Base = PngChunkPayloadBase<ChunkType>;
+    using Base::PngChunkPayloadBase;
 
-    using PngChunkPayloadBase::operator bool;
-    using PngChunkPayloadBase::getChunkType;
-    using PngChunkPayloadBase::getSize;
-    using PngChunkPayloadBase::isBaseValid;
+    using Base::operator bool;
+    using Base::getChunkType;
+    using Base::isBaseValid;
+    using Base::size;
 
-    using PngChunkPayloadBase::setBaseInvalid;
+    using Base::setBaseInvalid;
 
     [[nodiscard]] constexpr bool isValid() const noexcept override {
         return isBaseValid();
@@ -28,27 +30,47 @@ class PngChunkPayloadBaseWrapper : public PngChunkPayloadBase
 
 bool
 test_png_chunk_payload_base() {
-    constexpr auto test_valid = []( const std::uint32_t size,
-                                    const PngChunkType  chunk_type ) {
-        return test_payload_valid<PngChunkPayloadBaseWrapper>(
-            std::cref( size ), std::cref( chunk_type ) );
-    };
+    constexpr auto test_valid =
+        []<PngChunkType ChunkType>( const std::uint32_t size ) {
+            return test_payload_valid<PngChunkPayloadBaseWrapper<ChunkType>>(
+                std::cref( size ), ChunkType );
+        };
     // constexpr auto test_critical = [](const PngChunkPayloadBase & chunk) {
     //     return
     // }
 
+    constexpr auto test_valid_invalid = []() {
+        return test_payload_valid<
+            PngChunkPayloadBaseWrapper<PngChunkType::INVALID>>();
+    };
+    constexpr auto test_valid_ihdr = []() {
+        return test_payload_valid<
+            PngChunkPayloadBaseWrapper<PngChunkType::IHDR>>();
+    };
+    constexpr auto test_valid_plte = []( const std::size_t size ) {
+        return test_payload_valid<
+            PngChunkPayloadBaseWrapper<PngChunkType::PLTE>>(
+            std::cref( size ) );
+    };
+    constexpr auto test_valid_idat = []( const std::size_t size ) {
+        return test_payload_valid<
+            PngChunkPayloadBaseWrapper<PngChunkType::IDAT>>(
+            std::cref( size ) );
+    };
+    constexpr auto test_valid_iend = []() {
+        return test_payload_valid<
+            PngChunkPayloadBaseWrapper<PngChunkType::IEND>>();
+    };
+
     const auto test_results = std::vector<bool>{
         // Testing correct construction w/ isValid
+        TEST_INTERFACE::test_function( test_valid_invalid, false ),
+        TEST_INTERFACE::test_function( test_valid_ihdr, true ),
         TEST_INTERFACE::test_function(
-            test_valid, false, std::uint32_t{ 0 }, PngChunkType::INVALID ),
+            test_valid_plte, true, std::uint32_t{ 0 } ),
         TEST_INTERFACE::test_function(
-            test_valid, true, std::uint32_t{ 13 }, PngChunkType::IHDR ),
-        TEST_INTERFACE::test_function(
-            test_valid, true, std::uint32_t{ 0 }, PngChunkType::PLTE ),
-        TEST_INTERFACE::test_function(
-            test_valid, true, std::uint32_t{ 0 }, PngChunkType::IDAT ),
-        TEST_INTERFACE::test_function(
-            test_valid, true, std::uint32_t{ 0 }, PngChunkType::IEND )
+            test_valid_idat, true, std::uint32_t{ 0 } ),
+        TEST_INTERFACE::test_function( test_valid_iend, true )
         // Testing member functions
         // isCritical/isAncillary
         // isPrivate
