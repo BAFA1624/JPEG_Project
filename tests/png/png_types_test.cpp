@@ -52,6 +52,55 @@ test_png_types() {
 }
 
 bool
+test_png_chunk_size() {
+    constexpr auto test_ihdr_traits = []() {
+        constexpr PngChunkSize<PngChunkType::IHDR> size{};
+        return size.isValid() && size.size() == 13
+               && size.sizeType() == ChunkSizeType::Constant
+               && size.chunkType() == PngChunkType::IHDR;
+    };
+    constexpr auto test_plte_traits = []() {
+        constexpr PngChunkSize<PngChunkType::PLTE> size{ 9 };
+        return size.isValid() && size.size() == 9
+               && size.sizeType() == ChunkSizeType::Variable
+               && size.chunkType() == PngChunkType::PLTE;
+    };
+    constexpr auto test_plte_mutation = []() {
+        auto size = PngChunkSize<PngChunkType::PLTE>{ 3 };
+        size.setSize( 12 );
+        return size.isValid() && size.size() == 12;
+    };
+    constexpr auto test_iend_traits = []() {
+        constexpr PngChunkSize<PngChunkType::IEND> size{};
+        return size.isValid() && size.size() == 0
+               && size.sizeType() == ChunkSizeType::Constant
+               && size.chunkType() == PngChunkType::IEND;
+    };
+    constexpr auto test_invalid_chunk = []() {
+        constexpr PngChunkSize<PngChunkType::INVALID> size{};
+        return !size.isValid() && size.size() == 0
+               && size.sizeType() == ChunkSizeType::Constant
+               && size.chunkType() == PngChunkType::INVALID;
+    };
+    constexpr auto test_plte_invalidation = []() {
+        auto size = PngChunkSize<PngChunkType::PLTE>{ 6 };
+        size.setInvalid();
+        return !size.isValid() && size.size() == 6;
+    };
+
+    const auto test_results = std::vector<bool>{
+        TEST_INTERFACE::test_function( test_ihdr_traits, true ),
+        TEST_INTERFACE::test_function( test_plte_traits, true ),
+        TEST_INTERFACE::test_function( test_plte_mutation, true ),
+        TEST_INTERFACE::test_function( test_iend_traits, true ),
+        TEST_INTERFACE::test_function( test_invalid_chunk, true ),
+        TEST_INTERFACE::test_function( test_plte_invalidation, true )
+    };
+
+    return TEST_INTERFACE::confirm_results( test_results );
+}
+
+bool
 test_ihdr_types() {
     constexpr auto bit_depth_test_set =
         std::array{ std::tuple{ IHDR::BitDepth{ 1 }, true },

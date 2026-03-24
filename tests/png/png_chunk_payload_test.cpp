@@ -30,15 +30,6 @@ class PngChunkPayloadBaseWrapper : public PngChunkPayloadBase<ChunkType>
 
 bool
 test_png_chunk_payload_base() {
-    constexpr auto test_valid =
-        []<PngChunkType ChunkType>( const std::uint32_t size ) {
-            return test_payload_valid<PngChunkPayloadBaseWrapper<ChunkType>>(
-                std::cref( size ), ChunkType );
-        };
-    // constexpr auto test_critical = [](const PngChunkPayloadBase & chunk) {
-    //     return
-    // }
-
     constexpr auto test_valid_invalid = []() {
         return test_payload_valid<
             PngChunkPayloadBaseWrapper<PngChunkType::INVALID>>();
@@ -47,15 +38,13 @@ test_png_chunk_payload_base() {
         return test_payload_valid<
             PngChunkPayloadBaseWrapper<PngChunkType::IHDR>>();
     };
-    constexpr auto test_valid_plte = []( const std::size_t size ) {
+    constexpr auto test_valid_plte = []( const std::uint32_t size ) {
         return test_payload_valid<
-            PngChunkPayloadBaseWrapper<PngChunkType::PLTE>>(
-            std::cref( size ) );
+            PngChunkPayloadBaseWrapper<PngChunkType::PLTE>>( size );
     };
-    constexpr auto test_valid_idat = []( const std::size_t size ) {
+    constexpr auto test_valid_idat = []( const std::uint32_t size ) {
         return test_payload_valid<
-            PngChunkPayloadBaseWrapper<PngChunkType::IDAT>>(
-            std::cref( size ) );
+            PngChunkPayloadBaseWrapper<PngChunkType::IDAT>>( size );
     };
     constexpr auto test_valid_iend = []() {
         return test_payload_valid<
@@ -86,7 +75,7 @@ test_png_chunk_payload_base() {
 bool
 test_ihdr_payload() {
     constexpr auto test_valid = []( const std::span<const std::byte> & data ) {
-        return test_payload_valid<IHDR::IhdrChunkPayload>( std::cref( data ) );
+        return test_payload_valid<IHDR::IhdrChunkPayload>( data );
     };
 
     const auto test_results = std::vector<bool>{

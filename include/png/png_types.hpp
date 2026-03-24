@@ -198,7 +198,7 @@ class PngChunkSize
     using storage_t =
         std::conditional_t<is_const, std::monostate, std::uint32_t>;
 
-    static constexpr ChunkSizeType m_size_type{ ChunkSizeType::Variable };
+    static constexpr ChunkSizeType m_size_type{ traits::m_size_type };
     storage_t                      m_size{};
     bool                           m_is_valid{ true };
 

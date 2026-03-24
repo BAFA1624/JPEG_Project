@@ -65,8 +65,8 @@ class PayloadTestFixture : public TEST_INTERFACE::TestFixture
 template <typename Payload, typename... Args>
     requires std::constructible_from<Payload, Args...>
 constexpr bool
-test_payload_valid( const Args &&... args ) {
-    const Payload payload{ std::forward<const Args>( args )... };
+test_payload_valid( Args &&... args ) {
+    const Payload payload{ std::forward<Args>( args )... };
     return payload.isValid();
 }
 } // namespace
