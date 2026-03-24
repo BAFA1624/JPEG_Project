@@ -51,6 +51,11 @@ static_assert(
 static_assert(
     !std::is_constructible_v<PngChunkPayloadBaseWrapper<PngChunkType::IEND>,
                              std::uint32_t> );
+static_assert(
+    std::is_default_constructible_v<PngChunkPayloadBaseWrapper<PngChunkType::cHRM>> );
+static_assert(
+    !std::is_constructible_v<PngChunkPayloadBaseWrapper<PngChunkType::cHRM>,
+                             std::uint32_t> );
 
 namespace
 {
@@ -64,6 +69,12 @@ const auto png_signature =
 test_data_path( const std::string_view filename ) {
     return std::filesystem::current_path() / ".." / ".." / ".." / "tests"
            / "data" / filename;
+}
+
+[[nodiscard]] std::filesystem::path
+repo_data_path( const std::string_view filename ) {
+    return std::filesystem::current_path() / ".." / ".." / ".." / "data"
+           / filename;
 }
 
 [[nodiscard]] std::vector<std::byte>
@@ -432,6 +443,57 @@ test_iend_payload() {
             test_valid, true, std::span<const std::byte>{ empty_data } ),
         TEST_INTERFACE::test_function(
             test_valid, false, std::span<const std::byte>{ non_empty_data } ),
+        TEST_INTERFACE::test_function( test_real_png, true )
+    };
+    return TEST_INTERFACE::confirm_results( test_results );
+}
+
+bool
+test_chrm_payload() {
+    constexpr auto test_valid = []( const std::span<const std::byte> & data ) {
+        return test_payload_valid<cHRM::ChrmChunkPayload>( data );
+    };
+    const auto test_move = []() {
+        auto payload = cHRM::ChrmChunkPayload(
+            31269, 32899, 63999, 33001, 30000, 60000, 15000, 5999 );
+        const auto moved_payload = cHRM::ChrmChunkPayload( std::move( payload ) );
+        return moved_payload.isValid() && !payload.isValid()
+               && moved_payload.whitePointX() == 31269
+               && moved_payload.blueY() == 5999;
+    };
+    const auto test_real_png = []() {
+        const auto payload_bytes =
+            find_chunk_payload( repo_data_path( "swirl.png" ),
+                                PngChunkType::cHRM );
+        if ( !payload_bytes ) {
+            return false;
+        }
+
+        const cHRM::ChrmChunkPayload payload{ std::span<const std::byte>{
+            payload_bytes->data(), payload_bytes->size() } };
+        return payload.isValid() && payload.getChunkType() == PngChunkType::cHRM
+               && payload.size() == 32 && payload.whitePointX() == 31269
+               && payload.whitePointY() == 32899 && payload.redX() == 63999
+               && payload.redY() == 33001 && payload.greenX() == 30000
+               && payload.greenY() == 60000 && payload.blueX() == 15000
+               && payload.blueY() == 5999;
+    };
+
+    const auto chrm_data = std::array{
+        std::byte{ 0x00 }, std::byte{ 0x00 }, std::byte{ 0x7A }, std::byte{ 0x25 },
+        std::byte{ 0x00 }, std::byte{ 0x00 }, std::byte{ 0x80 }, std::byte{ 0x83 },
+        std::byte{ 0x00 }, std::byte{ 0x00 }, std::byte{ 0xF9 }, std::byte{ 0xFF },
+        std::byte{ 0x00 }, std::byte{ 0x00 }, std::byte{ 0x80 }, std::byte{ 0xE9 },
+        std::byte{ 0x00 }, std::byte{ 0x00 }, std::byte{ 0x75 }, std::byte{ 0x30 },
+        std::byte{ 0x00 }, std::byte{ 0x00 }, std::byte{ 0xEA }, std::byte{ 0x60 },
+        std::byte{ 0x00 }, std::byte{ 0x00 }, std::byte{ 0x3A }, std::byte{ 0x98 },
+        std::byte{ 0x00 }, std::byte{ 0x00 }, std::byte{ 0x17 }, std::byte{ 0x6F }
+    };
+
+    const auto test_results = std::vector<bool>{
+        TEST_INTERFACE::test_function(
+            test_valid, true, std::span<const std::byte>{ chrm_data } ),
+        TEST_INTERFACE::test_function( test_move, true ),
         TEST_INTERFACE::test_function( test_real_png, true )
     };
     return TEST_INTERFACE::confirm_results( test_results );

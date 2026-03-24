@@ -95,5 +95,64 @@ IhdrChunkPayload::operator=( IhdrChunkPayload && other ) noexcept {
 namespace PLTE
 {} // namespace PLTE
 
+namespace cHRM
+{
+
+ChrmChunkPayload::ChrmChunkPayload( const std::span<const std::byte> & raw_data ) :
+    PngChunkPayloadBase() {
+    assert( raw_data.size() == size() );
+
+    constexpr std::size_t field_size{ sizeof( std::uint32_t ) };
+    const auto read_field = [&raw_data]<std::size_t Offset>() {
+        return span_to_integer<std::uint32_t, std::endian::big,
+                               std::endian::native>(
+            raw_data.subspan( Offset, field_size ) );
+    };
+
+    m_white_point_x = read_field.operator()<0>();
+    m_white_point_y = read_field.operator()<field_size>();
+    m_red_x = read_field.operator()<field_size * 2>();
+    m_red_y = read_field.operator()<field_size * 3>();
+    m_green_x = read_field.operator()<field_size * 4>();
+    m_green_y = read_field.operator()<field_size * 5>();
+    m_blue_x = read_field.operator()<field_size * 6>();
+    m_blue_y = read_field.operator()<field_size * 7>();
+}
+
+ChrmChunkPayload::ChrmChunkPayload( ChrmChunkPayload && other ) noexcept :
+    PngChunkPayloadBase(),
+    m_white_point_x( other.whitePointX() ),
+    m_white_point_y( other.whitePointY() ),
+    m_red_x( other.redX() ),
+    m_red_y( other.redY() ),
+    m_green_x( other.greenX() ),
+    m_green_y( other.greenY() ),
+    m_blue_x( other.blueX() ),
+    m_blue_y( other.blueY() ) {
+    other.setInvalid();
+}
+
+ChrmChunkPayload &
+ChrmChunkPayload::operator=( ChrmChunkPayload && other ) noexcept {
+    if ( this != &other ) {
+        PngChunkPayloadBase::operator=( std::move( other ) );
+
+        m_white_point_x = other.m_white_point_x;
+        m_white_point_y = other.m_white_point_y;
+        m_red_x = other.m_red_x;
+        m_red_y = other.m_red_y;
+        m_green_x = other.m_green_x;
+        m_green_y = other.m_green_y;
+        m_blue_x = other.m_blue_x;
+        m_blue_y = other.m_blue_y;
+
+        other.setInvalid();
+    }
+
+    return *this;
+}
+
+} // namespace cHRM
+
 
 } // namespace PNG

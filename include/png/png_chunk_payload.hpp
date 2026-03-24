@@ -390,6 +390,88 @@ class IendChunkPayload final : protected PngChunkPayloadBase<PngChunkType::IEND>
 
 } // namespace IEND
 
+namespace cHRM
+{
+
+class ChrmChunkPayload final : protected PngChunkPayloadBase<PngChunkType::cHRM>
+{
+    private:
+    std::uint32_t m_white_point_x;
+    std::uint32_t m_white_point_y;
+    std::uint32_t m_red_x;
+    std::uint32_t m_red_y;
+    std::uint32_t m_green_x;
+    std::uint32_t m_green_y;
+    std::uint32_t m_blue_x;
+    std::uint32_t m_blue_y;
+
+    public:
+    using PngChunkPayloadBase<PngChunkType::cHRM>::getChunkType;
+    using PngChunkPayloadBase<PngChunkType::cHRM>::size;
+
+    ChrmChunkPayload() = delete;
+    constexpr ChrmChunkPayload( const std::uint32_t white_point_x,
+                                const std::uint32_t white_point_y,
+                                const std::uint32_t red_x,
+                                const std::uint32_t red_y,
+                                const std::uint32_t green_x,
+                                const std::uint32_t green_y,
+                                const std::uint32_t blue_x,
+                                const std::uint32_t blue_y ) noexcept :
+        PngChunkPayloadBase(),
+        m_white_point_x( white_point_x ),
+        m_white_point_y( white_point_y ),
+        m_red_x( red_x ),
+        m_red_y( red_y ),
+        m_green_x( green_x ),
+        m_green_y( green_y ),
+        m_blue_x( blue_x ),
+        m_blue_y( blue_y ) {}
+    explicit ChrmChunkPayload( const std::span<const std::byte> & data );
+
+    constexpr ~ChrmChunkPayload() override = default;
+    constexpr explicit ChrmChunkPayload( const ChrmChunkPayload & other ) =
+        default;
+    explicit ChrmChunkPayload( ChrmChunkPayload && other ) noexcept;
+
+    constexpr ChrmChunkPayload &
+    operator=( const ChrmChunkPayload & other ) = default;
+    ChrmChunkPayload & operator=( ChrmChunkPayload && other ) noexcept;
+
+    [[nodiscard]] constexpr operator bool() const noexcept override {
+        return isValid();
+    }
+    [[nodiscard]] constexpr bool isValid() const noexcept override {
+        return isBaseValid();
+    }
+    constexpr void setInvalid() noexcept override {
+        setBaseInvalid();
+        m_white_point_x = 0;
+        m_white_point_y = 0;
+        m_red_x = 0;
+        m_red_y = 0;
+        m_green_x = 0;
+        m_green_y = 0;
+        m_blue_x = 0;
+        m_blue_y = 0;
+    }
+
+    [[nodiscard]] constexpr auto whitePointX() const noexcept {
+        return m_white_point_x;
+    }
+    [[nodiscard]] constexpr auto whitePointY() const noexcept {
+        return m_white_point_y;
+    }
+    [[nodiscard]] constexpr auto redX() const noexcept { return m_red_x; }
+    [[nodiscard]] constexpr auto redY() const noexcept { return m_red_y; }
+    [[nodiscard]] constexpr auto greenX() const noexcept { return m_green_x; }
+    [[nodiscard]] constexpr auto greenY() const noexcept { return m_green_y; }
+    [[nodiscard]] constexpr auto blueX() const noexcept { return m_blue_x; }
+    [[nodiscard]] constexpr auto blueY() const noexcept { return m_blue_y; }
+};
+
+} // namespace cHRM
+
 // Ancillary Chunks
 
 } // namespace PNG

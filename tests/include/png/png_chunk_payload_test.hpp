@@ -137,18 +137,23 @@ namespace IDAT
 namespace IEND
 {}
 
+namespace cHRM
+{}
+
 // Critical Chunks
 bool test_ihdr_payload();
 bool test_plte_payload();
 bool test_idat_payload();
 bool test_iend_payload();
-bool test_fail();
 
 // Ancillary Chunks
+bool test_chrm_payload();
+bool test_fail();
 
 const auto test_functions = std::vector{ test_png_chunk_payload_base,
                                          test_ihdr_payload,
                                          test_plte_payload,
                                          test_idat_payload,
-                                         test_iend_payload /*, test_fail */ };
+                                         test_iend_payload,
+                                         test_chrm_payload /*, test_fail */ };
 } // namespace PNG
