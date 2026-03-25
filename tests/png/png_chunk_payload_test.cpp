@@ -33,24 +33,47 @@ test_png_chunk_payload_base() {
         return test_payload_valid<PngChunkPayloadBaseWrapper>(
             std::cref( size ), std::cref( chunk_type ) );
     };
-    // constexpr auto test_critical = [](const PngChunkPayloadBase & chunk) {
-    //     return
-    // }
+
+    constexpr auto test_critical = []( const std::uint32_t size,
+                                       const PngChunkType  chunk_type ) {
+        return PngChunkPayloadBaseWrapper( size, chunk_type ).isCritical();
+    };
+
+    constexpr auto test_ancillary = []( const std::uint32_t size,
+                                        const PngChunkType  chunk_type ) {
+        return PngChunkPayloadBaseWrapper( size, chunk_type ).isAncillary();
+    };
 
     const auto test_results = std::vector<bool>{
         // Testing correct construction w/ isValid
-        TEST_INTERFACE::test_function(
-            test_valid, false, std::uint32_t{ 0 }, PngChunkType::INVALID ),
-        TEST_INTERFACE::test_function(
-            test_valid, true, std::uint32_t{ 13 }, PngChunkType::IHDR ),
-        TEST_INTERFACE::test_function(
-            test_valid, true, std::uint32_t{ 0 }, PngChunkType::PLTE ),
-        TEST_INTERFACE::test_function(
-            test_valid, true, std::uint32_t{ 0 }, PngChunkType::IDAT ),
-        TEST_INTERFACE::test_function(
-            test_valid, true, std::uint32_t{ 0 }, PngChunkType::IEND )
+        TEST_INTERFACE::test_function( test_valid, false, std::uint32_t{ 0 },
+                                       PngChunkType::INVALID ),
+        TEST_INTERFACE::test_function( test_valid, true, std::uint32_t{ 13 },
+                                       PngChunkType::IHDR ),
+        TEST_INTERFACE::test_function( test_valid, true, std::uint32_t{ 0 },
+                                       PngChunkType::PLTE ),
+        TEST_INTERFACE::test_function( test_valid, true, std::uint32_t{ 0 },
+                                       PngChunkType::IDAT ),
+        TEST_INTERFACE::test_function( test_valid, true, std::uint32_t{ 0 },
+                                       PngChunkType::IEND ),
         // Testing member functions
         // isCritical/isAncillary
+        TEST_INTERFACE::test_function( test_critical, true, std::uint32_t{ 0 },
+                                       PngChunkType::IHDR ),
+        TEST_INTERFACE::test_function( test_critical, true, std::uint32_t{ 0 },
+                                       PngChunkType::PLTE ),
+        TEST_INTERFACE::test_function( test_critical, true, std::uint32_t{ 0 },
+                                       PngChunkType::IDAT ),
+        TEST_INTERFACE::test_function( test_critical, true, std::uint32_t{ 0 },
+                                       PngChunkType::IEND ),
+        TEST_INTERFACE::test_function( test_ancillary, true, std::uint32_t{ 0 },
+                                       PngChunkType::IHDR ),
+        TEST_INTERFACE::test_function( test_ancillary, true, std::uint32_t{ 0 },
+                                       PngChunkType::PLTE ),
+        TEST_INTERFACE::test_function( test_ancillary, true, std::uint32_t{ 0 },
+                                       PngChunkType::IDAT ),
+        TEST_INTERFACE::test_function( test_ancillary, true, std::uint32_t{ 0 },
+                                       PngChunkType::IEND ),
         // isPrivate
         // isReserved
         // isSafeToCopy
@@ -70,133 +93,89 @@ test_ihdr_payload() {
     const auto test_results = std::vector<bool>{
         // Valid Chunk Tests:
         TEST_INTERFACE::test_function(
-            test_valid,
-            true,
+            test_valid, true,
             IHDR::generate_ihdr_bytes<
-                std::uint32_t{ 1 },
-                std::uint32_t{ 1 },
-                IHDR::BitDepth{ 1 },
+                std::uint32_t{ 1 }, std::uint32_t{ 1 }, IHDR::BitDepth{ 1 },
                 IHDR::ColourType::GREYSCALE,
                 IHDR::CompressionMethod::COMPRESSION_METHOD_0,
                 IHDR::FilterMethod::FILTER_METHOD_0,
-                IHDR::InterlaceMethod::ADAM_7,
-                true>() ),
+                IHDR::InterlaceMethod::ADAM_7, true>() ),
         TEST_INTERFACE::test_function(
-            test_valid,
-            true,
+            test_valid, true,
             IHDR::generate_ihdr_bytes<
-                500,
-                500,
-                IHDR::BitDepth{ 16 },
+                500, 500, IHDR::BitDepth{ 16 },
                 IHDR::ColourType::TRUE_COLOUR_ALPHA,
                 IHDR::CompressionMethod::COMPRESSION_METHOD_0,
                 IHDR::FilterMethod::FILTER_METHOD_0,
-                IHDR::InterlaceMethod::NO_INTERLACE,
-                true>() ),
+                IHDR::InterlaceMethod::NO_INTERLACE, true>() ),
         // Invalid Chunk Tests:
         // - Invalid Width
         TEST_INTERFACE::test_function(
-            test_valid,
-            false,
+            test_valid, false,
             IHDR::generate_ihdr_bytes<
-                0,
-                500,
-                IHDR::BitDepth{ 16 },
+                0, 500, IHDR::BitDepth{ 16 },
                 IHDR::ColourType::TRUE_COLOUR_ALPHA,
                 IHDR::CompressionMethod::COMPRESSION_METHOD_0,
                 IHDR::FilterMethod::FILTER_METHOD_0,
-                IHDR::InterlaceMethod::NO_INTERLACE,
-                false>() ),
+                IHDR::InterlaceMethod::NO_INTERLACE, false>() ),
         // - Invalid Height
         TEST_INTERFACE::test_function(
-            test_valid,
-            false,
+            test_valid, false,
             IHDR::generate_ihdr_bytes<
-                500,
-                0,
-                IHDR::BitDepth{ 16 },
+                500, 0, IHDR::BitDepth{ 16 },
                 IHDR::ColourType::TRUE_COLOUR_ALPHA,
                 IHDR::CompressionMethod::COMPRESSION_METHOD_0,
                 IHDR::FilterMethod::FILTER_METHOD_0,
-                IHDR::InterlaceMethod::NO_INTERLACE,
-                false>() ),
+                IHDR::InterlaceMethod::NO_INTERLACE, false>() ),
         // - Invalid BitDepth
         TEST_INTERFACE::test_function(
-            test_valid,
-            false,
+            test_valid, false,
             IHDR::generate_ihdr_bytes<
-                500,
-                500,
-                IHDR::BitDepth{ 5 },
+                500, 500, IHDR::BitDepth{ 5 },
                 IHDR::ColourType::TRUE_COLOUR_ALPHA,
                 IHDR::CompressionMethod::COMPRESSION_METHOD_0,
                 IHDR::FilterMethod::FILTER_METHOD_0,
-                IHDR::InterlaceMethod::NO_INTERLACE,
-                false>() ),
+                IHDR::InterlaceMethod::NO_INTERLACE, false>() ),
         // - Invalid ColourType 1
         TEST_INTERFACE::test_function(
-            test_valid,
-            false,
+            test_valid, false,
             IHDR::generate_ihdr_bytes<
-                500,
-                500,
-                IHDR::BitDepth{ 16 },
-                IHDR::ColourType::INVALID,
+                500, 500, IHDR::BitDepth{ 16 }, IHDR::ColourType::INVALID,
                 IHDR::CompressionMethod::COMPRESSION_METHOD_0,
                 IHDR::FilterMethod::FILTER_METHOD_0,
-                IHDR::InterlaceMethod::NO_INTERLACE,
-                false>() ),
+                IHDR::InterlaceMethod::NO_INTERLACE, false>() ),
         // - Invalid ColourType 2
         TEST_INTERFACE::test_function(
-            test_valid,
-            false,
+            test_valid, false,
             IHDR::generate_ihdr_bytes<
-                500,
-                500,
-                IHDR::BitDepth{ 4 },
-                IHDR::ColourType::TRUE_COLOUR,
+                500, 500, IHDR::BitDepth{ 4 }, IHDR::ColourType::TRUE_COLOUR,
                 IHDR::CompressionMethod::COMPRESSION_METHOD_0,
                 IHDR::FilterMethod::FILTER_METHOD_0,
-                IHDR::InterlaceMethod::NO_INTERLACE,
-                false>() ),
+                IHDR::InterlaceMethod::NO_INTERLACE, false>() ),
         // - Invalid CompressionMethod
         TEST_INTERFACE::test_function(
-            test_valid,
-            false,
-            IHDR::generate_ihdr_bytes<500,
-                                      500,
-                                      IHDR::BitDepth{ 16 },
-                                      IHDR::ColourType::GREYSCALE,
-                                      IHDR::CompressionMethod::INVALID,
-                                      IHDR::FilterMethod::FILTER_METHOD_0,
-                                      IHDR::InterlaceMethod::NO_INTERLACE,
-                                      false>() ),
+            test_valid, false,
+            IHDR::generate_ihdr_bytes<
+                500, 500, IHDR::BitDepth{ 16 }, IHDR::ColourType::GREYSCALE,
+                IHDR::CompressionMethod::INVALID,
+                IHDR::FilterMethod::FILTER_METHOD_0,
+                IHDR::InterlaceMethod::NO_INTERLACE, false>() ),
         // - Invalid FilterMethod
         TEST_INTERFACE::test_function(
-            test_valid,
-            false,
+            test_valid, false,
             IHDR::generate_ihdr_bytes<
-                500,
-                500,
-                IHDR::BitDepth{ 16 },
-                IHDR::ColourType::GREYSCALE,
+                500, 500, IHDR::BitDepth{ 16 }, IHDR::ColourType::GREYSCALE,
                 IHDR::CompressionMethod::COMPRESSION_METHOD_0,
                 IHDR::FilterMethod::INVALID,
-                IHDR::InterlaceMethod::NO_INTERLACE,
-                false>() ),
+                IHDR::InterlaceMethod::NO_INTERLACE, false>() ),
         // - Invalid InterlaceMethod
         TEST_INTERFACE::test_function(
-            test_valid,
-            false,
+            test_valid, false,
             IHDR::generate_ihdr_bytes<
-                500,
-                500,
-                IHDR::BitDepth{ 16 },
-                IHDR::ColourType::GREYSCALE,
+                500, 500, IHDR::BitDepth{ 16 }, IHDR::ColourType::GREYSCALE,
                 IHDR::CompressionMethod::COMPRESSION_METHOD_0,
                 IHDR::FilterMethod::FILTER_METHOD_0,
-                IHDR::InterlaceMethod::INVALID,
-                false>() )
+                IHDR::InterlaceMethod::INVALID, false>() )
         // Multiple Invalid Inputs:
     };
 

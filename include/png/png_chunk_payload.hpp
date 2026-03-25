@@ -177,12 +177,8 @@ class IhdrChunkPayload final : protected PngChunkPayloadBase
 
     // Overrides
     [[nodiscard]] constexpr bool isValid() const override {
-        const ValidChecker valid_check( width,
-                                        height,
-                                        bit_depth,
-                                        colour_type,
-                                        compression_method,
-                                        filter_method,
+        const ValidChecker valid_check( width, height, bit_depth, colour_type,
+                                        compression_method, filter_method,
                                         interlace_method );
         return isBaseValid() && valid_check.isValid();
     }
@@ -220,45 +216,23 @@ namespace PLTE
 {
 
 constexpr std::vector<Palette>
-bytes_to_palette( const std::span<const std::byte> & data ) {
-    std::vector<Palette> result;
-    result.reserve( data.size() / 3 );
-
-    for ( const auto [i, palette_values] :
-          data | std::views::chunk( sizeof( Palette ) /* = 3 */ )
-              | std::views::enumerate ) {
-        result[i] =
-            Palette{ std::to_integer<std::uint8_t>( palette_values[0] ),
-                     std::to_integer<std::uint8_t>( palette_values[1] ),
-                     std::to_integer<std::uint8_t>( palette_values[2] ) };
-    }
-
-    return result;
-}
+bytes_to_palette( const std::span<const std::byte> & data );
 
 class PlteChunkPayload final : protected PngChunkPayloadBase
 {
     private:
-    std::vector<Palette> palettes;
+    std::vector<colour_t> r_channel;
+    std::vector<colour_t> g_channel;
+    std::vector<colour_t> b_channel;
 
     protected:
     public:
     PlteChunkPayload() = delete;
     constexpr explicit PlteChunkPayload(
-        const std::vector<Palette> & palettes ) :
-        PngChunkPayloadBase(
-            sizeof( Palette ) * static_cast<std::uint32_t>( palettes.size() ),
-            PngChunkType::PLTE ),
-        palettes( palettes ) {}
+        const std::vector<Palette> & palettes );
     constexpr explicit PlteChunkPayload(
-        const std::span<const std::byte> & data ) :
-        PngChunkPayloadBase( static_cast<std::uint32_t>( data.size() ),
-                             PngChunkType::PLTE ),
-        palettes( bytes_to_palette( data ) ) {
-        if ( data.size() % 3 != 0 ) {
-            setInvalid();
-        }
-    }
+        const std::span<const std::byte> & data );
+
     constexpr ~PlteChunkPayload() = default;
 
     constexpr explicit PlteChunkPayload( const PlteChunkPayload & ) = default;
@@ -275,13 +249,23 @@ class PlteChunkPayload final : protected PngChunkPayloadBase
         return isBaseValid();
     }
     constexpr void setInvalid() noexcept override { setBaseInvalid(); }
-};
 
+    constexpr auto operator[]( const std::size_t idx ) const noexcept {
+        return Palette{ .red = r_channel[idx],
+                        .green = g_channel[idx],
+                        .blue = b_channel[idx] };
+    }
+
+    constexpr auto rChannel() const noexcept { return r_channel; }
+    constexpr auto gChannel() const noexcept { return g_channel; }
+    constexpr auto bChannel() const noexcept { return b_channel; }
+
+    constexpr auto getPalettes() const noexcept;
+};
 } // namespace PLTE
 
 namespace IDAT
 {
-
 class IdatChunkPayload final : protected PngChunkPayloadBase
 {
     private:

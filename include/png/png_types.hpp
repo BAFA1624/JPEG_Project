@@ -289,11 +289,13 @@ is_valid( const InterlaceMethod interlace_method ) {
 namespace PLTE
 {
 
+using colour_t = std::uint8_t;
+
 struct Palette
 {
-    std::uint8_t red;
-    std::uint8_t green;
-    std::uint8_t blue;
+    colour_t red;
+    colour_t green;
+    colour_t blue;
 };
 
 std::ostream & operator<<( std::ostream & out_stream, const Palette palette );

@@ -100,7 +100,85 @@ IhdrChunkPayload::operator=( IhdrChunkPayload && other ) noexcept {
 } // namespace IHDR
 
 namespace PLTE
-{} // namespace PLTE
+{
+
+constexpr std::vector<Palette>
+bytes_to_palette( const std::span<const std::byte> & data ) {
+    std::vector<Palette> result;
+    result.reserve( data.size() / 3 );
+
+    for ( const auto [i, palette_values] :
+          data | std::views::chunk( sizeof( Palette ) /* = 3 */ )
+              | std::views::enumerate ) {
+        result[i] = Palette{ std::to_integer<colour_t>( palette_values[0] ),
+                             std::to_integer<colour_t>( palette_values[1] ),
+                             std::to_integer<colour_t>( palette_values[2] ) };
+    }
+
+    return result;
+}
+
+constexpr PlteChunkPayload::PlteChunkPayload(
+    const std::vector<Palette> & palettes ) :
+    PngChunkPayloadBase( sizeof( Palette )
+                             * static_cast<std::uint32_t>( palettes.size() ),
+                         PngChunkType::PLTE ) {
+    r_channel = palettes | std::views::transform( []( const auto palette ) {
+                    return palette.red;
+                } )
+                | std::ranges::to<std::vector<colour_t>>();
+    g_channel = palettes | std::views::transform( []( const auto palette ) {
+                    return palette.green;
+                } )
+                | std::ranges::to<std::vector<colour_t>>();
+    b_channel = palettes | std::views::transform( []( const auto palette ) {
+                    return palette.blue;
+                } )
+                | std::ranges::to<std::vector<colour_t>>();
+}
+
+constexpr PlteChunkPayload::PlteChunkPayload(
+    const std::span<const std::byte> & data ) :
+    PngChunkPayloadBase( static_cast<std::uint32_t>( data.size() ),
+                         PngChunkType::PLTE ) {
+    assert( data.size() % 3 == 0 );
+    *this = PlteChunkPayload( bytes_to_palette( data ) );
+}
+
+constexpr PlteChunkPayload::PlteChunkPayload(
+    PlteChunkPayload && other ) noexcept :
+    PngChunkPayloadBase( other.getSize(), other.getChunkType() ),
+    r_channel( other.rChannel() ),
+    g_channel( other.gChannel() ),
+    b_channel( other.bChannel() ) {
+    assert( other.getChunkType() == PngChunkType::PLTE );
+    assert( other.getSize() % 3 == 0 );
+    other.setInvalid();
+}
+
+constexpr PlteChunkPayload &
+PlteChunkPayload::operator=( PlteChunkPayload && other ) noexcept {
+    assert( other.getChunkType() == PngChunkType::PLTE );
+    assert( other.getSize() % 3 == 0 );
+
+    r_channel = other.rChannel();
+    g_channel = other.gChannel();
+    b_channel = other.bChannel();
+
+    other.setInvalid();
+}
+
+constexpr auto
+PlteChunkPayload::getPalettes() const noexcept {
+    return std::ranges::views::zip( r_channel, g_channel, b_channel )
+           | std::views::transform( []( const auto & iter ) {
+                 const auto & [r, g, b] = iter;
+                 return Palette{ .red = r, .green = g, .blue = b };
+             } )
+           | std::ranges::to<std::vector<Palette>>();
+}
+
+} // namespace PLTE
 
 
 } // namespace PNG

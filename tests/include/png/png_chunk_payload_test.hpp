@@ -104,24 +104,25 @@ template <std::uint32_t width, std::uint32_t height, BitDepth bit_depth,
              && ValidCheck<is_valid( interlace_method ), expected_valid>
 constexpr std::vector<std::byte>
 generate_ihdr_bytes() {
-    constexpr auto conv_func = []<typename T>( const T value ) {
-        return to_bytes<T, std::endian::native, std::endian::big>( value );
+    constexpr auto conv_func = []( const auto value ) {
+        return to_bytes<decltype( value ), std::endian::native,
+                        std::endian::big>( value );
     };
-    constexpr auto insert_bytes = []( std::vector<std::byte> & target,
-                                      const auto &             source ) {
-        target.insert( target.cend(), source.cbegin(), source.cend() );
+    constexpr auto insert = []( std::vector<std::byte> & container,
+                                const auto               bytes ) {
+        container.insert( container.end(), bytes.cbegin(), bytes.cend() );
     };
 
-    std::vector<std::byte> bytes{};
+    std::vector<std::byte> bytes;
     bytes.reserve( 13 );
 
-    insert_bytes( bytes, conv_func( width ) );
-    insert_bytes( bytes, conv_func( height ) );
-    insert_bytes( bytes, conv_func( bit_depth ) );
-    insert_bytes( bytes, conv_func( colour_type ) );
-    insert_bytes( bytes, conv_func( compression_method ) );
-    insert_bytes( bytes, conv_func( filter_method ) );
-    insert_bytes( bytes, conv_func( interlace_method ) );
+    insert( bytes, conv_func( width ) );
+    insert( bytes, conv_func( height ) );
+    insert( bytes, conv_func( bit_depth ) );
+    insert( bytes, conv_func( colour_type ) );
+    insert( bytes, conv_func( compression_method ) );
+    insert( bytes, conv_func( filter_method ) );
+    insert( bytes, conv_func( interlace_method ) );
 
     return bytes;
 }
@@ -129,7 +130,11 @@ generate_ihdr_bytes() {
 } // namespace IHDR
 
 namespace PLTE
-{}
+{
+
+
+// constexpr std::vector<std::byte>
+}
 
 namespace IDAT
 {}
@@ -146,9 +151,8 @@ bool test_fail();
 
 // Ancillary Chunks
 
-const auto test_functions = std::vector{ test_png_chunk_payload_base,
-                                         test_ihdr_payload,
-                                         test_plte_payload,
-                                         test_idat_payload,
-                                         test_iend_payload /*, test_fail */ };
+const auto test_functions =
+    std::vector{ test_png_chunk_payload_base, test_ihdr_payload,
+                 test_plte_payload, test_idat_payload,
+                 test_iend_payload /*, test_fail */ };
 } // namespace PNG
