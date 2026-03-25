@@ -368,12 +368,38 @@ test_plte_payload() {
 
         const PLTE::PlteChunkPayload payload{ std::span<const std::byte>{
             payload_bytes->data(), payload_bytes->size() } };
+        const auto palettes = payload.getPalettes();
         return payload.isValid() && payload.getChunkType() == PngChunkType::PLTE
-               && payload.size() == 6 && payload.data().size() == 2
-               && payload.data()[0].red == 0 && payload.data()[0].green == 0
-               && payload.data()[0].blue == 0 && payload.data()[1].red == 255
-               && payload.data()[1].green == 255
-               && payload.data()[1].blue == 255;
+               && payload.size() == 6 && payload.rChannel().size() == 2
+               && payload.gChannel().size() == 2 && payload.bChannel().size() == 2
+               && payload.rChannel()[0] == 0 && payload.gChannel()[0] == 0
+               && payload.bChannel()[0] == 0 && payload.rChannel()[1] == 255
+               && payload.gChannel()[1] == 255 && payload.bChannel()[1] == 255
+               && palettes.size() == 2 && palettes[0].red == 0
+               && palettes[0].green == 0 && palettes[0].blue == 0
+               && palettes[1].red == 255 && palettes[1].green == 255
+               && palettes[1].blue == 255;
+    };
+    const auto test_palette_round_trip = []() {
+        const auto palettes = std::vector<PLTE::Palette>{
+            { .red = 0, .green = 1, .blue = 2 },
+            { .red = 3, .green = 4, .blue = 5 },
+        };
+        const PLTE::PlteChunkPayload payload{ palettes };
+        const auto reconstructed = payload.getPalettes();
+        return payload.isValid() && payload.size() == 6
+               && payload.rChannel() == std::vector<PLTE::colour_t>{ 0, 3 }
+               && payload.gChannel() == std::vector<PLTE::colour_t>{ 1, 4 }
+               && payload.bChannel() == std::vector<PLTE::colour_t>{ 2, 5 }
+               && reconstructed.size() == palettes.size()
+               && reconstructed[0].red == palettes[0].red
+               && reconstructed[0].green == palettes[0].green
+               && reconstructed[0].blue == palettes[0].blue
+               && reconstructed[1].red == palettes[1].red
+               && reconstructed[1].green == palettes[1].green
+               && reconstructed[1].blue == palettes[1].blue
+               && payload[1].red == 3 && payload[1].green == 4
+               && payload[1].blue == 5;
     };
 
     const auto valid_plte = std::array{ std::byte{ 0x00 }, std::byte{ 0x00 },
@@ -387,6 +413,7 @@ test_plte_payload() {
             test_valid, true, std::span<const std::byte>{ valid_plte } ),
         TEST_INTERFACE::test_function(
             test_valid, false, std::span<const std::byte>{ invalid_plte } ),
+        TEST_INTERFACE::test_function( test_palette_round_trip, true ),
         TEST_INTERFACE::test_function( test_real_png, true )
     };
     return TEST_INTERFACE::confirm_results( test_results );

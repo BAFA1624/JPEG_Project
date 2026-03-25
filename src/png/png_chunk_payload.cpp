@@ -58,42 +58,90 @@ IhdrChunkPayload::IhdrChunkPayload(
                               sizeof( interlace_method ) ) );
 }
 
-constexpr IhdrChunkPayload::IhdrChunkPayload(
-    IhdrChunkPayload && other ) noexcept :
-    PngChunkPayloadBase(),
-    width( other.getWidth() ),
-    height( other.getHeight() ),
-    bit_depth( other.getBitDepth() ),
-    colour_type( other.getColourType() ),
-    compression_method( other.getCompressionMethod() ),
-    filter_method( other.getFilterMethod() ),
-    interlace_method( other.getInterlaceMethod() ) {
+} // namespace IHDR
+
+namespace PLTE
+{
+
+std::vector<Palette>
+bytes_to_palette( const std::span<const std::byte> & data ) {
+    std::vector<Palette> result;
+    result.reserve( data.size() / 3 );
+
+    for ( const auto palette_values :
+          data | std::views::chunk( sizeof( Palette ) /* = 3 */ ) ) {
+        result.emplace_back(
+            Palette{ std::to_integer<colour_t>( palette_values[0] ),
+                     std::to_integer<colour_t>( palette_values[1] ),
+                     std::to_integer<colour_t>( palette_values[2] ) } );
+    }
+
+    return result;
+}
+
+PlteChunkPayload::PlteChunkPayload(
+    const std::vector<Palette> & palettes ) :
+    PngChunkPayloadBase( sizeof( Palette )
+                         * static_cast<std::uint32_t>( palettes.size() ) ) {
+    r_channel = palettes | std::views::transform( []( const auto & palette ) {
+                    return palette.red;
+                } )
+                | std::ranges::to<std::vector<colour_t>>();
+    g_channel = palettes | std::views::transform( []( const auto & palette ) {
+                    return palette.green;
+                } )
+                | std::ranges::to<std::vector<colour_t>>();
+    b_channel = palettes | std::views::transform( []( const auto & palette ) {
+                    return palette.blue;
+                } )
+                | std::ranges::to<std::vector<colour_t>>();
+}
+
+PlteChunkPayload::PlteChunkPayload(
+    const std::span<const std::byte> & data ) :
+    PngChunkPayloadBase( static_cast<std::uint32_t>( data.size() ) ) {
+    if ( data.size() % 3 != 0 ) {
+        setInvalid();
+        return;
+    }
+
+    *this = PlteChunkPayload( bytes_to_palette( data ) );
+}
+
+PlteChunkPayload::PlteChunkPayload(
+    PlteChunkPayload && other ) noexcept :
+    PngChunkPayloadBase( other.size() ),
+    r_channel( other.rChannel() ),
+    g_channel( other.gChannel() ),
+    b_channel( other.bChannel() ) {
+    assert( other.size() % 3 == 0 );
     other.setInvalid();
 }
 
-constexpr IhdrChunkPayload &
-IhdrChunkPayload::operator=( IhdrChunkPayload && other ) noexcept {
+PlteChunkPayload &
+PlteChunkPayload::operator=( PlteChunkPayload && other ) noexcept {
     if ( this != &other ) {
         PngChunkPayloadBase::operator=( std::move( other ) );
-
-        width = other.width;
-        height = other.height;
-        bit_depth = other.bit_depth;
-        colour_type = other.colour_type;
-        compression_method = other.compression_method;
-        filter_method = other.filter_method;
-        interlace_method = other.interlace_method;
-
+        r_channel = other.rChannel();
+        g_channel = other.gChannel();
+        b_channel = other.bChannel();
         other.setInvalid();
     }
 
     return *this;
 }
 
-} // namespace IHDR
+std::vector<Palette>
+PlteChunkPayload::getPalettes() const noexcept {
+    return std::ranges::views::zip( r_channel, g_channel, b_channel )
+           | std::views::transform( []( const auto & channels ) {
+                 const auto & [r, g, b] = channels;
+                 return Palette{ .red = r, .green = g, .blue = b };
+             } )
+           | std::ranges::to<std::vector<Palette>>();
+}
 
-namespace PLTE
-{} // namespace PLTE
+} // namespace PLTE
 
 namespace cHRM
 {
