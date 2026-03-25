@@ -1,12 +1,11 @@
 #pragma once
 
 #include "common/crc.hpp"
-#include "common/test_interface.hpp"
 
 #include <filesystem>
 #include <fstream>
 #include <stdexcept>
-#include <vector>
+#include <string_view>
 
 namespace CRC_TEST
 {
@@ -49,21 +48,26 @@ get_file_data( const std::filesystem::directory_entry & data_src,
 }
 
 constexpr auto
+get_crc( const std::span<const std::byte> data_stream ) {
+    CRC::CrcTable32 crc_calculator(
+        CRC::PNG::png_polynomial<std::endian::big>() );
+    return crc_calculator.crc( data_stream );
+}
+
+constexpr auto
+get_crc( const std::string_view data_stream ) {
+    return get_crc(
+        std::as_bytes( std::span{ data_stream.data(), data_stream.size() } ) );
+}
+
+constexpr auto
 get_crc( const std::filesystem::directory_entry & data_src,
          const std::streamsize                    expected_size ) {
     const auto file_buf = get_file_data( data_src, expected_size );
 
-    const auto data_stream{ std::as_bytes(
-        std::span{ file_buf.data(), file_buf.size() } ) };
-
-    CRC::CrcTable32 crc_calculator(
-        CRC::PNG::png_polynomial<std::endian::big>() );
-
-    return crc_calculator.crc( data_stream );
+    return get_crc( std::string_view{ file_buf.data(), file_buf.size() } );
 }
 
-constexpr bool test_iend( const std::filesystem::directory_entry & data_src );
-
-const auto crc_test_functions = std::vector{ test_iend };
-
 } // namespace CRC_TEST
+
+int crc_test( [[maybe_unused]] int argc, [[maybe_unused]] char ** argv );
