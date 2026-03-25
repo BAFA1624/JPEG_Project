@@ -8,28 +8,36 @@
 namespace PNG
 {
 
+/* TODO: Adapt for ChunkSizeType
+ *  -
+ */
+
 // PngChunkPayloadBase: Base class to be inherited by all other Payload classes.
+template <PngChunkType ChunkType>
 class PngChunkPayloadBase
 {
     private:
-    std::uint32_t size;
-    PngChunkType  chunk_type;
+    PngChunkSize<ChunkType> m_size_type;
 
     // PngChunkTypes are always 4 bytes.
     // The property bits are bit 5 in each byte.
     template <std::size_t Byte>
         requires( Byte == 0 || Byte == 1 || Byte == 2 || Byte == 3 )
     [[nodiscard]] constexpr bool test_property_bit() const noexcept {
-        return std::bitset<sizeof( PngChunkType ) * byte_bits>{
-            static_cast<std::underlying_type_t<PngChunkType>>( chunk_type )
-        }[byte_bits * Byte + 5];
+        return std::bitset<sizeof( PngChunkType ) * byte_bits>{ as_integral(
+            ChunkType ) }[byte_bits * Byte + 5];
     }
 
     protected:
     public:
-    constexpr PngChunkPayloadBase( const std::uint32_t size,
-                                   const PngChunkType  chunk_type ) :
-        size( size ), chunk_type( chunk_type ) {}
+    constexpr PngChunkPayloadBase()
+        requires( PngChunkSize<ChunkType>::sizeType()
+                  == ChunkSizeType::Constant )
+        : m_size_type( PngChunkSize<ChunkType>() ) {}
+    constexpr PngChunkPayloadBase( const std::uint32_t size )
+        requires( PngChunkSize<ChunkType>::sizeType()
+                  == ChunkSizeType::Variable )
+        : m_size_type( PngChunkSize<ChunkType>( size ) ) {}
     constexpr virtual ~PngChunkPayloadBase() = default;
     constexpr explicit PngChunkPayloadBase(
         const PngChunkPayloadBase & other ) = default;
@@ -41,11 +49,11 @@ class PngChunkPayloadBase
     operator=( PngChunkPayloadBase && other ) = default;
 
     [[nodiscard]] virtual constexpr operator bool() const noexcept {
-        return is_valid( chunk_type );
+        return is_valid( ChunkType ) && m_size_type.isValid();
     }
 
     [[nodiscard]] virtual constexpr bool isBaseValid() const noexcept {
-        return is_valid( chunk_type );
+        return is_valid( ChunkType ) && m_size_type.isValid();
     }
 
     [[nodiscard]] constexpr auto isCritical() const noexcept {
@@ -72,17 +80,14 @@ class PngChunkPayloadBase
     }
 
     [[nodiscard]] virtual constexpr bool          isValid() const = 0;
-    [[nodiscard]] virtual constexpr std::uint32_t getSize() const {
-        return size;
+    [[nodiscard]] virtual constexpr std::uint32_t size() const {
+        return m_size_type.size();
     }
     [[nodiscard]] virtual constexpr PngChunkType getChunkType() const {
-        return chunk_type;
+        return ChunkType;
     }
 
-    constexpr void setBaseInvalid() noexcept {
-        size = 0;
-        chunk_type = PngChunkType::INVALID;
-    }
+    constexpr void setBaseInvalid() noexcept { m_size_type.setInvalid(); }
     virtual constexpr void setInvalid() noexcept = 0;
 };
 
@@ -91,7 +96,7 @@ class PngChunkPayloadBase
 namespace IHDR
 {
 
-class IhdrChunkPayload final : protected PngChunkPayloadBase
+class IhdrChunkPayload final : protected PngChunkPayloadBase<PngChunkType::IHDR>
 {
     private:
     // IHDR Chunk Members:
@@ -139,6 +144,9 @@ class IhdrChunkPayload final : protected PngChunkPayloadBase
     };
 
     public:
+    using PngChunkPayloadBase<PngChunkType::IHDR>::getChunkType;
+    using PngChunkPayloadBase<PngChunkType::IHDR>::size;
+
     IhdrChunkPayload() = delete;
     constexpr IhdrChunkPayload(
         const std::uint32_t width, const std::uint32_t height,
@@ -146,11 +154,7 @@ class IhdrChunkPayload final : protected PngChunkPayloadBase
         const CompressionMethod compression_method,
         const FilterMethod      filter_method,
         const InterlaceMethod   interlace_method ) noexcept :
-        PngChunkPayloadBase(
-            sizeof( width ) + sizeof( height ) + sizeof( bit_depth )
-                + sizeof( colour_type ) + sizeof( compression_method )
-                + sizeof( filter_method ) + sizeof( interlace_method ),
-            PngChunkType::IHDR ),
+        PngChunkPayloadBase(),
         width( width ),
         height( height ),
         bit_depth( bit_depth ),
@@ -177,8 +181,12 @@ class IhdrChunkPayload final : protected PngChunkPayloadBase
 
     // Overrides
     [[nodiscard]] constexpr bool isValid() const override {
-        const ValidChecker valid_check( width, height, bit_depth, colour_type,
-                                        compression_method, filter_method,
+        const ValidChecker valid_check( width,
+                                        height,
+                                        bit_depth,
+                                        colour_type,
+                                        compression_method,
+                                        filter_method,
                                         interlace_method );
         return isBaseValid() && valid_check.isValid();
     }
@@ -215,26 +223,46 @@ class IhdrChunkPayload final : protected PngChunkPayloadBase
 namespace PLTE
 {
 
-// TODO(chunk_size_type): decide whether the channel-split PLTE storage stays on
-// main or is replaced by the typed-size payload model from chunk_size_type.
 constexpr std::vector<Palette>
-bytes_to_palette( const std::span<const std::byte> & data );
+bytes_to_palette( const std::span<const std::byte> & data ) {
+    std::vector<Palette> result;
+    result.reserve( data.size() / 3 );
 
-class PlteChunkPayload final : protected PngChunkPayloadBase
+    for ( const auto palette_values :
+          data | std::views::chunk( sizeof( Palette ) /* = 3 */ ) ) {
+        result.emplace_back(
+            Palette{ std::to_integer<std::uint8_t>( palette_values[0] ),
+                     std::to_integer<std::uint8_t>( palette_values[1] ),
+                     std::to_integer<std::uint8_t>( palette_values[2] ) } );
+    }
+
+    return result;
+}
+
+class PlteChunkPayload final : protected PngChunkPayloadBase<PngChunkType::PLTE>
 {
     private:
-    std::vector<colour_t> r_channel;
-    std::vector<colour_t> g_channel;
-    std::vector<colour_t> b_channel;
+    std::vector<Palette> palettes;
 
     protected:
     public:
+    using PngChunkPayloadBase<PngChunkType::PLTE>::getChunkType;
+    using PngChunkPayloadBase<PngChunkType::PLTE>::size;
+
     PlteChunkPayload() = delete;
     constexpr explicit PlteChunkPayload(
-        const std::vector<Palette> & palettes );
+        const std::vector<Palette> & palettes ) :
+        PngChunkPayloadBase( sizeof( Palette )
+                             * static_cast<std::uint32_t>( palettes.size() ) ),
+        palettes( palettes ) {}
     constexpr explicit PlteChunkPayload(
-        const std::span<const std::byte> & data );
-
+        const std::span<const std::byte> & data ) :
+        PngChunkPayloadBase( static_cast<std::uint32_t>( data.size() ) ),
+        palettes( bytes_to_palette( data ) ) {
+        if ( data.size() % 3 != 0 ) {
+            setInvalid();
+        }
+    }
     constexpr ~PlteChunkPayload() = default;
 
     constexpr explicit PlteChunkPayload( const PlteChunkPayload & ) = default;
@@ -252,34 +280,29 @@ class PlteChunkPayload final : protected PngChunkPayloadBase
     }
     constexpr void setInvalid() noexcept override { setBaseInvalid(); }
 
-    constexpr auto operator[]( const std::size_t idx ) const noexcept {
-        return Palette{ .red = r_channel[idx],
-                        .green = g_channel[idx],
-                        .blue = b_channel[idx] };
+    [[nodiscard]] constexpr const auto & data() const noexcept {
+        return palettes;
     }
-
-    constexpr auto rChannel() const noexcept { return r_channel; }
-    constexpr auto gChannel() const noexcept { return g_channel; }
-    constexpr auto bChannel() const noexcept { return b_channel; }
-
-    constexpr auto getPalettes() const noexcept;
 };
+
 } // namespace PLTE
 
 namespace IDAT
 {
-class IdatChunkPayload final : protected PngChunkPayloadBase
+
+class IdatChunkPayload final : protected PngChunkPayloadBase<PngChunkType::IDAT>
 {
     private:
     std::vector<std::byte> m_data;
 
     protected:
     public:
+    using PngChunkPayloadBase<PngChunkType::IDAT>::getChunkType;
+
     IdatChunkPayload() = delete;
     constexpr explicit IdatChunkPayload(
         const std::span<const std::byte> & data_span ) :
-        PngChunkPayloadBase( static_cast<std::uint32_t>( data_span.size() ),
-                             PngChunkType::IDAT ),
+        PngChunkPayloadBase( static_cast<std::uint32_t>( data_span.size() ) ),
         m_data( data_span.cbegin(), data_span.cend() ) {
         assert( data_span.size() <= std::numeric_limits<std::uint32_t>::max() );
     }
@@ -290,18 +313,17 @@ class IdatChunkPayload final : protected PngChunkPayloadBase
     IdatChunkPayload &
     operator=( IdatChunkPayload && other ) noexcept = default;
 
-    [[nodiscard]] constexpr std::uint32_t getSize() const noexcept override {
-        assert(
-            m_data.size()
-            == static_cast<std::uint64_t>( PngChunkPayloadBase::getSize() ) );
-        return PngChunkPayloadBase::getSize();
+    [[nodiscard]] constexpr std::uint32_t size() const noexcept override {
+        assert( m_data.size()
+                == static_cast<std::uint64_t>( PngChunkPayloadBase::size() ) );
+        return PngChunkPayloadBase::size();
     }
 
     [[nodiscard]] constexpr operator bool() const noexcept override {
         return isValid();
     }
     [[nodiscard]] constexpr bool isValid() const noexcept override {
-        return isBaseValid() && !m_data.empty() && getSize() == m_data.size();
+        return isBaseValid() && !m_data.empty() && size() == m_data.size();
     }
     constexpr void setInvalid() noexcept override {
         setBaseInvalid();
@@ -341,13 +363,21 @@ class IdatChunkPayload final : protected PngChunkPayloadBase
 
 namespace IEND
 {
-class IendChunkPayload final : protected PngChunkPayloadBase
+class IendChunkPayload final : protected PngChunkPayloadBase<PngChunkType::IEND>
 {
     private:
     protected:
     public:
-    constexpr IendChunkPayload() :
-        PngChunkPayloadBase( 0, PngChunkType::IEND ) {}
+    using PngChunkPayloadBase<PngChunkType::IEND>::getChunkType;
+    using PngChunkPayloadBase<PngChunkType::IEND>::size;
+
+    constexpr IendChunkPayload() : PngChunkPayloadBase() {}
+    constexpr explicit IendChunkPayload( const std::span<const std::byte> & data )
+        : PngChunkPayloadBase() {
+        if ( !data.empty() ) {
+            setInvalid();
+        }
+    }
 
     [[nodiscard]] constexpr operator bool() const noexcept override {
         return isValid();
@@ -359,6 +389,180 @@ class IendChunkPayload final : protected PngChunkPayloadBase
 };
 
 } // namespace IEND
+
+namespace cHRM
+{
+
+class ChrmChunkPayload final : protected PngChunkPayloadBase<PngChunkType::cHRM>
+{
+    private:
+    std::uint32_t m_white_point_x;
+    std::uint32_t m_white_point_y;
+    std::uint32_t m_red_x;
+    std::uint32_t m_red_y;
+    std::uint32_t m_green_x;
+    std::uint32_t m_green_y;
+    std::uint32_t m_blue_x;
+    std::uint32_t m_blue_y;
+
+    public:
+    using PngChunkPayloadBase<PngChunkType::cHRM>::getChunkType;
+    using PngChunkPayloadBase<PngChunkType::cHRM>::size;
+
+    ChrmChunkPayload() = delete;
+    constexpr ChrmChunkPayload( const std::uint32_t white_point_x,
+                                const std::uint32_t white_point_y,
+                                const std::uint32_t red_x,
+                                const std::uint32_t red_y,
+                                const std::uint32_t green_x,
+                                const std::uint32_t green_y,
+                                const std::uint32_t blue_x,
+                                const std::uint32_t blue_y ) noexcept :
+        PngChunkPayloadBase(),
+        m_white_point_x( white_point_x ),
+        m_white_point_y( white_point_y ),
+        m_red_x( red_x ),
+        m_red_y( red_y ),
+        m_green_x( green_x ),
+        m_green_y( green_y ),
+        m_blue_x( blue_x ),
+        m_blue_y( blue_y ) {}
+    explicit ChrmChunkPayload( const std::span<const std::byte> & data );
+
+    constexpr ~ChrmChunkPayload() override = default;
+    constexpr explicit ChrmChunkPayload( const ChrmChunkPayload & other ) =
+        default;
+    explicit ChrmChunkPayload( ChrmChunkPayload && other ) noexcept;
+
+    constexpr ChrmChunkPayload &
+    operator=( const ChrmChunkPayload & other ) = default;
+    ChrmChunkPayload & operator=( ChrmChunkPayload && other ) noexcept;
+
+    [[nodiscard]] constexpr operator bool() const noexcept override {
+        return isValid();
+    }
+    [[nodiscard]] constexpr bool isValid() const noexcept override {
+        return isBaseValid();
+    }
+    constexpr void setInvalid() noexcept override {
+        setBaseInvalid();
+        m_white_point_x = 0;
+        m_white_point_y = 0;
+        m_red_x = 0;
+        m_red_y = 0;
+        m_green_x = 0;
+        m_green_y = 0;
+        m_blue_x = 0;
+        m_blue_y = 0;
+    }
+
+    [[nodiscard]] constexpr auto whitePointX() const noexcept {
+        return m_white_point_x;
+    }
+    [[nodiscard]] constexpr auto whitePointY() const noexcept {
+        return m_white_point_y;
+    }
+    [[nodiscard]] constexpr auto redX() const noexcept { return m_red_x; }
+    [[nodiscard]] constexpr auto redY() const noexcept { return m_red_y; }
+    [[nodiscard]] constexpr auto greenX() const noexcept { return m_green_x; }
+    [[nodiscard]] constexpr auto greenY() const noexcept { return m_green_y; }
+    [[nodiscard]] constexpr auto blueX() const noexcept { return m_blue_x; }
+    [[nodiscard]] constexpr auto blueY() const noexcept { return m_blue_y; }
+};
+
+} // namespace cHRM
+
+namespace gAMA
+{
+
+class GamaChunkPayload final : protected PngChunkPayloadBase<PngChunkType::gAMA>
+{
+    private:
+    std::uint32_t m_image_gamma;
+
+    public:
+    using PngChunkPayloadBase<PngChunkType::gAMA>::getChunkType;
+    using PngChunkPayloadBase<PngChunkType::gAMA>::size;
+
+    GamaChunkPayload() = delete;
+    constexpr explicit GamaChunkPayload(
+        const std::uint32_t image_gamma ) noexcept :
+        PngChunkPayloadBase(),
+        m_image_gamma( image_gamma ) {}
+    explicit GamaChunkPayload( const std::span<const std::byte> & data );
+
+    constexpr ~GamaChunkPayload() override = default;
+    constexpr explicit GamaChunkPayload( const GamaChunkPayload & other ) =
+        default;
+    explicit GamaChunkPayload( GamaChunkPayload && other ) noexcept;
+
+    constexpr GamaChunkPayload &
+    operator=( const GamaChunkPayload & other ) = default;
+    GamaChunkPayload & operator=( GamaChunkPayload && other ) noexcept;
+
+    [[nodiscard]] constexpr operator bool() const noexcept override {
+        return isValid();
+    }
+    [[nodiscard]] constexpr bool isValid() const noexcept override {
+        return isBaseValid() && m_image_gamma > 0;
+    }
+    constexpr void setInvalid() noexcept override {
+        setBaseInvalid();
+        m_image_gamma = 0;
+    }
+
+    [[nodiscard]] constexpr auto imageGamma() const noexcept {
+        return m_image_gamma;
+    }
+};
+
+} // namespace gAMA
+
+namespace sRGB
+{
+
+class SrgbChunkPayload final : protected PngChunkPayloadBase<PngChunkType::sRGB>
+{
+    private:
+    RenderingIntent m_rendering_intent;
+
+    public:
+    using PngChunkPayloadBase<PngChunkType::sRGB>::getChunkType;
+    using PngChunkPayloadBase<PngChunkType::sRGB>::size;
+
+    SrgbChunkPayload() = delete;
+    constexpr explicit SrgbChunkPayload(
+        const RenderingIntent rendering_intent ) noexcept :
+        PngChunkPayloadBase(),
+        m_rendering_intent( rendering_intent ) {}
+    explicit SrgbChunkPayload( const std::span<const std::byte> & data );
+
+    constexpr ~SrgbChunkPayload() override = default;
+    constexpr explicit SrgbChunkPayload( const SrgbChunkPayload & other ) =
+        default;
+    explicit SrgbChunkPayload( SrgbChunkPayload && other ) noexcept;
+
+    constexpr SrgbChunkPayload &
+    operator=( const SrgbChunkPayload & other ) = default;
+    SrgbChunkPayload & operator=( SrgbChunkPayload && other ) noexcept;
+
+    [[nodiscard]] constexpr operator bool() const noexcept override {
+        return isValid();
+    }
+    [[nodiscard]] constexpr bool isValid() const noexcept override {
+        return isBaseValid() && PNG::sRGB::is_valid( m_rendering_intent );
+    }
+    constexpr void setInvalid() noexcept override {
+        setBaseInvalid();
+        m_rendering_intent = RenderingIntent::INVALID;
+    }
+
+    [[nodiscard]] constexpr auto renderingIntent() const noexcept {
+        return m_rendering_intent;
+    }
+};
+
+} // namespace sRGB
 
 // Ancillary Chunks
 

@@ -16,8 +16,8 @@ namespace PNG
 namespace
 {
 
-template <typename Payload>
-    requires std::is_base_of_v<PngChunkPayloadBase, Payload>
+template <PngChunkType ChunkType, typename Payload>
+    requires std::is_base_of_v<PngChunkPayloadBase<ChunkType>, Payload>
 class PayloadTestFixture : public TEST_INTERFACE::TestFixture
 {
     private:
@@ -65,8 +65,8 @@ class PayloadTestFixture : public TEST_INTERFACE::TestFixture
 template <typename Payload, typename... Args>
     requires std::constructible_from<Payload, Args...>
 constexpr bool
-test_payload_valid( const Args &&... args ) {
-    const Payload payload{ std::forward<const Args>( args )... };
+test_payload_valid( Args &&... args ) {
+    const Payload payload{ std::forward<Args>( args )... };
     return payload.isValid();
 }
 } // namespace
@@ -142,17 +142,33 @@ namespace IDAT
 namespace IEND
 {}
 
+namespace cHRM
+{}
+
+namespace gAMA
+{}
+
+namespace sRGB
+{}
+
 // Critical Chunks
 bool test_ihdr_payload();
 bool test_plte_payload();
 bool test_idat_payload();
 bool test_iend_payload();
-bool test_fail();
 
 // Ancillary Chunks
+bool test_chrm_payload();
+bool test_gama_payload();
+bool test_srgb_payload();
+bool test_fail();
 
-const auto test_functions =
-    std::vector{ test_png_chunk_payload_base, test_ihdr_payload,
-                 test_plte_payload, test_idat_payload,
-                 test_iend_payload /*, test_fail */ };
+const auto test_functions = std::vector{ test_png_chunk_payload_base,
+                                         test_ihdr_payload,
+                                         test_plte_payload,
+                                         test_idat_payload,
+                                         test_iend_payload,
+                                         test_chrm_payload,
+                                         test_gama_payload,
+                                         test_srgb_payload /*, test_fail */ };
 } // namespace PNG

@@ -59,8 +59,10 @@ validate_type( const std::array<std::tuple<Ts..., bool>, N> & test_set,
 // Testing Functions
 
 bool test_png_types();
+bool test_png_chunk_size();
 bool test_ihdr_types();
 
-const auto test_functions = std::vector{ test_png_types, test_ihdr_types };
+const auto test_functions =
+    std::vector{ test_png_types, test_png_chunk_size, test_ihdr_types };
 
 } // namespace PNG
