@@ -215,6 +215,8 @@ class IhdrChunkPayload final : protected PngChunkPayloadBase
 namespace PLTE
 {
 
+// TODO(chunk_size_type): decide whether the channel-split PLTE storage stays on
+// main or is replaced by the typed-size payload model from chunk_size_type.
 constexpr std::vector<Palette>
 bytes_to_palette( const std::span<const std::byte> & data );
 

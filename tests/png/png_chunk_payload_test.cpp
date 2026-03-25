@@ -66,13 +66,13 @@ test_png_chunk_payload_base() {
                                        PngChunkType::IDAT ),
         TEST_INTERFACE::test_function( test_critical, true, std::uint32_t{ 0 },
                                        PngChunkType::IEND ),
-        TEST_INTERFACE::test_function( test_ancillary, true, std::uint32_t{ 0 },
+        TEST_INTERFACE::test_function( test_ancillary, false, std::uint32_t{ 0 },
                                        PngChunkType::IHDR ),
-        TEST_INTERFACE::test_function( test_ancillary, true, std::uint32_t{ 0 },
+        TEST_INTERFACE::test_function( test_ancillary, false, std::uint32_t{ 0 },
                                        PngChunkType::PLTE ),
-        TEST_INTERFACE::test_function( test_ancillary, true, std::uint32_t{ 0 },
+        TEST_INTERFACE::test_function( test_ancillary, false, std::uint32_t{ 0 },
                                        PngChunkType::IDAT ),
-        TEST_INTERFACE::test_function( test_ancillary, true, std::uint32_t{ 0 },
+        TEST_INTERFACE::test_function( test_ancillary, false, std::uint32_t{ 0 },
                                        PngChunkType::IEND ),
         // isPrivate
         // isReserved
@@ -184,6 +184,8 @@ test_ihdr_payload() {
 
 bool
 test_plte_payload() {
+    // TODO(chunk_size_type): add coverage for the new channel-split PLTE
+    // representation once the API direction is settled.
     const auto test_results = std::vector<bool>{};
     return TEST_INTERFACE::confirm_results( test_results );
 }

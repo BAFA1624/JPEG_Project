@@ -107,12 +107,12 @@ bytes_to_palette( const std::span<const std::byte> & data ) {
     std::vector<Palette> result;
     result.reserve( data.size() / 3 );
 
-    for ( const auto [i, palette_values] :
-          data | std::views::chunk( sizeof( Palette ) /* = 3 */ )
-              | std::views::enumerate ) {
-        result[i] = Palette{ std::to_integer<colour_t>( palette_values[0] ),
-                             std::to_integer<colour_t>( palette_values[1] ),
-                             std::to_integer<colour_t>( palette_values[2] ) };
+    for ( const auto palette_values :
+          data | std::views::chunk( sizeof( Palette ) /* = 3 */ ) ) {
+        result.emplace_back(
+            Palette{ std::to_integer<colour_t>( palette_values[0] ),
+                     std::to_integer<colour_t>( palette_values[1] ),
+                     std::to_integer<colour_t>( palette_values[2] ) } );
     }
 
     return result;
@@ -141,7 +141,12 @@ constexpr PlteChunkPayload::PlteChunkPayload(
     const std::span<const std::byte> & data ) :
     PngChunkPayloadBase( static_cast<std::uint32_t>( data.size() ),
                          PngChunkType::PLTE ) {
-    assert( data.size() % 3 == 0 );
+    // TODO(chunk_size_type): add direct PLTE tests on main before expanding
+    // this refactor further; for now keep invalid byte-count handling simple.
+    if ( data.size() % 3 != 0 ) {
+        setInvalid();
+        return;
+    }
     *this = PlteChunkPayload( bytes_to_palette( data ) );
 }
 
@@ -166,6 +171,7 @@ PlteChunkPayload::operator=( PlteChunkPayload && other ) noexcept {
     b_channel = other.bChannel();
 
     other.setInvalid();
+    return *this;
 }
 
 constexpr auto
