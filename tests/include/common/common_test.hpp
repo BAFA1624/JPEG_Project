@@ -107,44 +107,5 @@ const auto test_functions =
 
 } // namespace COMMON_TEST
 
-#ifdef __SIZEOF_INT128__
-constexpr std::ostream &
-operator<<( std::ostream & out, const __uint128_t value ) {
-    std::ostream::sentry s( out );
-
-    unsigned     base{ 10 };
-    const char * digits{ "0123456789" };
-
-    const auto basefield{ out.flags() & std::ios_base::basefield };
-    if ( basefield == std::ios_base::hex ) {
-        base = 16;
-        digits = "0123456789ABCDEF";
-    }
-    else if ( basefield == std::ios_base::oct ) {
-        base = 8;
-        digits = "01234567";
-    }
-
-    if ( s ) {
-        __uint128_t tmp = value;
-
-        char   buffer[128];
-        char * d = std::end( buffer );
-
-        do {
-            --d;
-            *d = digits[tmp % base];
-            tmp /= base;
-        } while ( tmp != 0 );
-
-        const auto len{ std::end( buffer ) - d };
-        if ( out.rdbuf()->sputn( d, len ) != len ) {
-            out.setstate( std::ios_base::badbit );
-        }
-    }
-    return out;
-}
-#endif
-
 // Required by CTest
 int common_test( [[maybe_unused]] int argc, [[maybe_unused]] char ** argv );

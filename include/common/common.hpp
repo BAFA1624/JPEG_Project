@@ -324,41 +324,59 @@ span_to_integer_8( const std::span<const std::byte> & data ) {
                    << static_cast<const T>( byte_bits * 7 ) );
     }
 }
-} // namespace
 
 template <typename T, std::endian SourceEndian,
           std::endian TargetEndian = std::endian::native>
     requires std::is_integral_v<T> && std::is_unsigned_v<T>
              && ValidEndian<SourceEndian> && ValidEndian<TargetEndian>
 constexpr T
+span_to_integer_generic( const std::span<const std::byte> & data ) {
+    T result{ 0 };
+
+    for ( T i{ 0 }; i < sizeof( T ); ++i ) {
+        const T shift_value{ static_cast<T>( byte_bits )
+                             * msB_offset<TargetEndian, T>( i ) };
+        result |= static_cast<const T>( data[static_cast<std::size_t>(
+                      msB_offset<SourceEndian, T>( i ) )] )
+                  << shift_value;
+    }
+
+    return result;
+}
+
+} // namespace
+
+template <IntOrEnum T, std::endian SourceEndian,
+          std::endian TargetEndian = std::endian::native, bool Optimize = true>
+    requires ValidEndian<SourceEndian> && ValidEndian<TargetEndian>
+constexpr T
 span_to_integer( const std::span<const std::byte> & data ) {
     // Error if provided no. bytes != size of output type
     assert( sizeof( T ) == data.size() );
 
+    using U = integral_t<T>;
+    constexpr std::size_t N{ sizeof( U ) };
+
     // Specialisations for common integer sizes
-    if constexpr ( sizeof( T ) == sizeof( std::uint8_t ) ) {
-        return span_to_integer_1<T, SourceEndian, TargetEndian>( data );
+    if constexpr ( N == sizeof( std::uint8_t ) && Optimize ) {
+        return static_cast<T>(
+            span_to_integer_1<U, SourceEndian, TargetEndian>( data ) );
     }
-    else if constexpr ( sizeof( T ) == sizeof( std::uint16_t ) ) {
-        return span_to_integer_2<T, SourceEndian, TargetEndian>( data );
+    else if constexpr ( N == sizeof( std::uint16_t ) && Optimize ) {
+        return static_cast<T>(
+            span_to_integer_2<U, SourceEndian, TargetEndian>( data ) );
     }
-    else if constexpr ( sizeof( T ) == sizeof( std::uint32_t ) ) {
-        return span_to_integer_4<T, SourceEndian, TargetEndian>( data );
+    else if constexpr ( N == sizeof( std::uint32_t ) && Optimize ) {
+        return static_cast<T>(
+            span_to_integer_4<U, SourceEndian, TargetEndian>( data ) );
     }
-    else if constexpr ( sizeof( T ) == sizeof( std::uint64_t ) ) {
-        return span_to_integer_8<T, SourceEndian, TargetEndian>( data );
+    else if constexpr ( N == sizeof( std::uint64_t ) && Optimize ) {
+        return static_cast<T>(
+            span_to_integer_8<U, SourceEndian, TargetEndian>( data ) );
     }
     else {
-        // General calculation for less common sizes
-        T result{ 0 };
-        for ( T i{ 0 }; i < sizeof( T ); ++i ) {
-            const T shift_value{ static_cast<T>( byte_bits )
-                                 * msB_offset<TargetEndian, T>( i ) };
-            result |= static_cast<const T>( data[static_cast<std::size_t>(
-                          msB_offset<SourceEndian, T>( i ) )] )
-                      << shift_value;
-        }
-        return result;
+        return static_cast<T>(
+            span_to_integer_generic<U, SourceEndian, TargetEndian>( data ) );
     }
 }
 
@@ -385,15 +403,15 @@ get_byte( const T value, const T idx ) {
 
 namespace
 {
-template <IntOrEnum T, std::endian SourceEndian, std::endian TargetEndian>
-    requires( sizeof( T ) == sizeof( std::uint8_t ) )
+template <typename T, std::endian SourceEndian, std::endian TargetEndian>
+    requires std::is_integral_v<T> && ( sizeof( T ) == sizeof( std::uint8_t ) )
 constexpr std::array<std::byte, sizeof( T )>
 to_bytes_1( const T value ) {
     return std::array<std::byte, sizeof( T )>{ std::byte{ value } };
 }
 
-template <IntOrEnum T, std::endian SourceEndian, std::endian TargetEndian>
-    requires( sizeof( T ) == sizeof( std::uint16_t ) )
+template <typename T, std::endian SourceEndian, std::endian TargetEndian>
+    requires std::is_integral_v<T> && ( sizeof( T ) == sizeof( std::uint16_t ) )
 constexpr std::array<std::byte, sizeof( T )>
 to_bytes_2( const T value ) {
     const auto bytes{
@@ -407,8 +425,8 @@ to_bytes_2( const T value ) {
     return result;
 }
 
-template <IntOrEnum T, std::endian SourceEndian, std::endian TargetEndian>
-    requires( sizeof( T ) == sizeof( std::uint32_t ) )
+template <typename T, std::endian SourceEndian, std::endian TargetEndian>
+    requires std::is_integral_v<T> && ( sizeof( T ) == sizeof( std::uint32_t ) )
 constexpr std::array<std::byte, sizeof( T )>
 to_bytes_4( const T value ) {
     const auto bytes{
@@ -426,8 +444,8 @@ to_bytes_4( const T value ) {
     return result;
 }
 
-template <IntOrEnum T, std::endian SourceEndian, std::endian TargetEndian>
-    requires( sizeof( T ) == sizeof( std::uint64_t ) )
+template <typename T, std::endian SourceEndian, std::endian TargetEndian>
+    requires std::is_integral_v<T> && ( sizeof( T ) == sizeof( std::uint64_t ) )
 constexpr std::array<std::byte, sizeof( T )>
 to_bytes_8( const T value ) {
     const auto bytes{
@@ -452,6 +470,24 @@ to_bytes_8( const T value ) {
         bytes[msB_offset<SourceEndian, T, 7>()];
     return result;
 }
+
+template <typename T, std::endian SourceEndian, std::endian TargetEndian>
+constexpr std::array<std::byte, sizeof( T )>
+to_bytes_generic( const T value ) {
+    constexpr T N{ sizeof( T ) };
+
+    const auto bytes{ std::bit_cast<const std::array<const std::byte, N>>(
+        value ) };
+
+    std::array<std::byte, N> result;
+    for ( T i{ 0 }; i < N; ++i ) {
+        result[static_cast<std::size_t>( msB_offset<TargetEndian, T>( i ) )] =
+            bytes[static_cast<std::size_t>( msB_offset<SourceEndian, T>( i ) )];
+    }
+
+    return result;
+}
+
 } // namespace
 
 template <IntOrEnum T, std::endian SourceEndian, std::endian TargetEndian,
@@ -459,43 +495,26 @@ template <IntOrEnum T, std::endian SourceEndian, std::endian TargetEndian,
     requires ValidEndian<SourceEndian> && ValidEndian<TargetEndian>
 constexpr std::array<std::byte, sizeof( T )>
 to_bytes( const T value ) {
-    if constexpr ( sizeof( T ) == sizeof( std::uint8_t ) && Optimize ) {
-        return to_bytes_1<integral_t<T>, SourceEndian, TargetEndian>(
-            as_integral( value ) );
+    using U = integral_t<T>;
+
+    constexpr std::size_t N{ sizeof( U ) };
+    const U               underlying_value{ as_integral( value ) };
+
+    if constexpr ( N == sizeof( std::uint8_t ) && Optimize ) {
+        return to_bytes_1<U, SourceEndian, TargetEndian>( underlying_value );
     }
-    else if constexpr ( sizeof( T ) == sizeof( std::uint16_t ) && Optimize ) {
-        return to_bytes_2<integral_t<T>, SourceEndian, TargetEndian>(
-            as_integral( value ) );
+    else if constexpr ( N == sizeof( std::uint16_t ) && Optimize ) {
+        return to_bytes_2<U, SourceEndian, TargetEndian>( underlying_value );
     }
-    else if constexpr ( sizeof( T ) == sizeof( std::uint32_t ) && Optimize ) {
-        return to_bytes_4<integral_t<T>, SourceEndian, TargetEndian>(
-            as_integral( value ) );
+    else if constexpr ( N == sizeof( std::uint32_t ) && Optimize ) {
+        return to_bytes_4<U, SourceEndian, TargetEndian>( underlying_value );
     }
-    else if constexpr ( sizeof( T ) == sizeof( std::uint64_t ) && Optimize ) {
-        return to_bytes_8<integral_t<T>, SourceEndian, TargetEndian>(
-            as_integral( value ) );
+    else if constexpr ( N == sizeof( std::uint64_t ) && Optimize ) {
+        return to_bytes_8<U, SourceEndian, TargetEndian>( underlying_value );
     }
     else {
-        using U = integral_t<T>;
-
-        constexpr U N{ sizeof( U ) };
-
-        const U underlying_value{ as_integral( value ) };
-
-        const auto bytes{
-            std::bit_cast<const std::array<const std::byte, sizeof( T )>>(
-                underlying_value )
-        };
-
-        std::array<std::byte, sizeof( U )> result;
-        for ( U i{ 0 }; i < N; ++i ) {
-            result[static_cast<std::size_t>(
-                msB_offset<TargetEndian, integral_t<T>>( i ) )] =
-                bytes[static_cast<std::size_t>(
-                    msB_offset<SourceEndian, integral_t<T>>( i ) )];
-        }
-
-        return result;
+        return to_bytes_generic<U, SourceEndian, TargetEndian>(
+            underlying_value );
     }
 }
 

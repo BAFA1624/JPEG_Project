@@ -170,19 +170,12 @@ test_span_to_integer() {
     std::uniform_int_distribution<std::uint64_t> uniform_uint64_dist(
         std::numeric_limits<std::uint64_t>::min(),
         std::numeric_limits<std::uint64_t>::max() );
-#ifdef __SIZEOF_INT128__
-    std::uniform_int_distribution<__uint128_t> uniform_uint128_dist(
-        __uint128_t( 0 ), ~__uint128_t{ 0 } );
-#endif
 
     // Integers for tests
     const std::uint8_t  uint_8{ uniform_uint8_dist( rand_device ) };
     const std::uint16_t uint_16{ uniform_uint16_dist( rand_device ) };
     const std::uint32_t uint_32{ uniform_uint32_dist( rand_device ) };
     const std::uint64_t uint_64{ uniform_uint64_dist( rand_device ) };
-#ifdef __SIZEOF_INT128__
-    const __uint128_t uint_128{ uniform_uint128_dist( rand_device ) };
-#endif
 
     // Byte vectors for tests
     const auto vector_8_little{
@@ -208,13 +201,6 @@ test_span_to_integer() {
     const auto vector_64_big{
         integral_to_bytes<std::uint64_t, std::endian::big>( uint_64 )
     };
-#ifdef __SIZEOF_INT128__
-    const auto vector_128_little{
-        integral_to_bytes<__uint128_t, std::endian::little>( uint_128 )
-    };
-    const auto vector_128_big{ integral_to_bytes<__uint128_t, std::endian::big>(
-        uint_128 ) };
-#endif
 
     const auto test_results = std::vector<bool>{
         // little -> little & big -> big tests.
@@ -265,37 +251,36 @@ test_span_to_integer() {
             convert_endian<std::endian::native, std::endian::big>( uint_32 ) ),
         TEST_INTERFACE::test_function(
             [&]() {
-                return span_to_integer<std::uint32_t,
+                return span_to_integer<std::uint64_t,
                                        std::endian::little,
-                                       std::endian::little>( vector_32_little );
+                                       std::endian::little>( vector_64_little );
             },
             convert_endian<std::endian::native, std::endian::little>(
-                uint_32 ) ),
+                uint_64 ) ),
         TEST_INTERFACE::test_function(
             [&]() {
-                return span_to_integer<std::uint32_t,
+                return span_to_integer<std::uint64_t,
                                        std::endian::big,
-                                       std::endian::big>( vector_32_big );
+                                       std::endian::big>( vector_64_big );
             },
-            convert_endian<std::endian::native, std::endian::big>( uint_32 ) ),
-#ifdef __SIZEOF_INT128__
+            convert_endian<std::endian::native, std::endian::big>( uint_64 ) ),
         TEST_INTERFACE::test_function(
             [&]() {
-                return span_to_integer<__uint128_t,
+                return span_to_integer<std::uint64_t,
                                        std::endian::little,
-                                       std::endian::little>(
-                    vector_128_little );
+                                       std::endian::little,
+                                       false>( vector_64_little );
             },
             convert_endian<std::endian::native, std::endian::little>(
-                uint_128 ) ),
+                uint_64 ) ),
         TEST_INTERFACE::test_function(
             [&]() {
-                return span_to_integer<__uint128_t,
+                return span_to_integer<std::uint64_t,
                                        std::endian::big,
-                                       std::endian::big>( vector_128_big );
+                                       std::endian::big,
+                                       false>( vector_64_big );
             },
-            convert_endian<std::endian::native, std::endian::big>( uint_128 ) ),
-#endif
+            convert_endian<std::endian::native, std::endian::big>( uint_64 ) ),
         // little -> big & big -> little tests.
         TEST_INTERFACE::test_function(
             [&]() {
@@ -357,23 +342,23 @@ test_span_to_integer() {
             },
             convert_endian<std::endian::native, std::endian::little>(
                 uint_64 ) ),
-#ifdef __SIZEOF_INT128__
         TEST_INTERFACE::test_function(
             [&]() {
-                return span_to_integer<__uint128_t,
+                return span_to_integer<std::uint64_t,
                                        std::endian::little,
-                                       std::endian::big>( vector_128_little );
+                                       std::endian::big,
+                                       false>( vector_64_little );
             },
-            convert_endian<std::endian::native, std::endian::big>( uint_128 ) ),
+            convert_endian<std::endian::native, std::endian::big>( uint_64 ) ),
         TEST_INTERFACE::test_function(
             [&]() {
-                return span_to_integer<__uint128_t,
+                return span_to_integer<std::uint64_t,
                                        std::endian::big,
-                                       std::endian::little>( vector_128_big );
+                                       std::endian::little,
+                                       false>( vector_64_big );
             },
             convert_endian<std::endian::native, std::endian::little>(
-                uint_128 ) )
-#endif
+                uint_64 ) )
     };
 
     return TEST_INTERFACE::confirm_results( test_results );
@@ -530,16 +515,6 @@ test_to_bytes() {
     constexpr std::uint16_t uint_16{ 0x12'34 };
     constexpr std::uint32_t uint_32{ 0x12'34'56'78 };
     constexpr std::uint64_t uint_64{ 0x12'34'56'78'90'AB'CD'EF };
-#ifdef __SIZEOF_INT128__
-    constexpr auto construct_uint128_t = []( const std::uint64_t hi,
-                                             const std::uint64_t lo ) {
-        return ( static_cast<__uint128_t>( hi ) << 64 )
-               | static_cast<__uint128_t>( lo );
-    };
-    constexpr __uint128_t uint_128{ construct_uint128_t(
-        0x12'34'56'78'90'AB'CD'EF, 0x12'34'56'78'90'AB'CD'EF ) };
-
-#endif
 
     constexpr auto uint_8_big{
         convert_endian<std::endian::native, std::endian::big>( uint_8 )
@@ -565,14 +540,6 @@ test_to_bytes() {
     constexpr auto uint_64_little{
         convert_endian<std::endian::native, std::endian::little>( uint_64 )
     };
-#ifdef __SIZEOF_INT128__
-    [[maybe_unused]] constexpr auto uint_128_big{
-        convert_endian<std::endian::native, std::endian::big>( uint_128 )
-    };
-    [[maybe_unused]] constexpr auto uint_128_little{
-        convert_endian<std::endian::native, std::endian::little>( uint_128 )
-    };
-#endif
 
     [[maybe_unused]] const auto print = []( const auto             value,
                                             const std::string_view name ) {
@@ -596,11 +563,6 @@ test_to_bytes() {
         print( uint_64, "uint_64" );
         print( uint_64_big, "uint_64_big" );
         print( uint_64_little, "uint_64_little" );
-    #ifdef __SIZEOF_INT128__
-        print( uint_128, "uint_128" );
-        print( uint_128_big, "uint_128_big" );
-        print( uint_128_little, "uint_128_little" );
-    #endif
     */
 
     // Example Solutions - All declared assuming big endian
@@ -616,16 +578,6 @@ test_to_bytes() {
                                   std::byte{ 0x56 }, std::byte{ 0x78 },
                                   std::byte{ 0x90 }, std::byte{ 0xAB },
                                   std::byte{ 0xCD }, std::byte{ 0xEF } };
-#ifdef __SIZEOF_INT128__
-    [[maybe_unused]] constexpr auto result_128 = std::array<std::byte, 16>{
-        std::byte{ 0x12 }, std::byte{ 0x34 }, std::byte{ 0x56 },
-        std::byte{ 0x78 }, std::byte{ 0x90 }, std::byte{ 0xAB },
-        std::byte{ 0xCD }, std::byte{ 0xEF }, std::byte{ 0x12 },
-        std::byte{ 0x34 }, std::byte{ 0x56 }, std::byte{ 0x78 },
-        std::byte{ 0x90 }, std::byte{ 0xAB }, std::byte{ 0xCD },
-        std::byte{ 0xEF }
-    };
-#endif
 
     constexpr std::array<std::byte, 1> big_8_result{ result_8 };
     std::array<std::byte, 2>           big_16_result{};
@@ -635,10 +587,6 @@ test_to_bytes() {
     std::array<std::byte, 2>           little_16_result{};
     std::array<std::byte, 4>           little_32_result{};
     std::array<std::byte, 8>           little_64_result{};
-#ifdef __SIZEOF_INT128__
-    [[maybe_unused]] std::array<std::byte, 16> big_128_result{};
-    [[maybe_unused]] std::array<std::byte, 16> little_128_result{};
-#endif
 
     if constexpr ( std::endian::native == std::endian::little ) {
         big_16_result = result_16;
@@ -651,12 +599,6 @@ test_to_bytes() {
             result_32.cbegin(), result_32.cend(), little_32_result.begin() );
         std::ranges::reverse_copy(
             result_64.cbegin(), result_64.cend(), little_64_result.begin() );
-
-#ifdef __SIZEOF_INT128__
-        big_128_result = result_128;
-        std::ranges::reverse_copy(
-            result_128.cbegin(), result_128.cend(), little_128_result.begin() );
-#endif
     }
     else {
         little_16_result = result_16;
@@ -669,12 +611,6 @@ test_to_bytes() {
             result_32.cbegin(), result_32.cend(), big_32_result.begin() );
         std::ranges::reverse_copy(
             result_64.cbegin(), result_64.cend(), big_64_result.begin() );
-
-#ifdef __SIZEOF_INT128__
-        little_128_result = result_128;
-        std::ranges::reverse_copy(
-            result_128.cbegin(), result_128.cend(), big_128_result.begin() );
-#endif
     }
 
     [[maybe_unused]] constexpr auto print_val = []( const auto & value ) {
@@ -729,22 +665,23 @@ test_to_bytes() {
                 value );
         return result;
     };
-#ifdef __SIZEOF_INT128__
-    [[maybe_unused]] const auto test_little_little_128 =
-        [&]( const __uint128_t value ) {
+    const auto test_little_little_64_generic =
+        [&]( const std::uint64_t value ) {
             const auto result =
-                to_bytes<__uint128_t, std::endian::little, std::endian::little>(
-                    value );
+                to_bytes<std::uint64_t,
+                         std::endian::little,
+                         std::endian::little,
+                         false>( value );
             return result;
         };
-    [[maybe_unused]] const auto test_big_big_128 =
-        [&]( const __uint128_t value ) {
-            const auto result =
-                to_bytes<__uint128_t, std::endian::big, std::endian::big>(
-                    value );
-            return result;
-        };
-#endif
+    const auto test_big_big_64_generic = [&]( const std::uint64_t value ) {
+        const auto result =
+            to_bytes<std::uint64_t,
+                     std::endian::big,
+                     std::endian::big,
+                     false>( value );
+        return result;
+    };
 
     const auto test_little_big_8 = [&]( const std::uint8_t value ) {
         const auto result =
@@ -789,28 +726,25 @@ test_to_bytes() {
         return result;
     };
     const auto test_big_little_64 = [&]( const std::uint64_t value ) {
+        const auto result =
+            to_bytes<std::uint64_t, std::endian::big, std::endian::little>(
+                value );
+        return result;
+    };
+    const auto test_little_big_64_generic = [&]( const std::uint64_t value ) {
+        const auto result = to_bytes<std::uint64_t,
+                                     std::endian::little,
+                                     std::endian::big,
+                                     false>( value );
+        return result;
+    };
+    const auto test_big_little_64_generic = [&]( const std::uint64_t value ) {
         const auto result = to_bytes<std::uint64_t,
                                      std::endian::big,
                                      std::endian::little,
                                      false>( value );
         return result;
     };
-#ifdef __SIZEOF_INT128__
-    [[maybe_unused]] const auto test_little_big_128 =
-        [&]( const __uint128_t value ) {
-            const auto result =
-                to_bytes<__uint128_t, std::endian::little, std::endian::big>(
-                    value );
-            return result;
-        };
-    [[maybe_unused]] const auto test_big_little_128 =
-        [&]( const __uint128_t value ) {
-            const auto result =
-                to_bytes<__uint128_t, std::endian::big, std::endian::little>(
-                    value );
-            return result;
-        };
-#endif
 
     const auto test_results = std::vector<bool>{
         TEST_INTERFACE::test_function(
@@ -821,10 +755,8 @@ test_to_bytes() {
             test_little_little_32, little_32_result, uint_32_little ),
         TEST_INTERFACE::test_function(
             test_little_little_64, little_64_result, uint_64_little ),
-#ifdef __SIZEOF_INT128__
         TEST_INTERFACE::test_function(
-            test_little_little_128, little_128_result, uint_128_little ),
-#endif
+            test_little_little_64_generic, little_64_result, uint_64_little ),
         TEST_INTERFACE::test_function(
             test_big_big_8, big_8_result, uint_8_big ),
         TEST_INTERFACE::test_function(
@@ -833,10 +765,8 @@ test_to_bytes() {
             test_big_big_32, big_32_result, uint_32_big ),
         TEST_INTERFACE::test_function(
             test_big_big_64, big_64_result, uint_64_big ),
-#ifdef __SIZEOF_INT128__
         TEST_INTERFACE::test_function(
-            test_big_big_128, big_128_result, uint_128_big ),
-#endif
+            test_big_big_64_generic, big_64_result, uint_64_big ),
         TEST_INTERFACE::test_function(
             test_little_big_8, big_8_result, uint_8_little ),
         TEST_INTERFACE::test_function(
@@ -845,10 +775,8 @@ test_to_bytes() {
             test_little_big_32, big_32_result, uint_32_little ),
         TEST_INTERFACE::test_function(
             test_little_big_64, big_64_result, uint_64_little ),
-#ifdef __SIZEOF_INT128__
         TEST_INTERFACE::test_function(
-            test_little_big_128, big_128_result, uint_128_little ),
-#endif
+            test_little_big_64_generic, big_64_result, uint_64_little ),
         TEST_INTERFACE::test_function(
             test_big_little_8, little_8_result, uint_8_big ),
         TEST_INTERFACE::test_function(
@@ -857,10 +785,8 @@ test_to_bytes() {
             test_big_little_32, little_32_result, uint_32_big ),
         TEST_INTERFACE::test_function(
             test_big_little_64, little_64_result, uint_64_big ),
-#ifdef __SIZEOF_INT128__
         TEST_INTERFACE::test_function(
-            test_big_little_128, little_128_result, uint_128_big ),
-#endif
+            test_big_little_64_generic, little_64_result, uint_64_big ),
     };
 
     return TEST_INTERFACE::confirm_results( test_results );
